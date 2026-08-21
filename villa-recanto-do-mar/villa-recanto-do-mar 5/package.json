@@ -1,0 +1,9 @@
+{
+  "name": "villa-recanto-do-mar",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Site de reservas diretas da Pousada Villa Recanto do Mar — HTML/CSS/JS puro + Supabase + Vercel Functions, sem dependências de npm.",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

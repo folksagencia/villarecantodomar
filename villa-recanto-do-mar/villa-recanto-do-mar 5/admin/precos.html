@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Preços & disponibilidade — Painel Villa Recanto do Mar</title>
+<link rel="stylesheet" href="/assets/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="admin-shell">
+  <nav class="admin-sidebar" id="adminNav"></nav>
+  <main class="admin-main">
+    <h1 class="section-title">Preços & disponibilidade</h1>
+    <p class="section-sub">Clique nos dias para selecionar, depois defina um preço especial ou bloqueie a data (ex: manutenção, uso próprio).</p>
+
+    <div class="field-row" style="max-width:520px;">
+      <div>
+        <label for="roomSelect">Quarto</label>
+        <select id="roomSelect"></select>
+      </div>
+      <div>
+        <label>Mês</label>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-secondary btn-sm" id="prevMonth">←</button>
+          <div style="flex:1;text-align:center;font-weight:700;padding-top:8px;" id="monthLabel"></div>
+          <button class="btn btn-secondary btn-sm" id="nextMonth">→</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:560px;margin-bottom:18px;"><div class="card-body">
+      <p style="margin:0 0 10px;font-weight:600;font-size:0.85rem;">Selecionar um período inteiro de uma vez (ex: temporada de Natal/Ano Novo, um feriado)</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="flex:1;min-width:130px;">
+          <label style="margin:0 0 6px;font-size:0.78rem;">De</label>
+          <input type="date" id="rangeFrom">
+        </div>
+        <div style="flex:1;min-width:130px;">
+          <label style="margin:0 0 6px;font-size:0.78rem;">Até</label>
+          <input type="date" id="rangeTo">
+        </div>
+        <button class="btn btn-sm btn-secondary" id="selectRangeBtn">Selecionar intervalo</button>
+      </div>
+      <p class="help-text">Pode incluir datas de meses diferentes (ex: 20/12 até 05/01) — depois é só definir o preço abaixo e salvar uma vez só.</p>
+    </div></div>
+
+    <div class="weekday">
+      <div class="price-calendar" style="grid-template-columns:repeat(7,1fr);margin-bottom:0;">
+        <div class="weekday">Dom</div><div class="weekday">Seg</div><div class="weekday">Ter</div>
+        <div class="weekday">Qua</div><div class="weekday">Qui</div><div class="weekday">Sex</div><div class="weekday">Sáb</div>
+      </div>
+    </div>
+    <div class="price-calendar" id="calendar"></div>
+
+    <div class="card" id="editBox" style="max-width:480px;display:none;">
+      <div class="card-body">
+        <p><strong id="selCount">0</strong> data(s) selecionada(s).</p>
+        <label for="customPrice">Preço para essas datas (R$)</label>
+        <input type="number" id="customPrice" min="0" step="0.01">
+        <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+          <button class="btn btn-primary btn-sm" id="applyPriceBtn">Salvar preço</button>
+          <button class="btn btn-danger btn-sm" id="blockBtn">Bloquear datas</button>
+          <button class="btn btn-secondary btn-sm" id="resetBtn">Restaurar preço padrão</button>
+          <button class="btn btn-secondary btn-sm" id="clearSelBtn">Limpar seleção</button>
+        </div>
+        <div id="editAlert"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="/assets/supabase-client.js"></script>
+<script src="/assets/format.js"></script>
+<script src="/assets/admin-common.js"></script>
+<script>
+let rooms = [];
+let currentRoomId = null;
+let viewYear, viewMonth; // viewMonth: 0-11
+let overridesByDate = {};
+let selected = new Set();
+
+async function init() {
+  const session = await requireAdminAuth();
+  if (!session) return;
+  renderAdminNav("precos");
+
+  const today = new Date();
+  viewYear = today.getFullYear();
+  viewMonth = today.getMonth();
+
+  const { data, error } = await villaSupabase.from("rooms").select("id,name,base_price").order("sort_order");
+  if (error || !data || data.length === 0) {
+    document.getElementById("calendar").innerHTML = "";
+    document.querySelector(".admin-main").insertAdjacentHTML("beforeend", '<div class="empty-state">Cadastre um quarto primeiro, na aba "Quartos".</div>');
+    return;
+  }
+  rooms = data;
+  currentRoomId = rooms[0].id;
+
+  const select = document.getElementById("roomSelect");
+  select.innerHTML = rooms.map((r) => `<option value="${r.id}">${esc(r.name)}</option>`).join("");
+  select.addEventListener("change", () => { currentRoomId = select.value; selected.clear(); loadMonth(); });
+
+  document.getElementById("prevMonth").addEventListener("click", () => { changeMonth(-1); });
+  document.getElementById("nextMonth").addEventListener("click", () => { changeMonth(1); });
+  document.getElementById("applyPriceBtn").addEventListener("click", applyPrice);
+  document.getElementById("blockBtn").addEventListener("click", blockSelected);
+  document.getElementById("resetBtn").addEventListener("click", resetSelected);
+  document.getElementById("clearSelBtn").addEventListener("click", () => { selected.clear(); renderCalendar(); updateEditBox(); });
+  document.getElementById("selectRangeBtn").addEventListener("click", selectRange);
+
+  await loadMonth();
+}
+
+function changeMonth(delta) {
+  viewMonth += delta;
+  if (viewMonth < 0) { viewMonth = 11; viewYear--; }
+  if (viewMonth > 11) { viewMonth = 0; viewYear++; }
+  // Não limpa `selected` aqui de propósito: assim dá pra selecionar um
+  // período que atravessa dois meses (ex: 20/dez a 05/jan) navegando entre
+  // eles antes de aplicar o preço.
+  loadMonth();
+}
+
+function selectRange() {
+  const from = document.getElementById("rangeFrom").value;
+  const to = document.getElementById("rangeTo").value;
+  const todayStr = todayISODate();
+
+  if (!from || !to || to < from) {
+    showEditAlert("Escolha um período válido: data inicial antes (ou igual) da data final.", true);
+    return;
+  }
+
+  let cursor = new Date(from + "T00:00:00Z");
+  const end = new Date(to + "T00:00:00Z");
+  let added = 0;
+  while (cursor <= end) {
+    const dateStr = cursor.toISOString().slice(0, 10);
+    if (dateStr >= todayStr) {
+      selected.add(dateStr);
+      added++;
+    }
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  renderCalendar();
+  updateEditBox();
+  showEditAlert(`${added} data(s) do período selecionadas. Role para baixo, defina o preço e clique em "Salvar preço".`, false);
+}
+
+function pad(n) { return String(n).padStart(2, "0"); }
+
+async function loadMonth() {
+  const monthNames = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+  document.getElementById("monthLabel").textContent = `${monthNames[viewMonth]} ${viewYear}`;
+
+  const firstDay = `${viewYear}-${pad(viewMonth + 1)}-01`;
+  const lastDate = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const lastDay = `${viewYear}-${pad(viewMonth + 1)}-${pad(lastDate)}`;
+
+  const { data, error } = await villaSupabase
+    .from("price_overrides")
+    .select("date,price,is_blocked")
+    .eq("room_id", currentRoomId)
+    .gte("date", firstDay)
+    .lte("date", lastDay);
+
+  overridesByDate = {};
+  (data || []).forEach((o) => { overridesByDate[o.date] = o; });
+
+  renderCalendar();
+  updateEditBox();
+}
+
+function renderCalendar() {
+  const cal = document.getElementById("calendar");
+  const room = rooms.find((r) => r.id === currentRoomId);
+  const basePrice = room ? room.base_price : 0;
+  const lastDate = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstWeekday = new Date(viewYear, viewMonth, 1).getDay();
+  const todayStr = todayISODate();
+
+  let html = "";
+  for (let i = 0; i < firstWeekday; i++) html += `<div></div>`;
+
+  for (let d = 1; d <= lastDate; d++) {
+    const dateStr = `${viewYear}-${pad(viewMonth + 1)}-${pad(d)}`;
+    const override = overridesByDate[dateStr];
+    const isPast = dateStr < todayStr;
+    const classes = ["day"];
+    if (override && override.is_blocked) classes.push("blocked");
+    else if (override && override.price != null) classes.push("custom-price");
+    if (selected.has(dateStr)) classes.push("selected");
+    if (isPast) classes.push("past");
+
+    const priceLabel = override && override.is_blocked
+      ? "bloqueado"
+      : formatBRL(override && override.price != null ? override.price : basePrice).replace("R$", "").trim();
+
+    html += `<div class="${classes.join(" ")}" data-date="${dateStr}" style="${isPast ? "opacity:0.4;cursor:default;" : ""}">
+      <div class="d">${d}</div><div class="p">${priceLabel}</div>
+    </div>`;
+  }
+
+  cal.innerHTML = html;
+
+  cal.querySelectorAll(".day[data-date]").forEach((el) => {
+    el.addEventListener("click", () => {
+      const dateStr = el.dataset.date;
+      if (dateStr < todayStr) return;
+      if (selected.has(dateStr)) selected.delete(dateStr); else selected.add(dateStr);
+      renderCalendar();
+      updateEditBox();
+    });
+  });
+}
+
+function updateEditBox() {
+  const box = document.getElementById("editBox");
+  box.style.display = selected.size > 0 ? "block" : "none";
+  document.getElementById("selCount").textContent = selected.size;
+}
+
+async function applyPrice() {
+  const price = Number(document.getElementById("customPrice").value);
+  if (!(price > 0)) { showEditAlert("Informe um preço válido.", true); return; }
+
+  const rows = Array.from(selected).map((date) => ({ room_id: currentRoomId, date, price, is_blocked: false }));
+  const { error } = await villaSupabase.from("price_overrides").upsert(rows, { onConflict: "room_id,date" });
+  if (error) { showEditAlert("Erro: " + error.message, true); return; }
+  showEditAlert("Preço salvo.", false);
+  selected.clear();
+  await loadMonth();
+}
+
+async function blockSelected() {
+  const rows = Array.from(selected).map((date) => ({ room_id: currentRoomId, date, price: null, is_blocked: true }));
+  const { error } = await villaSupabase.from("price_overrides").upsert(rows, { onConflict: "room_id,date" });
+  if (error) { showEditAlert("Erro: " + error.message, true); return; }
+  showEditAlert("Datas bloqueadas.", false);
+  selected.clear();
+  await loadMonth();
+}
+
+async function resetSelected() {
+  const dates = Array.from(selected);
+  const { error } = await villaSupabase.from("price_overrides").delete().eq("room_id", currentRoomId).in("date", dates);
+  if (error) { showEditAlert("Erro: " + error.message, true); return; }
+  showEditAlert("Preço padrão restaurado para as datas selecionadas.", false);
+  selected.clear();
+  await loadMonth();
+}
+
+function showEditAlert(msg, isError) {
+  const box = document.getElementById("editAlert");
+  box.innerHTML = `<div class="alert ${isError ? "alert-danger" : "alert-success"}">${esc(msg)}</div>`;
+  setTimeout(() => { box.innerHTML = ""; }, 4000);
+}
+
+function esc(str) {
+  return String(str || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+init();
+</script>
+</body>
+</html>
