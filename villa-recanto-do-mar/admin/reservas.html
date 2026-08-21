@@ -59,7 +59,7 @@ async function load() {
 
   let query = villaSupabase
     .from("reservations")
-    .select("id,guest_name,guest_email,guest_phone,check_in,check_out,nights,total_price,deposit_amount,status,guest_marked_paid_at,confirmed_at,confirmed_by,created_at,rooms(name)")
+    .select("id,guest_name,guest_email,guest_phone,guest_count,children_ages,check_in,check_out,nights,total_price,deposit_amount,status,guest_marked_paid_at,confirmed_at,confirmed_by,created_at,rooms(name)")
     .order("created_at", { ascending: false });
 
   if (currentFilter !== "todas") query = query.eq("status", currentFilter);
@@ -114,10 +114,13 @@ function rowHtml(r) {
   } else if (r.status === "pix_confirmado") {
     actions = `<button class="btn btn-danger btn-sm" id="cancel-${r.id}">Cancelar</button>`;
   }
+  const children = Array.isArray(r.children_ages) ? r.children_ages : [];
+  const guestInfo = `${r.guest_count || 1} hóspede(s)` + (children.length ? ` · ${children.length} criança(s) (${children.join(", ")} anos)` : "");
+  const contact = [r.guest_email, r.guest_phone].filter(Boolean).join(" · ");
   return `
     <tr>
       <td>${statusBadge(r.status)}${notice}</td>
-      <td>${esc(r.guest_name)}<br><span class="help-text">${esc(r.guest_email)} · ${esc(r.guest_phone)}</span></td>
+      <td>${esc(r.guest_name)}<br><span class="help-text">${esc(contact)}</span><br><span class="help-text">${esc(guestInfo)}</span></td>
       <td>${esc(r.rooms ? r.rooms.name : "")}</td>
       <td>${formatDateBR(r.check_in)} – ${formatDateBR(r.check_out)} (${r.nights}n)</td>
       <td>${formatBRL(r.total_price)}</td>
