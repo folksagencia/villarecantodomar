@@ -30,6 +30,8 @@ module.exports = async (req, res) => {
   try {
     const body = typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {};
     const { room_id, check_in, check_out, guest_name, guest_email, guest_phone } = body;
+    const guest_count = Number(body.guest_count);
+    const children_ages = Array.isArray(body.children_ages) ? body.children_ages.map(Number) : [];
 
     // ---- validação básica dos dados enviados -----------------------------
     const errors = [];
@@ -39,8 +41,11 @@ module.exports = async (req, res) => {
     if (check_in && check_out && check_out <= check_in) errors.push("Check-out precisa ser depois do check-in.");
     if (check_in && check_in < todayISO()) errors.push("Não é possível reservar uma data no passado.");
     if (!guest_name || guest_name.trim().length < 2) errors.push("Nome do hóspede é obrigatório.");
-    if (!guest_email || !EMAIL_RE.test(guest_email)) errors.push("E-mail inválido.");
+    if (guest_email && !EMAIL_RE.test(guest_email)) errors.push("E-mail inválido.");
     if (!guest_phone || guest_phone.replace(/\D/g, "").length < 10) errors.push("Telefone/WhatsApp inválido.");
+    if (!Number.isInteger(guest_count) || guest_count < 1) errors.push("Número de hóspedes inválido.");
+    if (children_ages.length > guest_count) errors.push("Número de crianças não pode ser maior que o total de hóspedes.");
+    if (children_ages.some((a) => !Number.isInteger(a) || a < 0 || a > 17)) errors.push("Idade de criança inválida.");
 
     if (errors.length > 0) {
       res.status(400).json({ error: errors.join(" ") });
@@ -50,11 +55,15 @@ module.exports = async (req, res) => {
     // ---- busca o quarto (fonte da verdade do preço) -----------------------
     const rooms = await pgSelect(
       "rooms",
-      `id=eq.${encodeURIComponent(room_id)}&select=id,name,base_price,active`
+      `id=eq.${encodeURIComponent(room_id)}&select=id,name,base_price,active,capacity`
     );
     const room = Array.isArray(rooms) ? rooms[0] : null;
     if (!room || room.active !== true) {
       res.status(404).json({ error: "Quarto não encontrado ou indisponível." });
+      return;
+    }
+    if (guest_count > room.capacity) {
+      res.status(400).json({ error: `Este quarto acomoda no máximo ${room.capacity} pessoa(s).` });
       return;
     }
 
@@ -107,8 +116,10 @@ module.exports = async (req, res) => {
         id,
         room_id: room.id,
         guest_name: guest_name.trim(),
-        guest_email: guest_email.trim(),
+        guest_email: guest_email ? guest_email.trim() : null,
         guest_phone: guest_phone.trim(),
+        guest_count,
+        children_ages,
         check_in,
         check_out,
         nights: stay.nights,
