@@ -89,11 +89,32 @@ function render() {
       <label for="guestName">Nome completo</label>
       <input type="text" id="guestName" placeholder="Seu nome">
 
-      <label for="guestEmail">E-mail</label>
+      <label for="guestPhone">WhatsApp para contato</label>
+      <input type="tel" id="guestPhone" placeholder="(00) 00000-0000">
+
+      <label for="guestEmail">E-mail (opcional)</label>
       <input type="email" id="guestEmail" placeholder="voce@email.com">
 
-      <label for="guestPhone">WhatsApp</label>
-      <input type="tel" id="guestPhone" placeholder="(00) 00000-0000">
+      <div class="field-row">
+        <div>
+          <label for="guestCount">Nº de hóspedes</label>
+          <select id="guestCount"></select>
+        </div>
+        <div>
+          <label for="childCount">Crianças</label>
+          <select id="childCount">
+            <option value="0">Nenhuma</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+      </div>
+      <p class="help-text" id="capacityHint"></p>
+
+      <div id="childAgesWrap"></div>
 
       <div id="submitAlert"></div>
 
@@ -106,7 +127,45 @@ function render() {
   document.getElementById("checkout").addEventListener("change", onDatesChange);
   document.getElementById("submitBtn").addEventListener("click", onSubmit);
 
+  const guestCountSel = document.getElementById("guestCount");
+  const capacity = Math.max(1, Number(room.capacity) || 1);
+  guestCountSel.innerHTML = range(1, capacity).map((n) => `<option value="${n}">${n}</option>`).join("");
+  document.getElementById("capacityHint").textContent = `Este quarto acomoda até ${capacity} pessoa(s) no total (inclua as crianças na contagem).`;
+
+  document.getElementById("childCount").addEventListener("change", onChildCountChange);
+  renderChildAges(0);
+
   recalculate();
+}
+
+function range(start, end) {
+  const out = [];
+  for (let i = start; i <= end; i++) out.push(i);
+  return out;
+}
+
+function onChildCountChange() {
+  renderChildAges(Number(document.getElementById("childCount").value || 0));
+}
+
+function renderChildAges(count) {
+  const wrap = document.getElementById("childAgesWrap");
+  if (!count) {
+    wrap.innerHTML = "";
+    return;
+  }
+  const ageOptions = range(0, 17).map((a) => `<option value="${a}">${a === 0 ? "menos de 1 ano" : a + " anos"}</option>`).join("");
+  let html = '<div class="field-row" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));">';
+  for (let i = 1; i <= count; i++) {
+    html += `
+      <div>
+        <label for="childAge${i}">Idade da criança ${i}</label>
+        <select id="childAge${i}">${ageOptions}</select>
+      </div>
+    `;
+  }
+  html += "</div>";
+  wrap.innerHTML = html;
 }
 
 let lastStay = null;
@@ -183,13 +242,23 @@ async function onSubmit() {
   const guestName = document.getElementById("guestName").value.trim();
   const guestEmail = document.getElementById("guestEmail").value.trim();
   const guestPhone = document.getElementById("guestPhone").value.trim();
+  const guestCount = Number(document.getElementById("guestCount").value);
+  const childCount = Number(document.getElementById("childCount").value || 0);
+  const childrenAges = [];
+  for (let i = 1; i <= childCount; i++) {
+    childrenAges.push(Number(document.getElementById("childAge" + i).value));
+  }
 
   if (!lastStay) {
     submitAlert.innerHTML = '<div class="alert alert-danger">Escolha datas disponíveis antes de reservar.</div>';
     return;
   }
-  if (!guestName || !guestEmail || !guestPhone) {
-    submitAlert.innerHTML = '<div class="alert alert-danger">Preencha nome, e-mail e WhatsApp.</div>';
+  if (!guestName || !guestPhone) {
+    submitAlert.innerHTML = '<div class="alert alert-danger">Preencha nome e WhatsApp.</div>';
+    return;
+  }
+  if (childCount > guestCount) {
+    submitAlert.innerHTML = '<div class="alert alert-danger">O número de crianças não pode ser maior que o número total de hóspedes.</div>';
     return;
   }
 
@@ -210,6 +279,8 @@ async function onSubmit() {
         guest_name: guestName,
         guest_email: guestEmail,
         guest_phone: guestPhone,
+        guest_count: guestCount,
+        children_ages: childrenAges,
       }),
     });
     const data = await res.json();
