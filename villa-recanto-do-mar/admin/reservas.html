@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reservas — Painel Villa Recanto do Mar</title>
+<link rel="stylesheet" href="/assets/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="admin-shell">
+  <nav class="admin-sidebar" id="adminNav"></nav>
+  <main class="admin-main">
+    <h1 class="section-title">Reservas</h1>
+    <p class="section-sub">Confirme o pagamento do sinal depois de conferir o Pix recebido (extrato do banco ou comprovante no WhatsApp).</p>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+      <button class="btn btn-sm btn-secondary" data-filter="todas">Todas</button>
+      <button class="btn btn-sm btn-secondary" data-filter="aguardando_pix">Aguardando Pix</button>
+      <button class="btn btn-sm btn-secondary" data-filter="pix_confirmado">Confirmadas</button>
+      <button class="btn btn-sm btn-secondary" data-filter="cancelada">Canceladas</button>
+    </div>
+
+    <div id="actionAlert"></div>
+    <div class="table-wrap" id="table"></div>
+  </main>
+</div>
+
+<script src="/assets/supabase-client.js"></script>
+<script src="/assets/format.js"></script>
+<script src="/assets/admin-common.js"></script>
+<script>
+let currentFilter = "todas";
+let currentUserEmail = "";
+
+async function init() {
+  const session = await requireAdminAuth();
+  if (!session) return;
+  currentUserEmail = session.user.email;
+  renderAdminNav("reservas");
+
+  document.querySelectorAll("[data-filter]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      currentFilter = btn.dataset.filter;
+      document.querySelectorAll("[data-filter]").forEach((b) => b.classList.remove("btn-primary"));
+      btn.classList.add("btn-primary");
+      load();
+    });
+  });
+  document.querySelector('[data-filter="todas"]').classList.add("btn-primary");
+
+  load();
+}
+
+async function load() {
+  const table = document.getElementById("table");
+  table.innerHTML = '<div class="empty-state"><span class="spinner"></span></div>';
+
+  let query = villaSupabase
+    .from("reservations")
+    .select("id,guest_name,guest_email,guest_phone,check_in,check_out,nights,total_price,deposit_amount,status,guest_marked_paid_at,confirmed_at,confirmed_by,created_at,rooms(name)")
+    .order("created_at", { ascending: false });
+
+  if (currentFilter !== "todas") query = query.eq("status", currentFilter);
+
+  const { data, error } = await query;
+
+  if (error) {
+    table.innerHTML = '<div class="empty-state">Erro ao carregar reservas.</div>';
+    console.error(error);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    table.innerHTML = '<div class="empty-state">Nenhuma reserva encontrada.</div>';
+    return;
+  }
+
+  table.innerHTML = `
+    <table>
+      <thead>
+        <tr><th>Status</th><th>Hóspede</th><th>Quarto</th><th>Datas</th><th>Total</th><th>Sinal</th><th>Ações</th></tr>
+      </thead>
+      <tbody>
+        ${data.map(rowHtml).join("")}
+      </tbody>
+    </table>
+  `;
+
+  data.forEach((r) => {
+    const confirmBtn = document.getElementById("confirm-" + r.id);
+    if (confirmBtn) confirmBtn.addEventListener("click", () => confirmReservation(r.id));
+    const cancelBtn = document.getElementById("cancel-" + r.id);
+    if (cancelBtn) cancelBtn.addEventListener("click", () => cancelReservation(r.id));
+  });
+}
+
+function statusBadge(status) {
+  const map = {
+    aguardando_pix: '<span class="badge badge-warn">Aguardando Pix</span>',
+    pix_confirmado: '<span class="badge badge-success">Confirmada</span>',
+    cancelada: '<span class="badge badge-danger">Cancelada</span>',
+    concluida: '<span class="badge badge-neutral">Concluída</span>',
+  };
+  return map[status] || status;
+}
+
+function rowHtml(r) {
+  const notice = r.guest_marked_paid_at ? '<br><span class="help-text">✋ hóspede avisou que pagou</span>' : "";
+  let actions = "";
+  if (r.status === "aguardando_pix") {
+    actions = `<button class="btn btn-primary btn-sm" id="confirm-${r.id}">Confirmar Pix</button> <button class="btn btn-danger btn-sm" id="cancel-${r.id}">Cancelar</button>`;
+  } else if (r.status === "pix_confirmado") {
+    actions = `<button class="btn btn-danger btn-sm" id="cancel-${r.id}">Cancelar</button>`;
+  }
+  return `
+    <tr>
+      <td>${statusBadge(r.status)}${notice}</td>
+      <td>${esc(r.guest_name)}<br><span class="help-text">${esc(r.guest_email)} · ${esc(r.guest_phone)}</span></td>
+      <td>${esc(r.rooms ? r.rooms.name : "")}</td>
+      <td>${formatDateBR(r.check_in)} – ${formatDateBR(r.check_out)} (${r.nights}n)</td>
+      <td>${formatBRL(r.total_price)}</td>
+      <td>${formatBRL(r.deposit_amount)}</td>
+      <td>${actions}</td>
+    </tr>
+  `;
+}
+
+async function confirmReservation(id) {
+  if (!confirm("Confirmar que o sinal via Pix foi recebido para esta reserva?")) return;
+  const { error } = await villaSupabase
+    .from("reservations")
+    .update({ status: "pix_confirmado", confirmed_at: new Date().toISOString(), confirmed_by: currentUserEmail })
+    .eq("id", id);
+
+  showActionResult(error, "Reserva confirmada.");
+  load();
+}
+
+async function cancelReservation(id) {
+  if (!confirm("Cancelar esta reserva?")) return;
+  const { error } = await villaSupabase.from("reservations").update({ status: "cancelada" }).eq("id", id);
+  showActionResult(error, "Reserva cancelada.");
+  load();
+}
+
+function showActionResult(error, successMsg) {
+  const box = document.getElementById("actionAlert");
+  box.innerHTML = error
+    ? `<div class="alert alert-danger">Erro: ${esc(error.message)}</div>`
+    : `<div class="alert alert-success">${successMsg}</div>`;
+  setTimeout(() => { box.innerHTML = ""; }, 4000);
+}
+
+function esc(str) {
+  return String(str || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+init();
+</script>
+</body>
+</html>

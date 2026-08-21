@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Reservar — Villa Recanto do Mar</title>
+<link rel="stylesheet" href="/assets/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="/index.html">Villa Recanto do Mar<small>Reservas diretas</small></a>
+  </div>
+</header>
+
+<div class="container-narrow" id="page" style="padding-top:28px;padding-bottom:60px;">
+  <div class="empty-state"><span class="spinner"></span><p>Carregando…</p></div>
+</div>
+
+<script src="/assets/supabase-client.js"></script>
+<script src="/assets/format.js"></script>
+<script src="/lib/pricing.js"></script>
+<script src="/assets/session.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const slug = params.get("slug");
+let room = null;
+
+async function init() {
+  const page = document.getElementById("page");
+
+  if (!slug) {
+    page.innerHTML = '<div class="empty-state">Quarto não especificado.</div>';
+    return;
+  }
+
+  const { data, error } = await villaSupabase
+    .from("rooms")
+    .select("id,slug,name,description,capacity,base_price,photos")
+    .eq("slug", slug)
+    .eq("active", true)
+    .maybeSingle();
+
+  if (error || !data) {
+    page.innerHTML = '<div class="empty-state">Este quarto não foi encontrado ou não está mais disponível.</div>';
+    return;
+  }
+
+  room = data;
+  logVillaEvent({ type: "view", room_id: room.id, stage: "viu_quarto" });
+  render();
+}
+
+function render() {
+  const page = document.getElementById("page");
+  const photos = Array.isArray(room.photos) && room.photos.length > 0 ? room.photos : [];
+  const gallery = photos.length
+    ? `<div class="photo" style="aspect-ratio:16/9;border-radius:12px;overflow:hidden;background-image:url('${esc(photos[0])}');background-size:cover;background-position:center;margin-bottom:18px;"></div>`
+    : "";
+
+  const today = todayISODate();
+  const minCheckout = addDaysISO(today, 1);
+
+  page.innerHTML = `
+    ${gallery}
+    <h1 class="section-title">${esc(room.name)}</h1>
+    <p class="section-sub">${esc(room.description || "")} · Capacidade: ${room.capacity} pessoa(s)</p>
+
+    <div class="card"><div class="card-body">
+      <div class="field-row">
+        <div>
+          <label for="checkin">Check-in</label>
+          <input type="date" id="checkin" min="${today}" value="${today}">
+        </div>
+        <div>
+          <label for="checkout">Check-out</label>
+          <input type="date" id="checkout" min="${minCheckout}" value="${minCheckout}">
+        </div>
+      </div>
+
+      <div id="priceSummary" style="margin-top:16px;"></div>
+      <div id="calcAlert"></div>
+    </div></div>
+
+    <div class="card" style="margin-top:20px;"><div class="card-body">
+      <h3 style="margin-top:0;">Seus dados</h3>
+      <label for="guestName">Nome completo</label>
+      <input type="text" id="guestName" placeholder="Seu nome">
+
+      <label for="guestEmail">E-mail</label>
+      <input type="email" id="guestEmail" placeholder="voce@email.com">
+
+      <label for="guestPhone">WhatsApp</label>
+      <input type="tel" id="guestPhone" placeholder="(00) 00000-0000">
+
+      <div id="submitAlert"></div>
+
+      <button class="btn btn-primary btn-block" id="submitBtn" style="margin-top:20px;">Reservar e gerar Pix do sinal</button>
+      <p class="help-text" style="text-align:center;margin-top:10px;">Você paga 30% agora via Pix para garantir a reserva. O restante é pago no check-in (débito, crédito, Pix ou crédito em até 3x).</p>
+    </div></div>
+  `;
+
+  document.getElementById("checkin").addEventListener("change", onDatesChange);
+  document.getElementById("checkout").addEventListener("change", onDatesChange);
+  document.getElementById("submitBtn").addEventListener("click", onSubmit);
+
+  recalculate();
+}
+
+let lastStay = null;
+
+async function recalculate() {
+  const checkin = document.getElementById("checkin").value;
+  const checkout = document.getElementById("checkout").value;
+  const summary = document.getElementById("priceSummary");
+  const alertBox = document.getElementById("calcAlert");
+  alertBox.innerHTML = "";
+  lastStay = null;
+
+  if (!checkin || !checkout || checkout <= checkin) {
+    summary.innerHTML = "";
+    return;
+  }
+
+  summary.innerHTML = '<span class="spinner"></span>';
+
+  const { data: overrides, error } = await villaSupabase
+    .from("price_overrides")
+    .select("date,price,is_blocked")
+    .eq("room_id", room.id)
+    .gte("date", checkin)
+    .lt("date", checkout);
+
+  if (error) {
+    summary.innerHTML = "";
+    alertBox.innerHTML = '<div class="alert alert-danger">Não foi possível calcular o preço agora.</div>';
+    return;
+  }
+
+  const stay = VillaPricing.calculateStay({
+    checkIn: checkin,
+    checkOut: checkout,
+    basePrice: room.base_price,
+    overrides: overrides || [],
+    depositPercent: 30,
+  });
+
+  lastStay = stay;
+
+  if (stay.blockedDates.length > 0) {
+    summary.innerHTML = "";
+    alertBox.innerHTML = `<div class="alert alert-danger">Datas indisponíveis nesse período (${stay.blockedDates.map(formatDateBR).join(", ")}). Escolha outro período.</div>`;
+    lastStay = null;
+    return;
+  }
+
+  summary.innerHTML = `
+    <div class="alert alert-info" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+      <span>${stay.nights} noite(s)</span>
+      <span>Total: <strong>${formatBRL(stay.totalPrice)}</strong></span>
+      <span>Sinal (30%) hoje: <strong>${formatBRL(stay.depositAmount)}</strong></span>
+    </div>
+  `;
+}
+
+function onDatesChange() {
+  const checkin = document.getElementById("checkin");
+  const checkout = document.getElementById("checkout");
+  const minCheckout = addDaysISO(checkin.value, 1);
+  checkout.min = minCheckout;
+  if (checkout.value <= checkin.value) checkout.value = minCheckout;
+  recalculate();
+}
+
+async function onSubmit() {
+  const submitAlert = document.getElementById("submitAlert");
+  submitAlert.innerHTML = "";
+
+  const checkin = document.getElementById("checkin").value;
+  const checkout = document.getElementById("checkout").value;
+  const guestName = document.getElementById("guestName").value.trim();
+  const guestEmail = document.getElementById("guestEmail").value.trim();
+  const guestPhone = document.getElementById("guestPhone").value.trim();
+
+  if (!lastStay) {
+    submitAlert.innerHTML = '<div class="alert alert-danger">Escolha datas disponíveis antes de reservar.</div>';
+    return;
+  }
+  if (!guestName || !guestEmail || !guestPhone) {
+    submitAlert.innerHTML = '<div class="alert alert-danger">Preencha nome, e-mail e WhatsApp.</div>';
+    return;
+  }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Reservando…';
+
+  logVillaEvent({ type: "funnel", room_id: room.id, stage: "iniciou_reserva" });
+
+  try {
+    const res = await fetch("/api/create-reservation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        room_id: room.id,
+        check_in: checkin,
+        check_out: checkout,
+        guest_name: guestName,
+        guest_email: guestEmail,
+        guest_phone: guestPhone,
+      }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      submitAlert.innerHTML = `<div class="alert alert-danger">${esc(data.error || "Não foi possível reservar.")}</div>`;
+      btn.disabled = false;
+      btn.innerHTML = "Reservar e gerar Pix do sinal";
+      return;
+    }
+
+    logVillaEvent({ type: "funnel", room_id: room.id, stage: "gerou_pix" });
+    location.href = "/reserva.html?id=" + encodeURIComponent(data.id);
+  } catch (e) {
+    console.error(e);
+    submitAlert.innerHTML = '<div class="alert alert-danger">Erro de conexão. Tente novamente.</div>';
+    btn.disabled = false;
+    btn.innerHTML = "Reservar e gerar Pix do sinal";
+  }
+}
+
+function esc(str) {
+  return String(str || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+init();
+</script>
+</body>
+</html>

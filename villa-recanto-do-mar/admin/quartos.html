@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Quartos — Painel Villa Recanto do Mar</title>
+<link rel="stylesheet" href="/assets/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="admin-shell">
+  <nav class="admin-sidebar" id="adminNav"></nav>
+  <main class="admin-main">
+    <h1 class="section-title">Quartos</h1>
+    <p class="section-sub">Cadastre os quartos, fotos, descrição e o preço padrão por noite.</p>
+
+    <div class="table-wrap" id="table"></div>
+
+    <h3 style="margin-top:32px;" id="formTitle">Novo quarto</h3>
+    <div class="card"><div class="card-body">
+      <input type="hidden" id="roomId">
+
+      <label for="name">Nome do quarto</label>
+      <input type="text" id="name" placeholder="Ex: Quarto Vista Mar">
+
+      <label for="slug">Identificador na URL (slug)</label>
+      <input type="text" id="slug" placeholder="quarto-vista-mar">
+      <p class="help-text">Gerado automaticamente a partir do nome — só edite se quiser mudar o link do quarto.</p>
+
+      <label for="description">Descrição</label>
+      <textarea id="description" rows="3" placeholder="O que tem nesse quarto, vista, cama, etc."></textarea>
+
+      <div class="field-row">
+        <div>
+          <label for="capacity">Capacidade (pessoas)</label>
+          <input type="number" id="capacity" min="1" value="2">
+        </div>
+        <div>
+          <label for="basePrice">Preço padrão / noite (R$)</label>
+          <input type="number" id="basePrice" min="0" step="0.01" placeholder="250.00">
+        </div>
+      </div>
+
+      <label><input type="checkbox" id="active" checked style="width:auto;display:inline-block;"> Quarto visível no site</label>
+
+      <label for="photoInput">Fotos</label>
+      <input type="file" id="photoInput" accept="image/*" multiple>
+      <div class="photo-thumb-row" id="photoList"></div>
+
+      <div id="formAlert"></div>
+
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button class="btn btn-primary" id="saveBtn">Salvar quarto</button>
+        <button class="btn btn-secondary" id="clearBtn">Limpar / novo quarto</button>
+      </div>
+    </div></div>
+  </main>
+</div>
+
+<script src="/assets/supabase-client.js"></script>
+<script src="/assets/format.js"></script>
+<script src="/assets/admin-common.js"></script>
+<script>
+let rooms = [];
+let currentPhotos = [];
+
+async function init() {
+  const session = await requireAdminAuth();
+  if (!session) return;
+  renderAdminNav("quartos");
+
+  document.getElementById("name").addEventListener("input", (e) => {
+    if (!document.getElementById("roomId").value) {
+      document.getElementById("slug").value = slugify(e.target.value);
+    }
+  });
+  document.getElementById("saveBtn").addEventListener("click", saveRoom);
+  document.getElementById("clearBtn").addEventListener("click", clearForm);
+  document.getElementById("photoInput").addEventListener("change", uploadPhotos);
+
+  await load();
+}
+
+function slugify(text) {
+  return text
+    .toLowerCase()
+    .normalize("NFD").replace(/[̀-ͯ]/g, "") // remove acentos (ã -> a, ç -> c, etc.)
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+async function load() {
+  const { data, error } = await villaSupabase.from("rooms").select("*").order("sort_order", { ascending: true });
+  const table = document.getElementById("table");
+  if (error) { table.innerHTML = '<div class="empty-state">Erro ao carregar quartos.</div>'; return; }
+  rooms = data || [];
+
+  if (rooms.length === 0) {
+    table.innerHTML = '<div class="empty-state">Nenhum quarto cadastrado ainda — use o formulário abaixo.</div>';
+    return;
+  }
+
+  table.innerHTML = `
+    <table>
+      <thead><tr><th>Quarto</th><th>Preço padrão</th><th>Visível</th><th>Ações</th></tr></thead>
+      <tbody>
+        ${rooms.map((r) => `
+          <tr>
+            <td>${esc(r.name)}<br><span class="help-text">/quarto.html?slug=${esc(r.slug)}</span></td>
+            <td>${formatBRL(r.base_price)}</td>
+            <td>${r.active ? '<span class="badge badge-success">Sim</span>' : '<span class="badge badge-neutral">Não</span>'}</td>
+            <td>
+              <button class="btn btn-secondary btn-sm" onclick="editRoom('${r.id}')">Editar</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteRoom('${r.id}')">Excluir</button>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+function editRoom(id) {
+  const r = rooms.find((x) => x.id === id);
+  if (!r) return;
+  document.getElementById("formTitle").textContent = "Editando: " + r.name;
+  document.getElementById("roomId").value = r.id;
+  document.getElementById("name").value = r.name;
+  document.getElementById("slug").value = r.slug;
+  document.getElementById("description").value = r.description || "";
+  document.getElementById("capacity").value = r.capacity;
+  document.getElementById("basePrice").value = r.base_price;
+  document.getElementById("active").checked = r.active;
+  currentPhotos = Array.isArray(r.photos) ? r.photos.slice() : [];
+  renderPhotoList();
+  window.scrollTo({ top: document.getElementById("formTitle").offsetTop - 20, behavior: "smooth" });
+}
+
+function clearForm() {
+  document.getElementById("formTitle").textContent = "Novo quarto";
+  document.getElementById("roomId").value = "";
+  document.getElementById("name").value = "";
+  document.getElementById("slug").value = "";
+  document.getElementById("description").value = "";
+  document.getElementById("capacity").value = 2;
+  document.getElementById("basePrice").value = "";
+  document.getElementById("active").checked = true;
+  currentPhotos = [];
+  renderPhotoList();
+  document.getElementById("formAlert").innerHTML = "";
+}
+
+function renderPhotoList() {
+  const el = document.getElementById("photoList");
+  el.innerHTML = currentPhotos.map((url, i) => `
+    <div class="photo-thumb-wrap">
+      <img class="photo-thumb" src="${esc(url)}">
+      <button class="photo-remove-btn" type="button" onclick="removePhoto(${i})">×</button>
+    </div>
+  `).join("");
+}
+
+function removePhoto(i) {
+  currentPhotos.splice(i, 1);
+  renderPhotoList();
+}
+
+async function uploadPhotos(e) {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
+  const alertBox = document.getElementById("formAlert");
+  alertBox.innerHTML = '<div class="alert alert-info"><span class="spinner"></span> Enviando fotos…</div>';
+
+  const slugPrefix = document.getElementById("slug").value || "quarto";
+
+  for (const file of files) {
+    const path = `${slugPrefix}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const { error } = await villaSupabase.storage.from("room-photos").upload(path, file, { upsert: false });
+    if (error) {
+      alertBox.innerHTML = `<div class="alert alert-danger">Erro ao enviar ${esc(file.name)}: ${esc(error.message)}</div>`;
+      continue;
+    }
+    const { data: pub } = villaSupabase.storage.from("room-photos").getPublicUrl(path);
+    currentPhotos.push(pub.publicUrl);
+  }
+
+  alertBox.innerHTML = '<div class="alert alert-success">Fotos enviadas.</div>';
+  renderPhotoList();
+  e.target.value = "";
+}
+
+async function saveRoom() {
+  const alertBox = document.getElementById("formAlert");
+  alertBox.innerHTML = "";
+
+  const id = document.getElementById("roomId").value;
+  const payload = {
+    name: document.getElementById("name").value.trim(),
+    slug: document.getElementById("slug").value.trim(),
+    description: document.getElementById("description").value.trim(),
+    capacity: Number(document.getElementById("capacity").value) || 1,
+    base_price: Number(document.getElementById("basePrice").value),
+    active: document.getElementById("active").checked,
+    photos: currentPhotos,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (!payload.name || !payload.slug || !(payload.base_price > 0)) {
+    alertBox.innerHTML = '<div class="alert alert-danger">Preencha nome, slug e um preço padrão válido.</div>';
+    return;
+  }
+
+  const query = id
+    ? villaSupabase.from("rooms").update(payload).eq("id", id)
+    : villaSupabase.from("rooms").insert([payload]);
+
+  const { error } = await query;
+
+  if (error) {
+    alertBox.innerHTML = `<div class="alert alert-danger">Erro ao salvar: ${esc(error.message)}</div>`;
+    return;
+  }
+
+  alertBox.innerHTML = '<div class="alert alert-success">Quarto salvo com sucesso.</div>';
+  clearForm();
+  await load();
+}
+
+async function deleteRoom(id) {
+  const room = rooms.find((r) => r.id === id);
+  if (!confirm(`Excluir o quarto "${room ? room.name : ""}"? Isso não pode ser desfeito. Reservas antigas desse quarto continuam guardadas.`)) return;
+  const { error } = await villaSupabase.from("rooms").delete().eq("id", id);
+  if (error) {
+    alert("Erro ao excluir: " + error.message + "\n\nDica: se houver reservas ligadas a este quarto, considere só desmarcar 'visível no site' em vez de excluir.");
+    return;
+  }
+  await load();
+}
+
+function esc(str) {
+  return String(str || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+init();
+</script>
+</body>
+</html>
