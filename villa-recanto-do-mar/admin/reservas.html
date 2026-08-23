@@ -187,7 +187,7 @@ function renderTable() {
   table.innerHTML = `
     <table>
       <thead>
-        <tr><th>Status</th><th>Hóspede</th><th>Quarto</th><th>Datas</th><th>Total</th><th>Sinal</th><th>Ações</th></tr>
+        <tr><th>Status</th><th>Hóspede</th><th>Quarto</th><th>Datas</th><th>Total</th><th>Sinal</th><th>Registrado em</th><th>Ações</th></tr>
       </thead>
       <tbody>
         ${data.map(rowHtml).join("")}
@@ -235,6 +235,7 @@ function rowHtml(r) {
       <td>${formatDateBR(r.check_in)} – ${formatDateBR(r.check_out)} (${r.nights}n)</td>
       <td>${formatBRL(r.total_price)}</td>
       <td>${formatBRL(r.deposit_amount)}</td>
+      <td><span class="help-text">${formatDateTimeBR(r.created_at)}</span></td>
       <td>${actions}</td>
     </tr>
   `;

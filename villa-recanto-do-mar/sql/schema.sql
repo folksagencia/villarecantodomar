@@ -58,6 +58,21 @@ create table if not exists price_overrides (
 comment on table price_overrides is 'Preço específico ou bloqueio de disponibilidade para uma data de um quarto.';
 
 -- ----------------------------------------------------------------------------
+-- Tabela: property_photos (fotos da área comum / serviços da pousada,
+-- não ligadas a um quarto específico — aparecem num carrossel na home)
+-- ----------------------------------------------------------------------------
+create table if not exists property_photos (
+  id uuid primary key default gen_random_uuid(),
+  url text not null,
+  caption text,
+  sort_order int not null default 0,
+  active boolean not null default true,
+  created_at timestamptz not null default now()
+);
+
+comment on table property_photos is 'Fotos gerais da pousada (área comum, serviços) exibidas na página inicial.';
+
+-- ----------------------------------------------------------------------------
 -- Tabela: reservations (reservas)
 -- ----------------------------------------------------------------------------
 create type reservation_status as enum (
@@ -137,6 +152,7 @@ create index if not exists idx_funnel_events_stage on funnel_events(stage, creat
 
 alter table rooms enable row level security;
 alter table price_overrides enable row level security;
+alter table property_photos enable row level security;
 alter table reservations enable row level security;
 alter table room_views enable row level security;
 alter table funnel_events enable row level security;
@@ -160,6 +176,18 @@ create policy "price_overrides_public_select" on price_overrides
   using (true);
 
 create policy "price_overrides_admin_write" on price_overrides
+  for all
+  to authenticated
+  using (true)
+  with check (true);
+
+-- --- property_photos: leitura pública das ativas; escrita só autenticado ----
+create policy "property_photos_public_select" on property_photos
+  for select
+  to anon, authenticated
+  using (active = true or auth.role() = 'authenticated');
+
+create policy "property_photos_admin_write" on property_photos
   for all
   to authenticated
   using (true)

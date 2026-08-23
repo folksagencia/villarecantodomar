@@ -21,6 +21,7 @@
 
 <script src="/assets/supabase-client.js"></script>
 <script src="/assets/format.js"></script>
+<script src="/assets/gallery.js"></script>
 <script src="/lib/pricing.js"></script>
 <script src="/assets/session.js"></script>
 <script>
@@ -56,15 +57,12 @@ async function init() {
 function render() {
   const page = document.getElementById("page");
   const photos = Array.isArray(room.photos) && room.photos.length > 0 ? room.photos : [];
-  const gallery = photos.length
-    ? `<div class="photo" style="aspect-ratio:16/9;border-radius:12px;overflow:hidden;background-image:url('${esc(photos[0])}');background-size:cover;background-position:center;margin-bottom:18px;"></div>`
-    : "";
 
   const today = todayISODate();
   const minCheckout = addDaysISO(today, 1);
 
   page.innerHTML = `
-    ${gallery}
+    <div id="roomGallery" style="margin-bottom:18px;"></div>
     <h1 class="section-title">${esc(room.name)}</h1>
     <p class="section-sub">${esc(room.description || "")} · Capacidade: ${room.capacity} pessoa(s)</p>
 
@@ -122,6 +120,8 @@ function render() {
       <p class="help-text" style="text-align:center;margin-top:10px;">Você paga 30% agora via Pix para garantir a reserva. O restante é pago no check-in (débito, crédito, Pix ou crédito em até 3x).</p>
     </div></div>
   `;
+
+  renderGallery("roomGallery", photos, { alt: room.name });
 
   document.getElementById("checkin").addEventListener("change", onDatesChange);
   document.getElementById("checkout").addEventListener("change", onDatesChange);

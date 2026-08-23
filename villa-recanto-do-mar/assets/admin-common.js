@@ -28,6 +28,7 @@ function renderAdminNav(activeKey) {
     { key: "reservas", href: "/admin/reservas.html", label: "Reservas" },
     { key: "quartos", href: "/admin/quartos.html", label: "Quartos" },
     { key: "precos", href: "/admin/precos.html", label: "Preços & disponibilidade" },
+    { key: "fotos", href: "/admin/fotos.html", label: "Fotos da pousada" },
   ];
 
   el.innerHTML =

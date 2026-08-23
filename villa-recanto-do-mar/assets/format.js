@@ -28,3 +28,14 @@ function addDaysISO(isoDate, days) {
   d.setUTCDate(d.getUTCDate() + days);
   return d.toISOString().slice(0, 10);
 }
+
+function formatDateTimeBR(isoTimestamp) {
+  // Sempre mostra no horário de Brasília, independente do fuso de quem
+  // está olhando o painel (ex: admin acessando de outro estado/país).
+  if (!isoTimestamp) return "";
+  const d = new Date(isoTimestamp);
+  if (isNaN(d.getTime())) return "";
+  const datePart = d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
+  const timePart = d.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
+  return `${datePart} ${timePart}`;
+}

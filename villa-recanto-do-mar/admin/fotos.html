@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fotos da pousada — Painel Villa Recanto do Mar</title>
+<link rel="stylesheet" href="/assets/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="admin-shell">
+  <nav class="admin-sidebar" id="adminNav"></nav>
+  <main class="admin-main">
+    <h1 class="section-title">Fotos da pousada</h1>
+    <p class="section-sub">Fotos da área comum, piscina, café da manhã, serviços etc. — aparecem num carrossel único na página inicial do site (não são fotos de um quarto específico; para isso, use a aba "Quartos").</p>
+
+    <div class="card" style="max-width:640px;margin-bottom:24px;"><div class="card-body">
+      <label for="photoInput">Adicionar fotos</label>
+      <input type="file" id="photoInput" accept="image/*" multiple>
+      <p class="help-text">Você pode escolher várias de uma vez. Dica: fotos muito grandes deixam o site lento — se puder, use imagens já redimensionadas (até ~1600px de largura) antes de enviar.</p>
+      <div id="uploadAlert"></div>
+    </div></div>
+
+    <div id="list"></div>
+  </main>
+</div>
+
+<script src="/assets/supabase-client.js"></script>
+<script src="/assets/format.js"></script>
+<script src="/assets/admin-common.js"></script>
+<script>
+let photos = [];
+
+async function init() {
+  const session = await requireAdminAuth();
+  if (!session) return;
+  renderAdminNav("fotos");
+
+  document.getElementById("photoInput").addEventListener("change", uploadPhotos);
+
+  await load();
+}
+
+async function load() {
+  const list = document.getElementById("list");
+  list.innerHTML = '<div class="empty-state"><span class="spinner"></span></div>';
+
+  const { data, error } = await villaSupabase.from("property_photos").select("*").order("sort_order", { ascending: true });
+  if (error) {
+    list.innerHTML = '<div class="empty-state">Erro ao carregar fotos.</div>';
+    console.error(error);
+    return;
+  }
+  photos = data || [];
+  render();
+}
+
+function render() {
+  const list = document.getElementById("list");
+  if (photos.length === 0) {
+    list.innerHTML = '<div class="empty-state">Nenhuma foto cadastrada ainda — use o campo acima para adicionar.</div>';
+    return;
+  }
+
+  list.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">
+      ${photos.map((p, i) => `
+        <div class="card" data-id="${p.id}">
+          <div class="photo" style="aspect-ratio:16/9;background-image:url('${esc(p.url)}');background-size:cover;background-position:center;"></div>
+          <div class="card-body">
+            <label style="margin-top:0;">Legenda (opcional)</label>
+            <input type="text" class="captionInput" placeholder="Ex: Piscina, Café da manhã, Área de lazer..." value="${esc(p.caption || "")}">
+            <label style="margin-top:10px;"><input type="checkbox" class="activeCheck" ${p.active ? "checked" : ""} style="width:auto;display:inline-block;"> Visível no site</label>
+            <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;">
+              <button class="btn btn-secondary btn-sm" onclick="moveUp(${i})" ${i === 0 ? "disabled" : ""}>↑ Subir</button>
+              <button class="btn btn-secondary btn-sm" onclick="moveDown(${i})" ${i === photos.length - 1 ? "disabled" : ""}>↓ Descer</button>
+              <button class="btn btn-primary btn-sm" onclick="savePhoto('${p.id}', this)">Salvar</button>
+              <button class="btn btn-danger btn-sm" onclick="deletePhoto('${p.id}')">Excluir</button>
+            </div>
+            <div class="saveAlert"></div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+async function savePhoto(id, btnEl) {
+  const card = btnEl.closest(".card");
+  const caption = card.querySelector(".captionInput").value.trim();
+  const active = card.querySelector(".activeCheck").checked;
+  const { error } = await villaSupabase.from("property_photos").update({ caption, active }).eq("id", id);
+  const alertBox = card.querySelector(".saveAlert");
+  alertBox.innerHTML = error
+    ? `<div class="alert alert-danger">Erro: ${esc(error.message)}</div>`
+    : '<div class="alert alert-success">Salvo.</div>';
+  setTimeout(() => { alertBox.innerHTML = ""; }, 3000);
+  const local = photos.find((p) => p.id === id);
+  if (local) { local.caption = caption; local.active = active; }
+}
+
+async function moveUp(i) {
+  if (i === 0) return;
+  await swapOrder(i, i - 1);
+}
+
+async function moveDown(i) {
+  if (i === photos.length - 1) return;
+  await swapOrder(i, i + 1);
+}
+
+async function swapOrder(i, j) {
+  const a = photos[i], b = photos[j];
+  const aOrder = a.sort_order, bOrder = b.sort_order;
+  const { error } = await villaSupabase.from("property_photos").upsert([
+    { id: a.id, sort_order: bOrder },
+    { id: b.id, sort_order: aOrder },
+  ]);
+  if (error) { alert("Erro ao reordenar: " + error.message); return; }
+  await load();
+}
+
+async function deletePhoto(id) {
+  if (!confirm("Excluir esta foto? Isso não pode ser desfeito.")) return;
+  const { error } = await villaSupabase.from("property_photos").delete().eq("id", id);
+  if (error) { alert("Erro ao excluir: " + error.message); return; }
+  await load();
+}
+
+async function uploadPhotos(e) {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
+  const alertBox = document.getElementById("uploadAlert");
+  alertBox.innerHTML = '<div class="alert alert-info"><span class="spinner"></span> Enviando fotos…</div>';
+
+  let nextOrder = photos.length > 0 ? Math.max(...photos.map((p) => p.sort_order)) + 1 : 0;
+
+  for (const file of files) {
+    const path = `pousada/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const { error: uploadError } = await villaSupabase.storage.from("room-photos").upload(path, file, { upsert: false });
+    if (uploadError) {
+      alertBox.innerHTML = `<div class="alert alert-danger">Erro ao enviar ${esc(file.name)}: ${esc(uploadError.message)}</div>`;
+      continue;
+    }
+    const { data: pub } = villaSupabase.storage.from("room-photos").getPublicUrl(path);
+    const { error: insertError } = await villaSupabase.from("property_photos").insert([
+      { url: pub.publicUrl, caption: "", sort_order: nextOrder, active: true },
+    ]);
+    if (insertError) {
+      alertBox.innerHTML = `<div class="alert alert-danger">Erro ao salvar ${esc(file.name)}: ${esc(insertError.message)}</div>`;
+      continue;
+    }
+    nextOrder++;
+  }
+
+  alertBox.innerHTML = '<div class="alert alert-success">Fotos enviadas.</div>';
+  e.target.value = "";
+  await load();
+}
+
+function esc(str) {
+  return String(str || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+init();
+</script>
+</body>
+</html>
