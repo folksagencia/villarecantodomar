@@ -2,10 +2,14 @@
 // externas, sem depender de nada além do CSS em style.css).
 //
 // Uso:
-//   renderGallery("meuContainerId", arrayDeFotos, { alt: "...", showCaption: true })
+//   renderGallery("meuContainerId", arrayDeFotos, { alt: "...", showCaption: true, autoplay: 4500 })
 //
 // `arrayDeFotos` aceita tanto uma lista de URLs simples (string) quanto uma
 // lista de objetos { url, caption }.
+//
+// `opts.autoplay`: intervalo em ms pra passar de foto sozinho (ex: 4500).
+// Se omitido, não passa sozinho. Pausa quando o dedo/mouse está em cima e
+// respeita "reduzir movimento" do sistema operacional da pessoa.
 //
 // Cuidado com performance: só a PRIMEIRA foto carrega imediatamente. As
 // miniaturas usam loading="lazy" (o navegador só baixa quando estão perto de
@@ -86,6 +90,34 @@ function renderGallery(containerId, photos, opts) {
     if (Math.abs(dx) > 40) show(current + (dx < 0 ? 1 : -1));
     touchStartX = null;
   }, { passive: true });
+
+  // avançar sozinho (autoplay), com pausa quando a pessoa interage
+  const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (opts.autoplay && photos.length > 1 && !prefersReducedMotion) {
+    let timer = null;
+    const start = () => {
+      stop();
+      timer = setInterval(() => show(current + 1), opts.autoplay);
+    };
+    const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+
+    // só começa a rodar quando o carrossel está visível na tela — evita
+    // gastar processamento/rede com carrosséis fora da vista.
+    if (window.IntersectionObserver) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => { if (entry.isIntersecting) start(); else stop(); });
+      }, { threshold: 0.25 });
+      io.observe(container);
+    } else {
+      start();
+    }
+
+    container.addEventListener("mouseenter", stop);
+    container.addEventListener("mouseleave", start);
+    container.addEventListener("touchstart", stop, { passive: true });
+    container.addEventListener("focusin", stop);
+    container.addEventListener("focusout", start);
+  }
 }
 
 function escAttr(str) {

@@ -9,6 +9,7 @@
   --teal-900: #18384c;
   --teal-700: #2e6285;
   --teal-500: #4088b8;
+  --teal-300: #7fb0d1; /* tom intermediário, usado só na onda animada da home */
   --teal-100: #daebf7;
   --sand-500: #e09818;
   --sand-700: #9e6b11;
@@ -158,15 +159,38 @@ a { color: var(--teal-700); }
 .room-card { display: flex; flex-direction: column; }
 
 .room-card .photo {
+  position: relative;
   aspect-ratio: 4 / 3;
   background: var(--teal-100) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%231c9484' stroke-width='1'%3E%3Cpath d='M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6'/%3E%3C/svg%3E") center/48px no-repeat;
   background-size: cover;
   background-position: center;
 }
 
+.room-card-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: var(--success);
+  color: var(--white);
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 5px 11px;
+  border-radius: 6px;
+  letter-spacing: 0.01em;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+}
+
 .room-card h3 { margin: 0 0 4px; font-size: 1.1rem; }
-.room-card p { margin: 0 0 12px; color: var(--ink-600); font-size: 0.92rem; }
-.price-tag { font-weight: 700; color: var(--teal-700); font-size: 1.05rem; }
+.room-card p { margin: 0 0 10px; color: var(--ink-600); font-size: 0.92rem; }
+.room-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--ink-600);
+  font-size: 0.82rem;
+  margin: -2px 0 12px;
+}
+.price-tag { font-weight: 800; color: var(--teal-700); font-size: 1.15rem; }
 .price-tag small { font-weight: 400; color: var(--ink-600); font-size: 0.8rem; }
 
 /* ---------- formulários ---------- */
@@ -214,6 +238,7 @@ input:focus, textarea:focus, select:focus {
 .alert-danger { background: var(--danger-bg); color: var(--danger); }
 .alert-success { background: var(--success-bg); color: var(--success); }
 .alert-info { background: var(--teal-100); color: var(--teal-900); }
+.alert-warn { background: var(--warn-bg); color: var(--warn); }
 
 /* ---------- painel admin ---------- */
 .admin-shell { display: flex; min-height: 100vh; }
@@ -282,8 +307,11 @@ tr:last-child td { border-bottom: none; }
 .price-calendar .day.blocked { background: var(--danger-bg); color: var(--danger); }
 .price-calendar .day.custom-price { background: var(--sand-100); border-color: var(--sand-500); }
 .price-calendar .day.selected { outline: 2px solid var(--teal-700); }
+.price-calendar .day.full { background: var(--danger-bg); }
 .price-calendar .day .d { font-weight: 700; }
 .price-calendar .day .p { font-size: 0.68rem; color: var(--ink-600); }
+.price-calendar .day .occ { font-size: 0.64rem; color: var(--ink-600); margin-top: 1px; }
+.price-calendar .day.full .occ { color: var(--danger); font-weight: 700; }
 .price-calendar .weekday { text-align: center; font-size: 0.7rem; font-weight: 700; color: var(--ink-600); text-transform: uppercase; }
 
 /* ---------- pix ---------- */
@@ -364,7 +392,56 @@ tr:last-child td { border-bottom: none; }
 }
 .gallery-thumb.active, .gallery-thumb:hover { opacity: 1; border-color: var(--sand-500); }
 
-.footer-note { text-align: center; color: var(--ink-600); font-size: 0.82rem; margin: 40px 0 24px; }
+/* ---------- fundo em degradê + onda (página inicial) ---------- */
+.home-hero {
+  background: linear-gradient(180deg, var(--teal-900) 0%, var(--teal-500) 100%);
+  padding-bottom: 8px;
+}
+.home-hero .section-title { color: var(--white); }
+.home-hero .section-sub { color: var(--teal-100); }
+.wave-divider {
+  position: relative;
+  overflow: hidden;
+  height: 64px;
+  margin-top: 12px;
+}
+.wave-divider svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+  display: block;
+}
+.wave-back {
+  animation: wave-scroll 16s linear infinite;
+  opacity: 0.55;
+}
+.wave-front {
+  animation: wave-scroll 10s linear infinite reverse;
+  top: 12px;
+}
+@keyframes wave-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (max-width: 560px) {
+  .wave-divider { height: 40px; }
+  .wave-front { top: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-back, .wave-front { animation: none; }
+}
+
+/* ---------- rodapé ---------- */
+.site-footer { background: var(--bg); padding: 28px 0 32px; }
+.social-links { display: flex; gap: 18px; justify-content: center; margin: 14px 0 6px; }
+.social-links a { color: var(--ink-600); display: inline-flex; transition: color 0.15s ease; }
+.social-links a:hover { color: var(--teal-700); }
+
+.footer-note { text-align: center; color: var(--ink-600); font-size: 0.82rem; margin: 16px 0 0; }
 
 .section-title { margin: 8px 0 4px; }
 .section-sub { color: var(--ink-600); margin: 0 0 20px; font-size: 0.94rem; }

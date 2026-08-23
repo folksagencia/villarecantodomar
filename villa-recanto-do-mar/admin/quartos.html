@@ -33,7 +33,7 @@
 
       <div class="field-row">
         <div>
-          <label for="capacity">Capacidade (pessoas)</label>
+          <label for="capacity">Capacidade (pessoas por unidade)</label>
           <input type="number" id="capacity" min="1" value="2">
         </div>
         <div>
@@ -42,10 +42,16 @@
         </div>
       </div>
 
+      <label for="units">Quantidade de unidades desse tipo de quarto</label>
+      <input type="number" id="units" min="1" value="1">
+      <p class="help-text">Ex: se você tem 3 quartos iguais do tipo "Vista Mar", coloque 3 — o sistema aceita até 3 reservas ao mesmo tempo pra mesma noite, e bloqueia automaticamente a 4ª. Se não sabe, deixe 1.</p>
+
       <label><input type="checkbox" id="active" checked style="width:auto;display:inline-block;"> Quarto visível no site</label>
 
       <label for="photoInput">Fotos</label>
       <input type="file" id="photoInput" accept="image/*" multiple>
+      <p class="help-text">A <strong>primeira foto</strong> (marcada "Capa") é a que aparece na listagem de quartos da página inicial. As demais aparecem no carrossel da página do quarto, na ordem mostrada abaixo — use as setinhas pra reordenar.</p>
+      <p class="help-text"><strong>Formato recomendado:</strong> fotos na horizontal (paisagem), em torno de <strong>1600 × 1067px</strong>. Comprima antes de enviar (ex: tinypng.com) pra o site continuar rápido — evite arquivos muito grandes.</p>
       <div class="photo-thumb-row" id="photoList"></div>
 
       <div id="formAlert"></div>
@@ -103,11 +109,12 @@ async function load() {
 
   table.innerHTML = `
     <table>
-      <thead><tr><th>Quarto</th><th>Preço padrão</th><th>Visível</th><th>Ações</th></tr></thead>
+      <thead><tr><th>Quarto</th><th>Unidades</th><th>Preço padrão</th><th>Visível</th><th>Ações</th></tr></thead>
       <tbody>
         ${rooms.map((r) => `
           <tr>
             <td>${esc(r.name)}<br><span class="help-text">/quarto.html?slug=${esc(r.slug)}</span></td>
+            <td>${r.units || 1}</td>
             <td>${formatBRL(r.base_price)}</td>
             <td>${r.active ? '<span class="badge badge-success">Sim</span>' : '<span class="badge badge-neutral">Não</span>'}</td>
             <td>
@@ -130,6 +137,7 @@ function editRoom(id) {
   document.getElementById("slug").value = r.slug;
   document.getElementById("description").value = r.description || "";
   document.getElementById("capacity").value = r.capacity;
+  document.getElementById("units").value = r.units || 1;
   document.getElementById("basePrice").value = r.base_price;
   document.getElementById("active").checked = r.active;
   currentPhotos = Array.isArray(r.photos) ? r.photos.slice() : [];
@@ -144,6 +152,7 @@ function clearForm() {
   document.getElementById("slug").value = "";
   document.getElementById("description").value = "";
   document.getElementById("capacity").value = 2;
+  document.getElementById("units").value = 1;
   document.getElementById("basePrice").value = "";
   document.getElementById("active").checked = true;
   currentPhotos = [];
@@ -155,14 +164,26 @@ function renderPhotoList() {
   const el = document.getElementById("photoList");
   el.innerHTML = currentPhotos.map((url, i) => `
     <div class="photo-thumb-wrap">
+      ${i === 0 ? '<span class="badge badge-success" style="position:absolute;top:-8px;left:-6px;">Capa</span>' : ""}
       <img class="photo-thumb" src="${esc(url)}">
       <button class="photo-remove-btn" type="button" onclick="removePhoto(${i})">×</button>
+      <div style="display:flex;gap:3px;margin-top:3px;">
+        <button class="btn btn-secondary btn-sm" type="button" style="padding:2px 8px;font-size:0.7rem;" onclick="movePhoto(${i}, -1)" ${i === 0 ? "disabled" : ""}>‹</button>
+        <button class="btn btn-secondary btn-sm" type="button" style="padding:2px 8px;font-size:0.7rem;" onclick="movePhoto(${i}, 1)" ${i === currentPhotos.length - 1 ? "disabled" : ""}>›</button>
+      </div>
     </div>
   `).join("");
 }
 
 function removePhoto(i) {
   currentPhotos.splice(i, 1);
+  renderPhotoList();
+}
+
+function movePhoto(i, delta) {
+  const j = i + delta;
+  if (j < 0 || j >= currentPhotos.length) return;
+  [currentPhotos[i], currentPhotos[j]] = [currentPhotos[j], currentPhotos[i]];
   renderPhotoList();
 }
 
@@ -200,6 +221,7 @@ async function saveRoom() {
     slug: document.getElementById("slug").value.trim(),
     description: document.getElementById("description").value.trim(),
     capacity: Number(document.getElementById("capacity").value) || 1,
+    units: Math.max(1, Number(document.getElementById("units").value) || 1),
     base_price: Number(document.getElementById("basePrice").value),
     active: document.getElementById("active").checked,
     photos: currentPhotos,

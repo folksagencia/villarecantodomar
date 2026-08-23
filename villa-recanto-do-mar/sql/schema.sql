@@ -31,6 +31,7 @@ create table if not exists rooms (
   name text not null,
   description text not null default '',
   capacity int not null default 2,
+  units int not null default 1, -- quantas unidades (quartos físicos) existem desse tipo
   base_price numeric(10, 2) not null,
   photos jsonb not null default '[]'::jsonb, -- array de URLs (Supabase Storage)
   active boolean not null default true,
@@ -41,6 +42,7 @@ create table if not exists rooms (
 
 comment on table rooms is 'Quartos/categorias de hospedagem da pousada.';
 comment on column rooms.base_price is 'Preço padrão por noite (usado quando não há um preço específico para a data em price_overrides).';
+comment on column rooms.units is 'Quantidade de unidades físicas desse tipo de quarto (ex: 3 quartos "Vista Mar" iguais). Controla quantas reservas simultâneas cabem numa mesma noite.';
 
 -- ----------------------------------------------------------------------------
 -- Tabela: price_overrides (preço específico OU bloqueio de uma data)

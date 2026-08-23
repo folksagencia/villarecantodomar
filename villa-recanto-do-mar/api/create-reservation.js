@@ -12,7 +12,8 @@
 const crypto = require("crypto");
 const { pgSelect, pgInsert, getEnv } = require("../lib/supabase-admin");
 const { buildPixPayload } = require("../lib/pix");
-const { calculateStay } = require("../lib/pricing");
+const { calculateStay, listNights } = require("../lib/pricing");
+const { isConflicting } = require("../lib/reservation-rules");
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -55,7 +56,7 @@ module.exports = async (req, res) => {
     // ---- busca o quarto (fonte da verdade do preço) -----------------------
     const rooms = await pgSelect(
       "rooms",
-      `id=eq.${encodeURIComponent(room_id)}&select=id,name,base_price,active,capacity`
+      `id=eq.${encodeURIComponent(room_id)}&select=id,name,base_price,active,capacity,units`
     );
     const room = Array.isArray(rooms) ? rooms[0] : null;
     if (!room || room.active !== true) {
@@ -86,28 +87,41 @@ module.exports = async (req, res) => {
       return;
     }
 
-    // ---- confere se já não existe reserva conflitante ----------------------
+    // ---- confere se ainda cabe uma reserva nessas noites -------------------
+    // Cada quarto pode ter mais de uma unidade física (rooms.units — ex: 3
+    // quartos iguais do tipo "Vista Mar"). Uma noite só fica indisponível
+    // quando o número de reservas ativas naquela noite atinge esse limite.
+    //
     // Reservas "aguardando_pix" seguram a data por até 2h (o mesmo prazo de
     // validade mostrado ao hóspede em reserva.html). Depois disso, se
     // ninguém avisou que pagou, a data libera de novo automaticamente —
-    // assim uma pessoa que desistiu no meio do caminho não trava a data pra
-    // sempre. Se o hóspede avisou que pagou (guest_marked_paid_at), a data
+    // assim uma pessoa que desistiu no meio do caminho não trava a vaga pra
+    // sempre. Se o hóspede avisou que pagou (guest_marked_paid_at), a vaga
     // continua segurada até a pousada confirmar ou cancelar manualmente.
+    const units = Math.max(1, Number(room.units) || 1);
     const candidates = await pgSelect(
       "reservations",
       `room_id=eq.${encodeURIComponent(room_id)}` +
         `&status=in.(aguardando_pix,pix_confirmado,concluida)` +
         `&check_in=lt.${check_out}&check_out=gt.${check_in}` +
-        `&select=id,status,created_at,guest_marked_paid_at`
+        `&select=id,status,created_at,guest_marked_paid_at,check_in,check_out`
     );
-    const holdCutoff = Date.now() - 2 * 60 * 60 * 1000;
-    const conflicting = (Array.isArray(candidates) ? candidates : []).filter((c) => {
-      if (c.status !== "aguardando_pix") return true; // pix_confirmado/concluida sempre bloqueiam
-      if (c.guest_marked_paid_at) return true; // hóspede avisou que pagou: mantém segurado p/ revisão manual
-      return new Date(c.created_at).getTime() > holdCutoff; // ainda dentro das 2h de validade
+    const nowMs = Date.now();
+    const active = (Array.isArray(candidates) ? candidates : []).filter((c) => isConflicting(c, nowMs));
+
+    const nightCounts = {};
+    active.forEach((c) => {
+      listNights(c.check_in, c.check_out).forEach((d) => {
+        nightCounts[d] = (nightCounts[d] || 0) + 1;
+      });
     });
-    if (conflicting.length > 0) {
-      res.status(409).json({ error: "Essas datas acabaram de ser reservadas por outra pessoa. Escolha outro período." });
+    const fullNights = listNights(check_in, check_out).filter((d) => (nightCounts[d] || 0) >= units);
+
+    if (fullNights.length > 0) {
+      res.status(409).json({
+        error: "Essas datas acabaram de ficar sem vaga nesse quarto (lotação atingida). Escolha outro período.",
+        fullDates: fullNights,
+      });
       return;
     }
 

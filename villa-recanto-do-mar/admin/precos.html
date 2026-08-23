@@ -13,7 +13,7 @@
   <nav class="admin-sidebar" id="adminNav"></nav>
   <main class="admin-main">
     <h1 class="section-title">Preços & disponibilidade</h1>
-    <p class="section-sub">Clique nos dias para selecionar, depois defina um preço especial ou bloqueie a data (ex: manutenção, uso próprio).</p>
+    <p class="section-sub">Clique nos dias para selecionar, depois defina um preço especial ou bloqueie a data (ex: manutenção, uso próprio). O número embaixo do preço (ex: "2/3") mostra quantas reservas já existem naquela noite, do total de unidades desse quarto — quando bate no limite, o dia fica destacado em vermelho e o site já para de aceitar reserva sozinho.</p>
 
     <div class="field-row" style="max-width:520px;">
       <div>
@@ -73,6 +73,7 @@
 
 <script src="/assets/supabase-client.js"></script>
 <script src="/assets/format.js"></script>
+<script src="/lib/pricing.js"></script>
 <script src="/assets/admin-common.js"></script>
 <script>
 let rooms = [];
@@ -90,7 +91,7 @@ async function init() {
   viewYear = today.getFullYear();
   viewMonth = today.getMonth();
 
-  const { data, error } = await villaSupabase.from("rooms").select("id,name,base_price").order("sort_order");
+  const { data, error } = await villaSupabase.from("rooms").select("id,name,base_price,units").order("sort_order");
   if (error || !data || data.length === 0) {
     document.getElementById("calendar").innerHTML = "";
     document.querySelector(".admin-main").insertAdjacentHTML("beforeend", '<div class="empty-state">Cadastre um quarto primeiro, na aba "Quartos".</div>');
@@ -171,14 +172,45 @@ async function loadMonth() {
   overridesByDate = {};
   (data || []).forEach((o) => { overridesByDate[o.date] = o; });
 
+  await loadOccupancy(firstDay, lastDay);
+
   renderCalendar();
   updateEditBox();
+}
+
+let occupancyByDate = {};
+
+async function loadOccupancy(firstDay, lastDay) {
+  occupancyByDate = {};
+  const { data, error } = await villaSupabase
+    .from("reservations")
+    .select("status,created_at,guest_marked_paid_at,check_in,check_out")
+    .eq("room_id", currentRoomId)
+    .in("status", ["aguardando_pix", "pix_confirmado", "concluida"])
+    .lte("check_in", lastDay)
+    .gt("check_out", firstDay);
+
+  if (error || !data) return;
+
+  const holdCutoff = Date.now() - 2 * 60 * 60 * 1000;
+  const active = data.filter((r) => {
+    if (r.status !== "aguardando_pix") return true;
+    if (r.guest_marked_paid_at) return true;
+    return new Date(r.created_at).getTime() > holdCutoff;
+  });
+
+  active.forEach((r) => {
+    VillaPricing.listNights(r.check_in, r.check_out).forEach((d) => {
+      if (d >= firstDay && d <= lastDay) occupancyByDate[d] = (occupancyByDate[d] || 0) + 1;
+    });
+  });
 }
 
 function renderCalendar() {
   const cal = document.getElementById("calendar");
   const room = rooms.find((r) => r.id === currentRoomId);
   const basePrice = room ? room.base_price : 0;
+  const units = room ? Math.max(1, Number(room.units) || 1) : 1;
   const lastDate = new Date(viewYear, viewMonth + 1, 0).getDate();
   const firstWeekday = new Date(viewYear, viewMonth, 1).getDay();
   const todayStr = todayISODate();
@@ -190,18 +222,22 @@ function renderCalendar() {
     const dateStr = `${viewYear}-${pad(viewMonth + 1)}-${pad(d)}`;
     const override = overridesByDate[dateStr];
     const isPast = dateStr < todayStr;
+    const occupied = occupancyByDate[dateStr] || 0;
+    const isFull = occupied >= units;
     const classes = ["day"];
     if (override && override.is_blocked) classes.push("blocked");
     else if (override && override.price != null) classes.push("custom-price");
+    if (isFull && !(override && override.is_blocked)) classes.push("full");
     if (selected.has(dateStr)) classes.push("selected");
     if (isPast) classes.push("past");
 
     const priceLabel = override && override.is_blocked
       ? "bloqueado"
       : formatBRL(override && override.price != null ? override.price : basePrice).replace("R$", "").trim();
+    const occupancyLabel = `${occupied}/${units} reservado(s)`;
 
-    html += `<div class="${classes.join(" ")}" data-date="${dateStr}" style="${isPast ? "opacity:0.4;cursor:default;" : ""}">
-      <div class="d">${d}</div><div class="p">${priceLabel}</div>
+    html += `<div class="${classes.join(" ")}" data-date="${dateStr}" style="${isPast ? "opacity:0.4;cursor:default;" : ""}" title="${occupancyLabel}">
+      <div class="d">${d}</div><div class="p">${priceLabel}</div><div class="occ">${occupied}/${units}</div>
     </div>`;
   }
 

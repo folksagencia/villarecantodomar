@@ -52,6 +52,58 @@ async function init() {
   room = data;
   logVillaEvent({ type: "view", room_id: room.id, stage: "viu_quarto" });
   render();
+  loadAvailability();
+}
+
+let fullyBookedSet = new Set();
+
+async function loadAvailability() {
+  try {
+    const res = await fetch(`/api/room-availability?room_id=${encodeURIComponent(room.id)}`);
+    const data = await res.json();
+    if (res.ok && Array.isArray(data.fullyBookedDates)) {
+      fullyBookedSet = new Set(data.fullyBookedDates);
+      if (lastStay) recalculate(); // reavalia caso as datas já escolhidas tenham acabado de lotar
+    }
+  } catch (e) {
+    console.warn("Não foi possível checar disponibilidade agora:", e);
+    // Não impede o uso do site — o servidor confere de novo na hora de reservar.
+  }
+}
+
+function findNextAvailableRange(nightsCount, searchFromDate) {
+  const maxDate = addDaysISO(todayISODate(), 170);
+  let cursor = searchFromDate;
+  while (cursor < maxDate) {
+    let ok = true;
+    for (let i = 0; i < nightsCount; i++) {
+      if (fullyBookedSet.has(addDaysISO(cursor, i))) { ok = false; break; }
+    }
+    if (ok) return { checkIn: cursor, checkOut: addDaysISO(cursor, nightsCount) };
+    cursor = addDaysISO(cursor, 1);
+  }
+  return null;
+}
+
+async function loadPropertyGallery() {
+  const section = document.getElementById("propertyGallerySection");
+  if (!section) return;
+  const { data: photos, error } = await villaSupabase
+    .from("property_photos")
+    .select("url,caption")
+    .eq("active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error || !photos || photos.length === 0) {
+    section.innerHTML = "";
+    return;
+  }
+
+  section.innerHTML = `
+    <h3 style="margin:20px 0 8px;">Conheça a pousada</h3>
+    <div id="propertyGallery" style="margin-bottom:20px;"></div>
+  `;
+  renderGallery("propertyGallery", photos, { alt: "Pousada Villa Recanto do Mar", showCaption: true, autoplay: 4500 });
 }
 
 function render() {
@@ -65,6 +117,8 @@ function render() {
     <div id="roomGallery" style="margin-bottom:18px;"></div>
     <h1 class="section-title">${esc(room.name)}</h1>
     <p class="section-sub">${esc(room.description || "")} · Capacidade: ${room.capacity} pessoa(s)</p>
+
+    <div id="propertyGallerySection"></div>
 
     <div class="card"><div class="card-body">
       <div class="field-row">
@@ -121,7 +175,8 @@ function render() {
     </div></div>
   `;
 
-  renderGallery("roomGallery", photos, { alt: room.name });
+  renderGallery("roomGallery", photos, { alt: room.name, autoplay: 5000 });
+  loadPropertyGallery();
 
   document.getElementById("checkin").addEventListener("change", onDatesChange);
   document.getElementById("checkout").addEventListener("change", onDatesChange);
@@ -223,6 +278,26 @@ async function recalculate() {
     summary.innerHTML = "";
     alertBox.innerHTML = `<div class="alert alert-danger">Datas indisponíveis nesse período (${stay.blockedDates.map(formatDateBR).join(", ")}). Escolha outro período.</div>`;
     lastStay = null;
+    return;
+  }
+
+  const fullNights = stay.nightly.map((n) => n.date).filter((d) => fullyBookedSet.has(d));
+  if (fullNights.length > 0) {
+    summary.innerHTML = "";
+    lastStay = null;
+    const suggestion = findNextAvailableRange(stay.nights, checkout);
+    const suggestionHtml = suggestion
+      ? `Encontramos uma opção livre pra você: <strong>${formatDateBR(suggestion.checkIn)} a ${formatDateBR(suggestion.checkOut)}</strong> (mesmas ${stay.nights} noite(s)). <button type="button" class="btn btn-sm btn-primary" id="useSuggestedBtn" style="margin-top:8px;">Usar essas datas</button>`
+      : `No momento não achamos automaticamente outra data livre pra esse quarto nos próximos meses — fale com a pousada pelo WhatsApp que a gente ajuda a encontrar uma opção.`;
+    alertBox.innerHTML = `<div class="alert alert-warn">Esse quarto já está com a lotação cheia em ${fullNights.map(formatDateBR).join(", ")}. ${suggestionHtml}</div>`;
+    if (suggestion) {
+      document.getElementById("useSuggestedBtn").addEventListener("click", () => {
+        document.getElementById("checkin").value = suggestion.checkIn;
+        document.getElementById("checkout").min = addDaysISO(suggestion.checkIn, 1);
+        document.getElementById("checkout").value = suggestion.checkOut;
+        recalculate();
+      });
+    }
     return;
   }
 
