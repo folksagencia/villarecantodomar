@@ -4,6 +4,11 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Painel — Villa Recanto do Mar</title>
+<link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192x192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -143,7 +148,7 @@ async function loadDashboard() {
 
   document.getElementById("statGrid").innerHTML = `
     <div class="stat-card"><div class="value">${pending.length}</div><div class="label">Aguardando confirmação</div></div>
-    <div class="stat-card"><div class="value">${viewsRes.count || 0}</div><div class="label">Visualizações de quartos (${currentRange.label})</div></div>
+    <div class="stat-card"><div class="value">${viewsRes.count || 0}</div><div class="label">Visualizações de acomodações (${currentRange.label})</div></div>
     <div class="stat-card"><div class="value">${funnelCounts.gerou_pix}</div><div class="label">Reservas com Pix gerado (${currentRange.label})</div></div>
   `;
 
@@ -157,7 +162,7 @@ async function loadDashboard() {
   } else {
     pendingTable.innerHTML = `
       <table>
-        <thead><tr><th>Hóspede</th><th>Quarto</th><th>Datas</th><th>Sinal</th><th>Avisou em</th><th></th></tr></thead>
+        <thead><tr><th>Hóspede</th><th>Acomodação</th><th>Datas</th><th>Sinal</th><th>Avisou em</th><th></th></tr></thead>
         <tbody>
           ${pending.map((r) => `
             <tr>
@@ -178,7 +183,7 @@ async function loadDashboard() {
     <table>
       <thead><tr><th>Etapa</th><th>Quantidade</th></tr></thead>
       <tbody>
-        <tr><td>Viram um quarto</td><td>${funnelCounts.viu_quarto}</td></tr>
+        <tr><td>Viram uma acomodação</td><td>${funnelCounts.viu_quarto}</td></tr>
         <tr><td>Começaram a reservar</td><td>${funnelCounts.iniciou_reserva}</td></tr>
         <tr><td>Chegaram a gerar o Pix</td><td>${funnelCounts.gerou_pix}</td></tr>
         <tr><td>Avisaram que pagaram</td><td>${funnelCounts.confirmou_envio_comprovante}</td></tr>

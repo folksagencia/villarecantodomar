@@ -26,7 +26,7 @@ function renderAdminNav(activeKey) {
   const links = [
     { key: "dashboard", href: "/admin/index.html", label: "Painel" },
     { key: "reservas", href: "/admin/reservas.html", label: "Reservas" },
-    { key: "quartos", href: "/admin/quartos.html", label: "Quartos" },
+    { key: "quartos", href: "/admin/quartos.html", label: "Acomodações" },
     { key: "precos", href: "/admin/precos.html", label: "Preços & disponibilidade" },
     { key: "fotos", href: "/admin/fotos.html", label: "Fotos da pousada" },
   ];

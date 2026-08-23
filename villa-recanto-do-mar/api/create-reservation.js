@@ -36,7 +36,7 @@ module.exports = async (req, res) => {
 
     // ---- validação básica dos dados enviados -----------------------------
     const errors = [];
-    if (!room_id) errors.push("Quarto não informado.");
+    if (!room_id) errors.push("Acomodação não informada.");
     if (!DATE_RE.test(check_in || "")) errors.push("Data de check-in inválida.");
     if (!DATE_RE.test(check_out || "")) errors.push("Data de check-out inválida.");
     if (check_in && check_out && check_out <= check_in) errors.push("Check-out precisa ser depois do check-in.");
@@ -60,11 +60,11 @@ module.exports = async (req, res) => {
     );
     const room = Array.isArray(rooms) ? rooms[0] : null;
     if (!room || room.active !== true) {
-      res.status(404).json({ error: "Quarto não encontrado ou indisponível." });
+      res.status(404).json({ error: "Acomodação não encontrada ou indisponível." });
       return;
     }
     if (guest_count > room.capacity) {
-      res.status(400).json({ error: `Este quarto acomoda no máximo ${room.capacity} pessoa(s).` });
+      res.status(400).json({ error: `Esta acomodação acomoda no máximo ${room.capacity} pessoa(s).` });
       return;
     }
 
@@ -119,7 +119,7 @@ module.exports = async (req, res) => {
 
     if (fullNights.length > 0) {
       res.status(409).json({
-        error: "Essas datas acabaram de ficar sem vaga nesse quarto (lotação atingida). Escolha outro período.",
+        error: "Essas datas acabaram de ficar sem vaga nessa acomodação (lotação atingida). Escolha outro período.",
         fullDates: fullNights,
       });
       return;

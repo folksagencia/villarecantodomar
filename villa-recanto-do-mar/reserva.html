@@ -4,6 +4,24 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Pagamento do sinal — Villa Recanto do Mar</title>
+<meta name="description" content="Pague o sinal da sua reserva na Pousada Villa Recanto do Mar via Pix." />
+
+<link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192x192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Pousada Villa Recanto do Mar" />
+<meta property="og:title" content="Pagamento do sinal — Villa Recanto do Mar" />
+<meta property="og:description" content="Pague o sinal da sua reserva na Pousada Villa Recanto do Mar via Pix." />
+<meta property="og:image" content="https://villarecantodomar.vercel.app/assets/img/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://villarecantodomar.vercel.app/assets/img/og-image.png" />
+
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
@@ -11,7 +29,7 @@
 
 <header class="site-header">
   <div class="container">
-    <a class="brand" href="/index.html"><img src="/assets/img/logo-white.png" alt="Villa Recanto do Mar" class="brand-logo"><small>Reservas diretas</small></a>
+    <a class="brand" href="/index.html"><img src="/assets/img/logo.png" alt="Villa Recanto do Mar" class="brand-logo"><small>RESERVAS</small></a>
   </div>
 </header>
 
@@ -92,11 +110,15 @@ function render(res) {
       <h2 style="margin:0 0 16px;color:var(--teal-700);">${formatBRL(res.depositAmount)}</h2>
       <div id="qrcode" class="pix-qr" style="display:flex;align-items:center;justify-content:center;"></div>
       <p class="help-text">Abra o app do seu banco, escolha Pix &rarr; Pagar com QR Code, ou copie o código abaixo:</p>
-      <div class="pix-copy">
-        <input type="text" id="pixPayload" readonly value="${esc(res.pixPayload)}">
-        <button class="btn btn-secondary btn-sm" id="copyBtn">Copiar</button>
+      <div class="copy-field copy-field-mono">
+        <input type="text" id="pixPayload" class="copy-field-text" readonly value="${esc(res.pixPayload)}">
+        <button type="button" class="copy-field-btn" id="copyBtn">
+          <svg class="copy-field-btn-icon icon-copy" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+          <svg class="copy-field-btn-icon icon-check" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          <span class="copy-field-btn-label">Copiar</span>
+        </button>
       </div>
-      <p id="copyFeedback" class="help-text"></p>
+      <p id="copyFeedback" class="help-text" aria-live="polite"></p>
     </div></div>
 
     <div class="card" style="margin-top:20px;"><div class="card-body">
@@ -122,12 +144,20 @@ function render(res) {
   const whatsappMsg = `Olá! Acabei de reservar o ${res.roomName} (${formatDateBR(res.checkIn)} a ${formatDateBR(res.checkOut)}). Segue o comprovante do sinal de ${formatBRL(res.depositAmount)}. Reserva: ${res.id}`;
   document.getElementById("whatsappBtn").href = `https://wa.me/${VILLA_CONFIG.whatsappNumber}?text=${encodeURIComponent(whatsappMsg)}`;
 
-  document.getElementById("copyBtn").addEventListener("click", () => {
+  const copyBtn = document.getElementById("copyBtn");
+  copyBtn.addEventListener("click", () => {
     const input = document.getElementById("pixPayload");
     input.select();
     input.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(input.value).then(() => {
       document.getElementById("copyFeedback").textContent = "Código copiado!";
+      copyBtn.classList.add("is-copied");
+      copyBtn.querySelector(".copy-field-btn-label").textContent = "Copiado!";
+      clearTimeout(copyBtn._resetTimer);
+      copyBtn._resetTimer = setTimeout(() => {
+        copyBtn.classList.remove("is-copied");
+        copyBtn.querySelector(".copy-field-btn-label").textContent = "Copiar";
+      }, 2200);
     }).catch(() => {
       document.getElementById("copyFeedback").textContent = "Não foi possível copiar automaticamente — selecione e copie manualmente.";
     });

@@ -3,7 +3,12 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Quartos — Painel Villa Recanto do Mar</title>
+<title>Acomodações — Painel Villa Recanto do Mar</title>
+<link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192x192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -12,24 +17,24 @@
 <div class="admin-shell">
   <nav class="admin-sidebar" id="adminNav"></nav>
   <main class="admin-main">
-    <h1 class="section-title">Quartos</h1>
-    <p class="section-sub">Cadastre os quartos, fotos, descrição e o preço padrão por noite.</p>
+    <h1 class="section-title">Acomodações</h1>
+    <p class="section-sub">Cadastre as acomodações, fotos, descrição e o preço padrão por noite.</p>
 
     <div class="table-wrap" id="table"></div>
 
-    <h3 style="margin-top:32px;" id="formTitle">Novo quarto</h3>
+    <h3 style="margin-top:32px;" id="formTitle">Nova acomodação</h3>
     <div class="card"><div class="card-body">
       <input type="hidden" id="roomId">
 
-      <label for="name">Nome do quarto</label>
-      <input type="text" id="name" placeholder="Ex: Quarto Vista Mar">
+      <label for="name">Nome da acomodação</label>
+      <input type="text" id="name" placeholder="Ex: Vista Mar">
 
       <label for="slug">Identificador na URL (slug)</label>
       <input type="text" id="slug" placeholder="quarto-vista-mar">
-      <p class="help-text">Gerado automaticamente a partir do nome — só edite se quiser mudar o link do quarto.</p>
+      <p class="help-text">Gerado automaticamente a partir do nome — só edite se quiser mudar o link da acomodação.</p>
 
       <label for="description">Descrição</label>
-      <textarea id="description" rows="3" placeholder="O que tem nesse quarto, vista, cama, etc."></textarea>
+      <textarea id="description" rows="3" placeholder="O que tem nessa acomodação, vista, cama, etc."></textarea>
 
       <div class="field-row">
         <div>
@@ -42,23 +47,23 @@
         </div>
       </div>
 
-      <label for="units">Quantidade de unidades desse tipo de quarto</label>
+      <label for="units">Quantidade de unidades desse tipo de acomodação</label>
       <input type="number" id="units" min="1" value="1">
-      <p class="help-text">Ex: se você tem 3 quartos iguais do tipo "Vista Mar", coloque 3 — o sistema aceita até 3 reservas ao mesmo tempo pra mesma noite, e bloqueia automaticamente a 4ª. Se não sabe, deixe 1.</p>
+      <p class="help-text">Ex: se você tem 3 acomodações iguais do tipo "Vista Mar", coloque 3 — o sistema aceita até 3 reservas ao mesmo tempo pra mesma noite, e bloqueia automaticamente a 4ª. Se não sabe, deixe 1.</p>
 
-      <label><input type="checkbox" id="active" checked style="width:auto;display:inline-block;"> Quarto visível no site</label>
+      <label><input type="checkbox" id="active" checked style="width:auto;display:inline-block;"> Acomodação visível no site</label>
 
       <label for="photoInput">Fotos</label>
       <input type="file" id="photoInput" accept="image/*" multiple>
-      <p class="help-text">A <strong>primeira foto</strong> (marcada "Capa") é a que aparece na listagem de quartos da página inicial. As demais aparecem no carrossel da página do quarto, na ordem mostrada abaixo — use as setinhas pra reordenar.</p>
+      <p class="help-text">A <strong>primeira foto</strong> (marcada "Capa") é a que aparece na listagem de acomodações da página inicial. As demais aparecem no carrossel da página da acomodação, na ordem mostrada abaixo — use as setinhas pra reordenar.</p>
       <p class="help-text"><strong>Formato recomendado:</strong> fotos na horizontal (paisagem), em torno de <strong>1600 × 1067px</strong>. Comprima antes de enviar (ex: tinypng.com) pra o site continuar rápido — evite arquivos muito grandes.</p>
       <div class="photo-thumb-row" id="photoList"></div>
 
       <div id="formAlert"></div>
 
       <div style="display:flex;gap:10px;margin-top:20px;">
-        <button class="btn btn-primary" id="saveBtn">Salvar quarto</button>
-        <button class="btn btn-secondary" id="clearBtn">Limpar / novo quarto</button>
+        <button class="btn btn-primary" id="saveBtn">Salvar acomodação</button>
+        <button class="btn btn-secondary" id="clearBtn">Limpar / nova acomodação</button>
       </div>
     </div></div>
   </main>
@@ -99,17 +104,17 @@ function slugify(text) {
 async function load() {
   const { data, error } = await villaSupabase.from("rooms").select("*").order("sort_order", { ascending: true });
   const table = document.getElementById("table");
-  if (error) { table.innerHTML = '<div class="empty-state">Erro ao carregar quartos.</div>'; return; }
+  if (error) { table.innerHTML = '<div class="empty-state">Erro ao carregar acomodações.</div>'; return; }
   rooms = data || [];
 
   if (rooms.length === 0) {
-    table.innerHTML = '<div class="empty-state">Nenhum quarto cadastrado ainda — use o formulário abaixo.</div>';
+    table.innerHTML = '<div class="empty-state">Nenhuma acomodação cadastrada ainda — use o formulário abaixo.</div>';
     return;
   }
 
   table.innerHTML = `
     <table>
-      <thead><tr><th>Quarto</th><th>Unidades</th><th>Preço padrão</th><th>Visível</th><th>Ações</th></tr></thead>
+      <thead><tr><th>Acomodação</th><th>Unidades</th><th>Preço padrão</th><th>Visível</th><th>Ações</th></tr></thead>
       <tbody>
         ${rooms.map((r) => `
           <tr>
@@ -146,7 +151,7 @@ function editRoom(id) {
 }
 
 function clearForm() {
-  document.getElementById("formTitle").textContent = "Novo quarto";
+  document.getElementById("formTitle").textContent = "Nova acomodação";
   document.getElementById("roomId").value = "";
   document.getElementById("name").value = "";
   document.getElementById("slug").value = "";
@@ -244,17 +249,17 @@ async function saveRoom() {
     return;
   }
 
-  alertBox.innerHTML = '<div class="alert alert-success">Quarto salvo com sucesso.</div>';
+  alertBox.innerHTML = '<div class="alert alert-success">Acomodação salva com sucesso.</div>';
   clearForm();
   await load();
 }
 
 async function deleteRoom(id) {
   const room = rooms.find((r) => r.id === id);
-  if (!confirm(`Excluir o quarto "${room ? room.name : ""}"? Isso não pode ser desfeito. Reservas antigas desse quarto continuam guardadas.`)) return;
+  if (!confirm(`Excluir a acomodação "${room ? room.name : ""}"? Isso não pode ser desfeito. Reservas antigas dessa acomodação continuam guardadas.`)) return;
   const { error } = await villaSupabase.from("rooms").delete().eq("id", id);
   if (error) {
-    alert("Erro ao excluir: " + error.message + "\n\nDica: se houver reservas ligadas a este quarto, considere só desmarcar 'visível no site' em vez de excluir.");
+    alert("Erro ao excluir: " + error.message + "\n\nDica: se houver reservas ligadas a esta acomodação, considere só desmarcar 'visível no site' em vez de excluir.");
     return;
   }
   await load();

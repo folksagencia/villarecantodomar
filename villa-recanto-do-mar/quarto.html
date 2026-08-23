@@ -4,6 +4,24 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Reservar — Villa Recanto do Mar</title>
+<meta name="description" content="Reserve diretamente com a Pousada Villa Recanto do Mar. Sinal de 30% via Pix, sem taxas de intermediários." />
+
+<link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192x192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Pousada Villa Recanto do Mar" />
+<meta property="og:title" content="Reservar — Villa Recanto do Mar" />
+<meta property="og:description" content="Reserve diretamente com a Pousada Villa Recanto do Mar. Sinal de 30% via Pix, sem taxas de intermediários." />
+<meta property="og:image" content="https://villarecantodomar.vercel.app/assets/img/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://villarecantodomar.vercel.app/assets/img/og-image.png" />
+
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -11,7 +29,7 @@
 
 <header class="site-header">
   <div class="container">
-    <a class="brand" href="/index.html"><img src="/assets/img/logo-white.png" alt="Villa Recanto do Mar" class="brand-logo"><small>Reservas diretas</small></a>
+    <a class="brand" href="/index.html"><img src="/assets/img/logo.png" alt="Villa Recanto do Mar" class="brand-logo"><small>RESERVAS</small></a>
   </div>
 </header>
 
@@ -33,7 +51,7 @@ async function init() {
   const page = document.getElementById("page");
 
   if (!slug) {
-    page.innerHTML = '<div class="empty-state">Quarto não especificado.</div>';
+    page.innerHTML = '<div class="empty-state">Acomodação não especificada.</div>';
     return;
   }
 
@@ -45,7 +63,7 @@ async function init() {
     .maybeSingle();
 
   if (error || !data) {
-    page.innerHTML = '<div class="empty-state">Este quarto não foi encontrado ou não está mais disponível.</div>';
+    page.innerHTML = '<div class="empty-state">Esta acomodação não foi encontrada ou não está mais disponível.</div>';
     return;
   }
 
@@ -185,7 +203,7 @@ function render() {
   const guestCountSel = document.getElementById("guestCount");
   const capacity = Math.max(1, Number(room.capacity) || 1);
   guestCountSel.innerHTML = range(1, capacity).map((n) => `<option value="${n}">${n}</option>`).join("");
-  document.getElementById("capacityHint").textContent = `Este quarto acomoda até ${capacity} pessoa(s) no total (inclua as crianças na contagem).`;
+  document.getElementById("capacityHint").textContent = `Esta acomodação acomoda até ${capacity} pessoa(s) no total (inclua as crianças na contagem).`;
 
   document.getElementById("childCount").addEventListener("change", onChildCountChange);
   renderChildAges(0);
@@ -288,8 +306,8 @@ async function recalculate() {
     const suggestion = findNextAvailableRange(stay.nights, checkout);
     const suggestionHtml = suggestion
       ? `Encontramos uma opção livre pra você: <strong>${formatDateBR(suggestion.checkIn)} a ${formatDateBR(suggestion.checkOut)}</strong> (mesmas ${stay.nights} noite(s)). <button type="button" class="btn btn-sm btn-primary" id="useSuggestedBtn" style="margin-top:8px;">Usar essas datas</button>`
-      : `No momento não achamos automaticamente outra data livre pra esse quarto nos próximos meses — fale com a pousada pelo WhatsApp que a gente ajuda a encontrar uma opção.`;
-    alertBox.innerHTML = `<div class="alert alert-warn">Esse quarto já está com a lotação cheia em ${fullNights.map(formatDateBR).join(", ")}. ${suggestionHtml}</div>`;
+      : `No momento não achamos automaticamente outra data livre pra essa acomodação nos próximos meses — fale com a pousada pelo WhatsApp que a gente ajuda a encontrar uma opção.`;
+    alertBox.innerHTML = `<div class="alert alert-warn">Essa acomodação já está com a lotação cheia em ${fullNights.map(formatDateBR).join(", ")}. ${suggestionHtml}</div>`;
     if (suggestion) {
       document.getElementById("useSuggestedBtn").addEventListener("click", () => {
         document.getElementById("checkin").value = suggestion.checkIn;

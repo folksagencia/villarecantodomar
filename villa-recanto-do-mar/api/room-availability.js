@@ -39,7 +39,7 @@ module.exports = async (req, res) => {
   try {
     const room_id = (req.query && req.query.room_id) || "";
     if (!room_id) {
-      res.status(400).json({ error: "Quarto não informado." });
+      res.status(400).json({ error: "Acomodação não informada." });
       return;
     }
 
@@ -55,7 +55,7 @@ module.exports = async (req, res) => {
     const rooms = await pgSelect("rooms", `id=eq.${encodeURIComponent(room_id)}&select=id,units,active`);
     const room = Array.isArray(rooms) ? rooms[0] : null;
     if (!room || room.active !== true) {
-      res.status(404).json({ error: "Quarto não encontrado ou indisponível." });
+      res.status(404).json({ error: "Acomodação não encontrada ou indisponível." });
       return;
     }
     const units = Math.max(1, Number(room.units) || 1);

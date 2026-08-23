@@ -4,6 +4,11 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Preços & disponibilidade — Painel Villa Recanto do Mar</title>
+<link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192x192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -13,11 +18,11 @@
   <nav class="admin-sidebar" id="adminNav"></nav>
   <main class="admin-main">
     <h1 class="section-title">Preços & disponibilidade</h1>
-    <p class="section-sub">Clique nos dias para selecionar, depois defina um preço especial ou bloqueie a data (ex: manutenção, uso próprio). O número embaixo do preço (ex: "2/3") mostra quantas reservas já existem naquela noite, do total de unidades desse quarto — quando bate no limite, o dia fica destacado em vermelho e o site já para de aceitar reserva sozinho.</p>
+    <p class="section-sub">Clique nos dias para selecionar, depois defina um preço especial ou bloqueie a data (ex: manutenção, uso próprio). O número embaixo do preço (ex: "2/3") mostra quantas reservas já existem naquela noite, do total de unidades dessa acomodação — quando bate no limite, o dia fica destacado em vermelho e o site já para de aceitar reserva sozinho.</p>
 
     <div class="field-row" style="max-width:520px;">
       <div>
-        <label for="roomSelect">Quarto</label>
+        <label for="roomSelect">Acomodação</label>
         <select id="roomSelect"></select>
       </div>
       <div>
@@ -94,7 +99,7 @@ async function init() {
   const { data, error } = await villaSupabase.from("rooms").select("id,name,base_price,units").order("sort_order");
   if (error || !data || data.length === 0) {
     document.getElementById("calendar").innerHTML = "";
-    document.querySelector(".admin-main").insertAdjacentHTML("beforeend", '<div class="empty-state">Cadastre um quarto primeiro, na aba "Quartos".</div>');
+    document.querySelector(".admin-main").insertAdjacentHTML("beforeend", '<div class="empty-state">Cadastre uma acomodação primeiro, na aba "Acomodações".</div>');
     return;
   }
   rooms = data;

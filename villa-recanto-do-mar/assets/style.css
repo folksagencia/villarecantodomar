@@ -35,6 +35,11 @@
 html, body {
   margin: 0;
   padding: 0;
+  /* Trava qualquer scroll/arraste horizontal da página inteira — sem isso,
+     um elemento largo demais (input comprido, imagem, etc.) pode deixar a
+     página "solta", balançando de lado no celular. */
+  overflow-x: hidden;
+  width: 100%;
 }
 
 body {
@@ -63,10 +68,15 @@ a { color: var(--teal-700); }
 }
 
 /* ---------- topo ---------- */
+/* Fundo claro (areia) com uma linha dourada embaixo — dá contraste de
+   propósito contra o degradê azul do .home-hero logo abaixo, então o topo
+   não "some" mais dentro do azul. Usa a logo colorida (a mesma da marca,
+   fundo claro) em vez da versão branca, que ficaria invisível aqui. */
 .site-header {
-  background: var(--teal-900);
-  color: var(--white);
-  padding: 18px 0;
+  background: var(--sand-100);
+  border-bottom: 3px solid var(--sand-500);
+  color: var(--teal-900);
+  padding: 14px 0;
 }
 
 .site-header .container {
@@ -78,7 +88,7 @@ a { color: var(--teal-700); }
 }
 
 .brand {
-  color: var(--white);
+  color: var(--teal-900);
   text-decoration: none;
   font-size: 1.25rem;
   font-weight: 700;
@@ -89,21 +99,21 @@ a { color: var(--teal-700); }
 }
 
 .brand-logo {
-  height: 64px;
+  height: 92px;
   width: auto;
   display: block;
 }
 
 @media (max-width: 560px) {
-  .brand-logo { height: 50px; }
+  .brand-logo { height: 68px; }
 }
 
 .brand small {
   display: block;
-  font-weight: 400;
+  font-weight: 700;
   font-size: 0.72rem;
-  color: var(--teal-100);
-  letter-spacing: 0.08em;
+  color: var(--sand-700);
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -317,10 +327,60 @@ tr:last-child td { border-bottom: none; }
 /* ---------- pix ---------- */
 .pix-box { text-align: center; padding: 28px 20px; }
 .pix-qr { width: 240px; height: 240px; margin: 0 auto 18px; border: 8px solid var(--white); box-shadow: var(--shadow-lg); border-radius: 10px; }
-.pix-copy {
-  display: flex; gap: 8px; align-items: stretch; margin: 14px 0;
+/* ---------- campo de copiar (endereço / código Pix) ---------- */
+/* Caixa "delicada": pílula com fundo suave e borda fina, texto contido numa
+   linha só, e um botãozinho também em formato de pílula. Ao copiar, o botão
+   fica verde por alguns segundos como confirmação — sem ficar berrante o
+   resto do tempo. */
+.copy-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--teal-100);
+  border: 1px solid var(--teal-300);
+  border-radius: 999px;
+  padding: 6px 6px 6px 16px;
+  margin: 14px 0;
 }
-.pix-copy input { flex: 1; font-family: monospace; font-size: 0.78rem; }
+.copy-field-icon {
+  color: var(--teal-700);
+  flex-shrink: 0;
+}
+.copy-field-text {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  color: var(--teal-900);
+  font-size: 0.86rem;
+  padding: 8px 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.copy-field-text:focus { outline: none; }
+.copy-field-mono .copy-field-text { font-family: monospace; font-size: 0.74rem; }
+.copy-field-btn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  border-radius: 999px;
+  padding: 9px 16px;
+  background: var(--white);
+  color: var(--teal-700);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.copy-field-btn:hover { background: var(--teal-500); color: var(--white); }
+.copy-field-btn-icon { display: inline-flex; flex-shrink: 0; }
+.copy-field-btn .icon-check { display: none; }
+.copy-field-btn.is-copied { background: var(--success-bg); color: var(--success); }
+.copy-field-btn.is-copied .icon-copy { display: none; }
+.copy-field-btn.is-copied .icon-check { display: inline-flex; }
 
 /* ---------- galeria / carrossel de fotos ---------- */
 .gallery-main {
@@ -441,7 +501,8 @@ tr:last-child td { border-bottom: none; }
 .social-links a { color: var(--ink-600); display: inline-flex; transition: color 0.15s ease; }
 .social-links a:hover { color: var(--teal-700); }
 
-.footer-note { text-align: center; color: var(--ink-600); font-size: 0.82rem; margin: 16px 0 0; }
+.footer-logo { height: 44px; width: auto; margin: 18px auto 0; }
+.footer-note { text-align: center; color: var(--ink-600); font-size: 0.82rem; margin: 8px 0 0; letter-spacing: 0.02em; }
 
 .section-title { margin: 8px 0 4px; }
 .section-sub { color: var(--ink-600); margin: 0 0 20px; font-size: 0.94rem; }
