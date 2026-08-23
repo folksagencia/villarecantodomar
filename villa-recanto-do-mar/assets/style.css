@@ -501,7 +501,11 @@ tr:last-child td { border-bottom: none; }
 .social-links a { color: var(--ink-600); display: inline-flex; transition: color 0.15s ease; }
 .social-links a:hover { color: var(--teal-700); }
 
-.footer-logo { height: 44px; width: auto; margin: 18px auto 0; }
+.footer-logo { height: 84px; width: auto; margin: 18px auto 0; }
+
+@media (max-width: 560px) {
+  .footer-logo { height: 64px; }
+}
 .footer-note { text-align: center; color: var(--ink-600); font-size: 0.82rem; margin: 8px 0 0; letter-spacing: 0.02em; }
 
 .section-title { margin: 8px 0 4px; }
