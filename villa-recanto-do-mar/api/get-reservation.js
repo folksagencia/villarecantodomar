@@ -4,7 +4,9 @@
 // conseguir reexibir o QR Code do Pix se a pessoa atualizar a página ou
 // voltar depois). Só devolve o que é seguro mostrar publicamente para quem
 // tem o link (o id é um UUID aleatório de 128 bits — impossível de
-// adivinhar): NÃO devolve e-mail nem telefone do hóspede.
+// adivinhar). Inclui nome/telefone/e-mail do hóspede APENAS para permitir
+// pré-preencher uma nova reserva depois que o Pix expira (ninguém além de
+// quem já tem esse link específico consegue chegar nesses dados).
 
 "use strict";
 
@@ -27,7 +29,7 @@ module.exports = async (req, res) => {
 
     const rows = await pgSelect(
       "reservations",
-      `id=eq.${encodeURIComponent(id)}&select=id,check_in,check_out,nights,total_price,deposit_amount,status,pix_payload,guest_marked_paid_at,rooms(name)`
+      `id=eq.${encodeURIComponent(id)}&select=id,check_in,check_out,nights,total_price,deposit_amount,status,pix_payload,guest_marked_paid_at,created_at,guest_name,guest_phone,guest_email,rooms(name,slug)`
     );
     const reservation = Array.isArray(rows) ? rows[0] : null;
 
@@ -39,6 +41,7 @@ module.exports = async (req, res) => {
     res.status(200).json({
       id: reservation.id,
       roomName: reservation.rooms ? reservation.rooms.name : "",
+      roomSlug: reservation.rooms ? reservation.rooms.slug : "",
       checkIn: reservation.check_in,
       checkOut: reservation.check_out,
       nights: reservation.nights,
@@ -47,6 +50,10 @@ module.exports = async (req, res) => {
       status: reservation.status,
       pixPayload: reservation.pix_payload,
       guestMarkedPaidAt: reservation.guest_marked_paid_at,
+      createdAt: reservation.created_at,
+      guestName: reservation.guest_name,
+      guestPhone: reservation.guest_phone,
+      guestEmail: reservation.guest_email,
     });
   } catch (err) {
     console.error("get-reservation error:", err);

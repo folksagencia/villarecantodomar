@@ -11,7 +11,7 @@
 
 <header class="site-header">
   <div class="container">
-    <a class="brand" href="/index.html">Villa Recanto do Mar<small>Reservas diretas</small></a>
+    <a class="brand" href="/index.html"><img src="/assets/img/logo-white.png" alt="Villa Recanto do Mar" class="brand-logo"><small>Reservas diretas</small></a>
   </div>
 </header>
 
@@ -47,8 +47,11 @@ async function init() {
   }
 }
 
+let countdownTimer = null;
+
 function render(res) {
   const page = document.getElementById("page");
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
 
   if (res.status === "pix_confirmado" || res.status === "concluida") {
     page.innerHTML = `
@@ -70,10 +73,19 @@ function render(res) {
   }
 
   const alreadyMarked = !!res.guestMarkedPaidAt;
+  const expiresAt = new Date(res.createdAt).getTime() + 2 * 60 * 60 * 1000;
+  const isExpired = !alreadyMarked && Date.now() >= expiresAt;
+
+  if (isExpired) {
+    renderExpired(res);
+    return;
+  }
 
   page.innerHTML = `
     <h1 class="section-title">Falta pouco!</h1>
     <p class="section-sub">${esc(res.roomName)} · ${formatDateBR(res.checkIn)} a ${formatDateBR(res.checkOut)} (${res.nights} noite(s))</p>
+
+    ${alreadyMarked ? "" : `<div class="alert alert-info" id="countdownBox" style="text-align:center;font-weight:600;"></div>`}
 
     <div class="card"><div class="pix-box">
       <p class="help-text" style="margin-bottom:2px;">Pague o sinal de</p>
@@ -102,7 +114,7 @@ function render(res) {
     text: res.pixPayload,
     width: 224,
     height: 224,
-    colorDark: "#0b4a3f",
+    colorDark: "#18384c",
     colorLight: "#ffffff",
     correctLevel: QRCode.CorrectLevel.M,
   });
@@ -133,12 +145,56 @@ function render(res) {
           body: JSON.stringify({ id: reservationId, session_id: getVillaSessionId() }),
         });
         markBtn.textContent = "✓ A pousada foi avisada";
+        if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+        const box = document.getElementById("countdownBox");
+        if (box) box.remove();
       } catch (e) {
         markBtn.disabled = false;
         markBtn.textContent = "Já paguei, avisar a pousada";
       }
     });
   }
+
+  if (!alreadyMarked) {
+    const updateCountdown = () => {
+      const box = document.getElementById("countdownBox");
+      if (!box) return;
+      const msLeft = expiresAt - Date.now();
+      if (msLeft <= 0) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+        renderExpired(res);
+        return;
+      }
+      const totalSeconds = Math.floor(msLeft / 1000);
+      const mm = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+      const ss = String(totalSeconds % 60).padStart(2, "0");
+      box.textContent = `⏱ Esse Pix é válido por mais ${mm}:${ss}`;
+    };
+    updateCountdown();
+    countdownTimer = setInterval(updateCountdown, 1000);
+  }
+}
+
+function renderExpired(res) {
+  const page = document.getElementById("page");
+  if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+
+  const prefillParams = new URLSearchParams();
+  if (res.guestName) prefillParams.set("name", res.guestName);
+  if (res.guestPhone) prefillParams.set("phone", res.guestPhone);
+  if (res.guestEmail) prefillParams.set("email", res.guestEmail);
+  const newBookingUrl = `/quarto.html?slug=${encodeURIComponent(res.roomSlug || "")}&${prefillParams.toString()}`;
+
+  page.innerHTML = `
+    <div class="card"><div class="card-body" style="text-align:center;">
+      <div class="badge badge-warn" style="margin-bottom:12px;">Pix expirado</div>
+      <h2 style="margin-top:0;">O prazo desse Pix acabou</h2>
+      <p class="help-text">Esse código era válido por 2 horas e o tempo passou. Mas fica tranquilo — seus dados continuam salvos e a data pode já ter ficado disponível de novo.</p>
+      <a class="btn btn-primary btn-block" href="${newBookingUrl}" style="margin-top:10px;">Fazer uma nova reserva com meus dados</a>
+      <p class="help-text" style="margin-top:14px;">Se você já pagou esse Pix mesmo depois do prazo, sem problema: fale com a pousada pelo WhatsApp e envie o comprovante — sua reserva original (${esc(res.id).slice(0, 8)}…) ainda existe e pode ser confirmada manualmente.</p>
+    </div></div>
+  `;
 }
 
 function esc(str) {

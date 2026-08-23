@@ -71,8 +71,10 @@ create table if not exists reservations (
   id uuid primary key default gen_random_uuid(),
   room_id uuid not null references rooms(id),
   guest_name text not null,
-  guest_email text not null,
+  guest_email text,
   guest_phone text not null,
+  guest_count int not null default 1,
+  children_ages jsonb not null default '[]'::jsonb, -- ex: [5, 8] = duas crianças, 5 e 8 anos
   check_in date not null,
   check_out date not null,
   nights int not null,

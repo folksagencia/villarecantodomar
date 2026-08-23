@@ -1,12 +1,18 @@
 /* assets/style.css — estilo único, compartilhado por todo o site e pelo painel admin. */
 
 :root {
-  --teal-900: #0b4a3f;
-  --teal-700: #0f6f5c;
-  --teal-500: #1c9484;
-  --teal-100: #e3f3ef;
-  --sand-500: #d9a066;
-  --sand-100: #faf1e4;
+  /* Paleta extraída da identidade visual da Villa Recanto do Mar (logo +
+     link da bio): azul principal #4088b8 e dourado #e09818. Os nomes das
+     variáveis (--teal-*, --sand-*) ficaram os mesmos por baixo do capô só
+     pra não precisar mexer em todo o site — mas os valores agora são as
+     cores reais da marca. */
+  --teal-900: #18384c;
+  --teal-700: #2e6285;
+  --teal-500: #4088b8;
+  --teal-100: #daebf7;
+  --sand-500: #e09818;
+  --sand-700: #9e6b11;
+  --sand-100: #faedd7;
   --ink-900: #1f2a2e;
   --ink-600: #52636a;
   --ink-300: #b9c4c8;
@@ -76,6 +82,15 @@ a { color: var(--teal-700); }
   font-size: 1.25rem;
   font-weight: 700;
   letter-spacing: 0.01em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  height: 44px;
+  width: auto;
+  display: block;
 }
 
 .brand small {
@@ -106,8 +121,8 @@ a { color: var(--teal-700); }
 .btn:active { transform: translateY(1px); }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
-.btn-primary { background: var(--teal-700); color: var(--white); }
-.btn-primary:hover { background: var(--teal-900); }
+.btn-primary { background: var(--sand-500); color: var(--ink-900); }
+.btn-primary:hover { background: var(--sand-700); color: var(--white); }
 
 .btn-secondary { background: var(--white); color: var(--teal-900); border: 1px solid var(--ink-300); }
 .btn-secondary:hover { border-color: var(--teal-700); }
@@ -217,6 +232,12 @@ input:focus, textarea:focus, select:focus {
 }
 
 .admin-sidebar a.active, .admin-sidebar a:hover { background: rgba(255,255,255,0.08); color: var(--white); }
+
+.admin-sidebar-logo { display: block; height: 40px; width: auto; margin: 0 auto 18px; }
+
+@media (max-width: 760px) {
+  .admin-sidebar-logo { height: 32px; margin: 4px 12px; }
+}
 
 .admin-main { flex: 1; padding: 28px 32px; max-width: 1100px; }
 

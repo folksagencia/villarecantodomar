@@ -31,6 +31,7 @@ function renderAdminNav(activeKey) {
   ];
 
   el.innerHTML =
+    `<img src="/assets/img/logo-white.png" alt="Villa Recanto do Mar" class="admin-sidebar-logo">` +
     links.map((l) => `<a href="${l.href}" class="${l.key === activeKey ? "active" : ""}">${l.label}</a>`).join("") +
     `<a href="#" id="logoutLink">Sair</a>`;
 

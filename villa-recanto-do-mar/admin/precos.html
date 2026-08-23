@@ -30,6 +30,22 @@
       </div>
     </div>
 
+    <div class="card" style="max-width:560px;margin-bottom:18px;"><div class="card-body">
+      <p style="margin:0 0 10px;font-weight:600;font-size:0.85rem;">Selecionar um período inteiro de uma vez (ex: temporada de Natal/Ano Novo, um feriado)</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
+        <div style="flex:1;min-width:130px;">
+          <label style="margin:0 0 6px;font-size:0.78rem;">De</label>
+          <input type="date" id="rangeFrom">
+        </div>
+        <div style="flex:1;min-width:130px;">
+          <label style="margin:0 0 6px;font-size:0.78rem;">Até</label>
+          <input type="date" id="rangeTo">
+        </div>
+        <button class="btn btn-sm btn-secondary" id="selectRangeBtn">Selecionar intervalo</button>
+      </div>
+      <p class="help-text">Pode incluir datas de meses diferentes (ex: 20/12 até 05/01) — depois é só definir o preço abaixo e salvar uma vez só.</p>
+    </div></div>
+
     <div class="weekday">
       <div class="price-calendar" style="grid-template-columns:repeat(7,1fr);margin-bottom:0;">
         <div class="weekday">Dom</div><div class="weekday">Seg</div><div class="weekday">Ter</div>
@@ -93,6 +109,7 @@ async function init() {
   document.getElementById("blockBtn").addEventListener("click", blockSelected);
   document.getElementById("resetBtn").addEventListener("click", resetSelected);
   document.getElementById("clearSelBtn").addEventListener("click", () => { selected.clear(); renderCalendar(); updateEditBox(); });
+  document.getElementById("selectRangeBtn").addEventListener("click", selectRange);
 
   await loadMonth();
 }
@@ -101,8 +118,37 @@ function changeMonth(delta) {
   viewMonth += delta;
   if (viewMonth < 0) { viewMonth = 11; viewYear--; }
   if (viewMonth > 11) { viewMonth = 0; viewYear++; }
-  selected.clear();
+  // Não limpa `selected` aqui de propósito: assim dá pra selecionar um
+  // período que atravessa dois meses (ex: 20/dez a 05/jan) navegando entre
+  // eles antes de aplicar o preço.
   loadMonth();
+}
+
+function selectRange() {
+  const from = document.getElementById("rangeFrom").value;
+  const to = document.getElementById("rangeTo").value;
+  const todayStr = todayISODate();
+
+  if (!from || !to || to < from) {
+    showEditAlert("Escolha um período válido: data inicial antes (ou igual) da data final.", true);
+    return;
+  }
+
+  let cursor = new Date(from + "T00:00:00Z");
+  const end = new Date(to + "T00:00:00Z");
+  let added = 0;
+  while (cursor <= end) {
+    const dateStr = cursor.toISOString().slice(0, 10);
+    if (dateStr >= todayStr) {
+      selected.add(dateStr);
+      added++;
+    }
+    cursor.setUTCDate(cursor.getUTCDate() + 1);
+  }
+
+  renderCalendar();
+  updateEditBox();
+  showEditAlert(`${added} data(s) do período selecionadas. Role para baixo, defina o preço e clique em "Salvar preço".`, false);
 }
 
 function pad(n) { return String(n).padStart(2, "0"); }

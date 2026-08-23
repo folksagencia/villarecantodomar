@@ -15,11 +15,35 @@
     <h1 class="section-title">Reservas</h1>
     <p class="section-sub">Confirme o pagamento do sinal depois de conferir o Pix recebido (extrato do banco ou comprovante no WhatsApp).</p>
 
+    <div class="card" style="margin-bottom:20px;max-width:720px;"><div class="card-body">
+      <label style="margin-top:0;">Período (data em que a reserva foi feita)</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-sm btn-secondary" data-range="hoje">Hoje</button>
+        <button class="btn btn-sm btn-secondary" data-range="7">Últimos 7 dias</button>
+        <button class="btn btn-sm btn-secondary" data-range="30">Últimos 30 dias</button>
+        <button class="btn btn-sm btn-secondary" data-range="todas">Tudo</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:14px;">
+        <div style="flex:1;min-width:130px;">
+          <label style="margin:0 0 6px;font-size:0.78rem;">Personalizado — de</label>
+          <input type="date" id="rangeFrom">
+        </div>
+        <div style="flex:1;min-width:130px;">
+          <label style="margin:0 0 6px;font-size:0.78rem;">até</label>
+          <input type="date" id="rangeTo">
+        </div>
+        <button class="btn btn-sm btn-primary" id="applyRangeBtn">Aplicar</button>
+      </div>
+    </div></div>
+
+    <div class="stat-grid" id="statusGrid"></div>
+
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
       <button class="btn btn-sm btn-secondary" data-filter="todas">Todas</button>
       <button class="btn btn-sm btn-secondary" data-filter="aguardando_pix">Aguardando Pix</button>
       <button class="btn btn-sm btn-secondary" data-filter="pix_confirmado">Confirmadas</button>
       <button class="btn btn-sm btn-secondary" data-filter="cancelada">Canceladas</button>
+      <button class="btn btn-sm btn-secondary" data-filter="concluida">Concluídas</button>
     </div>
 
     <div id="actionAlert"></div>
@@ -33,6 +57,39 @@
 <script>
 let currentFilter = "todas";
 let currentUserEmail = "";
+let currentRange = { since: null, until: null, label: "últimos 30 dias" };
+
+function daysAgoISO(days) {
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d.toISOString();
+}
+function startOfDayISO(dateStr) { return new Date(dateStr + "T00:00:00").toISOString(); }
+function endOfDayISO(dateStr) { return new Date(dateStr + "T23:59:59.999").toISOString(); }
+
+function setPresetRange(kind) {
+  if (kind === "hoje") currentRange = { since: startOfDayISO(todayISODate()), until: null, label: "hoje" };
+  else if (kind === "7") currentRange = { since: daysAgoISO(7), until: null, label: "últimos 7 dias" };
+  else if (kind === "todas") currentRange = { since: null, until: null, label: "todo o período" };
+  else currentRange = { since: daysAgoISO(30), until: null, label: "últimos 30 dias" };
+  document.getElementById("rangeFrom").value = "";
+  document.getElementById("rangeTo").value = "";
+}
+
+function setCustomRange() {
+  const from = document.getElementById("rangeFrom").value;
+  const to = document.getElementById("rangeTo").value;
+  if (!from || !to || to < from) {
+    alert("Escolha um período válido: data inicial antes (ou igual) da data final.");
+    return;
+  }
+  currentRange = { since: startOfDayISO(from), until: endOfDayISO(to), label: `${formatDateBR(from)} até ${formatDateBR(to)}` };
+}
+
+function highlightRangeBtn(activeBtn) {
+  document.querySelectorAll("[data-range]").forEach((b) => { b.classList.remove("btn-primary"); b.classList.add("btn-secondary"); });
+  if (activeBtn) { activeBtn.classList.remove("btn-secondary"); activeBtn.classList.add("btn-primary"); }
+}
 
 async function init() {
   const session = await requireAdminAuth();
@@ -45,13 +102,31 @@ async function init() {
       currentFilter = btn.dataset.filter;
       document.querySelectorAll("[data-filter]").forEach((b) => b.classList.remove("btn-primary"));
       btn.classList.add("btn-primary");
-      load();
+      renderTable();
     });
   });
   document.querySelector('[data-filter="todas"]').classList.add("btn-primary");
 
+  document.querySelectorAll("[data-range]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setPresetRange(btn.dataset.range);
+      highlightRangeBtn(btn);
+      load();
+    });
+  });
+  document.getElementById("applyRangeBtn").addEventListener("click", () => {
+    setCustomRange();
+    highlightRangeBtn(null);
+    load();
+  });
+
+  setPresetRange("30");
+  highlightRangeBtn(document.querySelector('[data-range="30"]'));
+
   load();
 }
+
+let allReservations = [];
 
 async function load() {
   const table = document.getElementById("table");
@@ -62,7 +137,8 @@ async function load() {
     .select("id,guest_name,guest_email,guest_phone,guest_count,children_ages,check_in,check_out,nights,total_price,deposit_amount,status,guest_marked_paid_at,confirmed_at,confirmed_by,created_at,rooms(name)")
     .order("created_at", { ascending: false });
 
-  if (currentFilter !== "todas") query = query.eq("status", currentFilter);
+  if (currentRange.since) query = query.gte("created_at", currentRange.since);
+  if (currentRange.until) query = query.lte("created_at", currentRange.until);
 
   const { data, error } = await query;
 
@@ -72,8 +148,39 @@ async function load() {
     return;
   }
 
+  allReservations = data || [];
+  renderStatusGrid();
+  renderTable();
+}
+
+function isExpiredHold(r) {
+  if (r.status !== "aguardando_pix" || r.guest_marked_paid_at) return false;
+  const twoHoursMs = 2 * 60 * 60 * 1000;
+  return Date.now() - new Date(r.created_at).getTime() > twoHoursMs;
+}
+
+function renderStatusGrid() {
+  const counts = { aguardando_pix: 0, pix_confirmado: 0, cancelada: 0, concluida: 0, expirada: 0 };
+  allReservations.forEach((r) => {
+    if (isExpiredHold(r)) counts.expirada++;
+    else if (counts[r.status] !== undefined) counts[r.status]++;
+  });
+  document.getElementById("statusGrid").innerHTML = `
+    <div class="stat-card"><div class="value">${allReservations.length}</div><div class="label">Total (${esc(currentRange.label)})</div></div>
+    <div class="stat-card"><div class="value">${counts.aguardando_pix}</div><div class="label">Aguardando Pix</div></div>
+    <div class="stat-card"><div class="value">${counts.pix_confirmado}</div><div class="label">Confirmadas</div></div>
+    <div class="stat-card"><div class="value">${counts.cancelada}</div><div class="label">Canceladas</div></div>
+    <div class="stat-card"><div class="value">${counts.concluida}</div><div class="label">Concluídas</div></div>
+    <div class="stat-card"><div class="value">${counts.expirada}</div><div class="label">Pix expirado (sem retorno)</div></div>
+  `;
+}
+
+function renderTable() {
+  const table = document.getElementById("table");
+  const data = currentFilter === "todas" ? allReservations : allReservations.filter((r) => r.status === currentFilter);
+
   if (!data || data.length === 0) {
-    table.innerHTML = '<div class="empty-state">Nenhuma reserva encontrada.</div>';
+    table.innerHTML = '<div class="empty-state">Nenhuma reserva encontrada para esse filtro/período.</div>';
     return;
   }
 
@@ -107,7 +214,10 @@ function statusBadge(status) {
 }
 
 function rowHtml(r) {
-  const notice = r.guest_marked_paid_at ? '<br><span class="help-text">✋ hóspede avisou que pagou</span>' : "";
+  const expired = isExpiredHold(r);
+  const notice = r.guest_marked_paid_at
+    ? '<br><span class="help-text">✋ hóspede avisou que pagou</span>'
+    : (expired ? '<br><span class="badge badge-neutral" style="margin-top:4px;">Pix expirado (sem retorno em 2h)</span>' : "");
   let actions = "";
   if (r.status === "aguardando_pix") {
     actions = `<button class="btn btn-primary btn-sm" id="confirm-${r.id}">Confirmar Pix</button> <button class="btn btn-danger btn-sm" id="cancel-${r.id}">Cancelar</button>`;

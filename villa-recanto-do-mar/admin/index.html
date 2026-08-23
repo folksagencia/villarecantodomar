@@ -25,7 +25,27 @@
     <p class="help-text">Hóspedes que já avisaram que pagaram (ou você conferiu o extrato) — confirme para liberar a reserva.</p>
     <div class="table-wrap" id="pendingTable"></div>
 
-    <h3 style="margin-top:36px;">Funil de reservas (últimos 30 dias)</h3>
+    <h3 style="margin-top:36px;">Estatísticas <span id="rangeLabel" style="font-weight:400;color:var(--ink-600);font-size:0.85rem;"></span></h3>
+    <div class="card" style="margin-bottom:20px;max-width:720px;"><div class="card-body">
+      <label style="margin-top:0;">Período do relatório</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-sm btn-secondary" data-range="hoje">Hoje</button>
+        <button class="btn btn-sm btn-secondary" data-range="7">Últimos 7 dias</button>
+        <button class="btn btn-sm btn-secondary" data-range="30">Últimos 30 dias</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;margin-top:14px;">
+        <div style="flex:1;min-width:130px;">
+          <label style="margin:0 0 6px;font-size:0.78rem;">Personalizado — de</label>
+          <input type="date" id="rangeFrom">
+        </div>
+        <div style="flex:1;min-width:130px;">
+          <label style="margin:0 0 6px;font-size:0.78rem;">até</label>
+          <input type="date" id="rangeTo">
+        </div>
+        <button class="btn btn-sm btn-primary" id="applyRangeBtn">Aplicar</button>
+      </div>
+    </div></div>
+
     <p class="help-text">Quantas pessoas passaram por cada etapa antes de pagar o sinal — ajuda a ver onde elas desistem.</p>
     <div class="table-wrap" id="funnelTable"></div>
   </main>
@@ -35,12 +55,40 @@
 <script src="/assets/format.js"></script>
 <script src="/assets/admin-common.js"></script>
 <script>
+let currentRange = { since: null, until: null, label: "Últimos 30 dias" };
+
 async function init() {
   const session = await requireAdminAuth();
   if (!session) return;
   renderAdminNav("dashboard");
+
+  document.querySelectorAll("[data-range]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      setPresetRange(btn.dataset.range);
+      highlightRangeBtn(btn);
+      loadDashboard();
+    });
+  });
+  document.getElementById("applyRangeBtn").addEventListener("click", () => {
+    setCustomRange();
+    highlightRangeBtn(null);
+    loadDashboard();
+  });
+
+  setPresetRange("30");
+  highlightRangeBtn(document.querySelector('[data-range="30"]'));
+
   await loadDashboard();
   setInterval(loadDashboard, 30000); // atualiza sozinho a cada 30s
+}
+
+function highlightRangeBtn(activeBtn) {
+  document.querySelectorAll("[data-range]").forEach((b) => b.classList.remove("btn-primary"));
+  document.querySelectorAll("[data-range]").forEach((b) => b.classList.add("btn-secondary"));
+  if (activeBtn) {
+    activeBtn.classList.remove("btn-secondary");
+    activeBtn.classList.add("btn-primary");
+  }
 }
 
 function daysAgoISO(days) {
@@ -49,7 +97,37 @@ function daysAgoISO(days) {
   return d.toISOString();
 }
 
+function startOfDayISO(dateStr) { return new Date(dateStr + "T00:00:00").toISOString(); }
+function endOfDayISO(dateStr) { return new Date(dateStr + "T23:59:59.999").toISOString(); }
+
+function setPresetRange(kind) {
+  if (kind === "hoje") {
+    currentRange = { since: startOfDayISO(todayISODate()), until: null, label: "hoje" };
+  } else if (kind === "7") {
+    currentRange = { since: daysAgoISO(7), until: null, label: "últimos 7 dias" };
+  } else {
+    currentRange = { since: daysAgoISO(30), until: null, label: "últimos 30 dias" };
+  }
+  document.getElementById("rangeFrom").value = "";
+  document.getElementById("rangeTo").value = "";
+  document.getElementById("rangeLabel").textContent = `(${currentRange.label})`;
+}
+
+function setCustomRange() {
+  const from = document.getElementById("rangeFrom").value;
+  const to = document.getElementById("rangeTo").value;
+  if (!from || !to || to < from) {
+    alert("Escolha um período válido: data inicial antes (ou igual) da data final.");
+    return;
+  }
+  currentRange = { since: startOfDayISO(from), until: endOfDayISO(to), label: `${formatDateBR(from)} até ${formatDateBR(to)}` };
+  document.getElementById("rangeLabel").textContent = `(${currentRange.label})`;
+}
+
 async function loadDashboard() {
+  const viewsQuery = villaSupabase.from("room_views").select("id", { count: "exact", head: true }).gte("viewed_at", currentRange.since);
+  if (currentRange.until) viewsQuery.lte("viewed_at", currentRange.until);
+
   const [pendingRes, viewsRes, funnelCounts] = await Promise.all([
     villaSupabase
       .from("reservations")
@@ -57,7 +135,7 @@ async function loadDashboard() {
       .eq("status", "aguardando_pix")
       .not("guest_marked_paid_at", "is", null)
       .order("guest_marked_paid_at", { ascending: false }),
-    villaSupabase.from("room_views").select("id", { count: "exact", head: true }).gte("viewed_at", daysAgoISO(30)),
+    viewsQuery,
     loadFunnelCounts(),
   ]);
 
@@ -65,8 +143,8 @@ async function loadDashboard() {
 
   document.getElementById("statGrid").innerHTML = `
     <div class="stat-card"><div class="value">${pending.length}</div><div class="label">Aguardando confirmação</div></div>
-    <div class="stat-card"><div class="value">${viewsRes.count || 0}</div><div class="label">Visualizações de quartos (30 dias)</div></div>
-    <div class="stat-card"><div class="value">${funnelCounts.gerou_pix}</div><div class="label">Reservas iniciadas com Pix gerado (30 dias)</div></div>
+    <div class="stat-card"><div class="value">${viewsRes.count || 0}</div><div class="label">Visualizações de quartos (${currentRange.label})</div></div>
+    <div class="stat-card"><div class="value">${funnelCounts.gerou_pix}</div><div class="label">Reservas com Pix gerado (${currentRange.label})</div></div>
   `;
 
   document.getElementById("pendingAlert").innerHTML = pending.length > 0
@@ -111,11 +189,12 @@ async function loadDashboard() {
 
 async function loadFunnelCounts() {
   const stages = ["viu_quarto", "iniciou_reserva", "gerou_pix", "confirmou_envio_comprovante"];
-  const since = daysAgoISO(30);
   const results = await Promise.all(
-    stages.map((stage) =>
-      villaSupabase.from("funnel_events").select("id", { count: "exact", head: true }).eq("stage", stage).gte("created_at", since)
-    )
+    stages.map((stage) => {
+      let q = villaSupabase.from("funnel_events").select("id", { count: "exact", head: true }).eq("stage", stage).gte("created_at", currentRange.since);
+      if (currentRange.until) q = q.lte("created_at", currentRange.until);
+      return q;
+    })
   );
   const out = {};
   stages.forEach((stage, i) => { out[stage] = results[i].count || 0; });

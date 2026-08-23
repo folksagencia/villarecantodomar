@@ -87,13 +87,26 @@ module.exports = async (req, res) => {
     }
 
     // ---- confere se já não existe reserva conflitante ----------------------
-    const conflicting = await pgSelect(
+    // Reservas "aguardando_pix" seguram a data por até 2h (o mesmo prazo de
+    // validade mostrado ao hóspede em reserva.html). Depois disso, se
+    // ninguém avisou que pagou, a data libera de novo automaticamente —
+    // assim uma pessoa que desistiu no meio do caminho não trava a data pra
+    // sempre. Se o hóspede avisou que pagou (guest_marked_paid_at), a data
+    // continua segurada até a pousada confirmar ou cancelar manualmente.
+    const candidates = await pgSelect(
       "reservations",
       `room_id=eq.${encodeURIComponent(room_id)}` +
         `&status=in.(aguardando_pix,pix_confirmado,concluida)` +
-        `&check_in=lt.${check_out}&check_out=gt.${check_in}&select=id`
+        `&check_in=lt.${check_out}&check_out=gt.${check_in}` +
+        `&select=id,status,created_at,guest_marked_paid_at`
     );
-    if (Array.isArray(conflicting) && conflicting.length > 0) {
+    const holdCutoff = Date.now() - 2 * 60 * 60 * 1000;
+    const conflicting = (Array.isArray(candidates) ? candidates : []).filter((c) => {
+      if (c.status !== "aguardando_pix") return true; // pix_confirmado/concluida sempre bloqueiam
+      if (c.guest_marked_paid_at) return true; // hóspede avisou que pagou: mantém segurado p/ revisão manual
+      return new Date(c.created_at).getTime() > holdCutoff; // ainda dentro das 2h de validade
+    });
+    if (conflicting.length > 0) {
       res.status(409).json({ error: "Essas datas acabaram de ser reservadas por outra pessoa. Escolha outro período." });
       return;
     }
