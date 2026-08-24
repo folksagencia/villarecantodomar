@@ -53,6 +53,8 @@ const VILLA_AMENITY_ICONS = {
   area_comum: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="4.6" r="2"/><path d="M18 0.8v1M14.4 4.6h1M20.6 4.6h1M15.4 1.6l.9.9M21.3 1.6l-.9.9"/><rect x="2" y="8" width="15.5" height="11" rx="2"/><path d="M4.5 12.3c1 1 2 1 3 0s2-1 3 0 2 1 3 0 2-1 3 0"/><path d="M4.5 16c1 1 2 1 3 0s2-1 3 0 2 1 3 0 2-1 3 0"/></svg>`,
 
   espaco_kids: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16"/><path d="M6 4 3.5 20M18 4l2.5 16"/><path d="M9.7 4v7M14.3 4v7"/><path d="M9.7 11h4.6"/><circle cx="12" cy="8.6" r="1.5"/><path d="M10.3 11v3.3M13.7 11v3.3"/></svg>`,
+
+  frigobar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.3" width="12" height="19.4" rx="1.5"/><path d="M15 7v6"/></svg>`,
 };
 
 // Catálogo: chave -> { label, category, icon }
@@ -65,6 +67,7 @@ const VILLA_AMENITY_CATALOG = [
   { key: "pet_friendly", label: "Pet friendly", category: "geral" },
   { key: "estacionamento_24h", label: "Estacionamento privativo 24h", category: "geral" },
   { key: "roupa_de_cama", label: "Roupa de cama", category: "geral" },
+  { key: "frigobar", label: "Frigobar", category: "geral" },
   { key: "area_comum", label: "Área comum com piscina, deck, churrasqueira e sinuca", category: "geral" },
   { key: "espaco_kids", label: "Espaço Kids", category: "geral" },
   { key: "vista", label: "Vista", category: "vista" },
