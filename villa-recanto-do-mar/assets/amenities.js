@@ -34,7 +34,7 @@ const VILLA_AMENITY_ICONS = {
 
   pet_friendly: `<svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><ellipse cx="12" cy="16.2" rx="4.2" ry="3.4"/><ellipse cx="6.3" cy="10.3" rx="1.7" ry="2.2"/><ellipse cx="10.2" cy="7.2" rx="1.7" ry="2.2"/><ellipse cx="13.8" cy="7.2" rx="1.7" ry="2.2"/><ellipse cx="17.7" cy="10.3" rx="1.7" ry="2.2"/></svg>`,
 
-  estacionamento_24h: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 16V8h3.2a2.4 2.4 0 0 1 0 4.8H9"/></svg>`,
+  estacionamento_24h: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16l1.4-4.6A2.2 2.2 0 0 1 7.5 9.8h9a2.2 2.2 0 0 1 2.1 1.6L20 16"/><rect x="2.5" y="16" width="19" height="3" rx="1.3"/><circle cx="7" cy="19.3" r="1.4"/><circle cx="17" cy="19.3" r="1.4"/></svg>`,
 
   roupa_de_cama: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v5"/><path d="M3 18h18v1.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V18Z"/><path d="M6 11V9a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v2"/></svg>`,
 
@@ -49,6 +49,10 @@ const VILLA_AMENITY_ICONS = {
   papel_higienico: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="9.5" cy="12" rx="5.5" ry="6"/><ellipse cx="9.5" cy="12" rx="2.1" ry="2.3"/><path d="M15 8.5h3.5a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 1-1.5 1.5H14"/></svg>`,
 
   tamanho: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>`,
+
+  area_comum: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="4.6" r="2"/><path d="M18 0.8v1M14.4 4.6h1M20.6 4.6h1M15.4 1.6l.9.9M21.3 1.6l-.9.9"/><rect x="2" y="8" width="15.5" height="11" rx="2"/><path d="M4.5 12.3c1 1 2 1 3 0s2-1 3 0 2 1 3 0 2-1 3 0"/><path d="M4.5 16c1 1 2 1 3 0s2-1 3 0 2 1 3 0 2-1 3 0"/></svg>`,
+
+  espaco_kids: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16"/><path d="M6 4 3.5 20M18 4l2.5 16"/><path d="M9.7 4v7M14.3 4v7"/><path d="M9.7 11h4.6"/><circle cx="12" cy="8.6" r="1.5"/><path d="M10.3 11v3.3M13.7 11v3.3"/></svg>`,
 };
 
 // Catálogo: chave -> { label, category, icon }
@@ -61,6 +65,8 @@ const VILLA_AMENITY_CATALOG = [
   { key: "pet_friendly", label: "Pet friendly", category: "geral" },
   { key: "estacionamento_24h", label: "Estacionamento privativo 24h", category: "geral" },
   { key: "roupa_de_cama", label: "Roupa de cama", category: "geral" },
+  { key: "area_comum", label: "Área comum com piscina, deck, churrasqueira e sinuca", category: "geral" },
+  { key: "espaco_kids", label: "Espaço Kids", category: "geral" },
   { key: "vista", label: "Vista", category: "vista" },
   { key: "produtos_banho", label: "Produtos de banho grátis", category: "banheiro" },
   { key: "chuveiro", label: "Chuveiro", category: "banheiro" },
@@ -75,8 +81,8 @@ function villaAmenityByKey(key) {
 // Ordem de prioridade pra escolher quais comodidades mostrar quando só cabe
 // espaço pra poucas (ex: ícones sobre a foto de capa do card na home).
 const VILLA_TOP_AMENITY_PRIORITY = [
-  "wifi_gratuito", "ar_condicionado", "pet_friendly", "varanda",
-  "estacionamento_24h", "banheiro_privativo", "tv_tela_plana", "vista", "roupa_de_cama",
+  "wifi_gratuito", "ar_condicionado", "pet_friendly", "varanda", "area_comum",
+  "estacionamento_24h", "banheiro_privativo", "tv_tela_plana", "espaco_kids", "vista", "roupa_de_cama",
 ];
 
 function villaTopAmenities(room, limit) {
@@ -125,28 +131,6 @@ function villaRenderRoomAmenities(room) {
   const vistaKeys = keys.filter((k) => { const a = villaAmenityByKey(k); return a && a.category === "vista"; });
   const banheiroKeys = keys.filter((k) => { const a = villaAmenityByKey(k); return a && a.category === "banheiro"; });
 
-  const topBadges = [];
-  if (room.size_m2) {
-    topBadges.push(`
-      <span class="amenity-chip">
-        <span class="amenity-chip-icon">${VILLA_AMENITY_ICONS.tamanho}</span>${room.size_m2} m²
-      </span>
-    `);
-  }
-  geralKeys.concat(vistaKeys).forEach((k) => {
-    const a = villaAmenityByKey(k);
-    if (!a) return;
-    topBadges.push(`
-      <span class="amenity-chip">
-        <span class="amenity-chip-icon">${a.icon}</span>${a.label}
-      </span>
-    `);
-  });
-
-  const topRow = topBadges.length
-    ? `<div class="amenity-chip-row">${topBadges.join("")}</div>`
-    : "";
-
   const bedLine = room.bed_config
     ? `<p class="amenity-bed-config">${String(room.bed_config).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]))}</p>`
     : "";
@@ -157,16 +141,12 @@ function villaRenderRoomAmenities(room) {
     villaRenderAmenitySection(VILLA_AMENITY_CATEGORIES.geral.sectionTitle, geralKeys),
   ].join("");
 
-  const smokingLine = `<p class="amenity-smoking help-text">Fumantes: ${room.smoking_allowed ? "Permitido" : "Não é permitido fumar"}</p>`;
-
-  if (!topRow && !bedLine && !sections) return "";
+  if (!bedLine && !sections) return "";
 
   return `
     <div class="amenity-block">
-      ${topRow}
       ${bedLine}
       ${sections}
-      ${smokingLine}
     </div>
   `;
 }

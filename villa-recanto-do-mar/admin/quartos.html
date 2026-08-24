@@ -64,9 +64,6 @@
       </div>
       <p class="help-text">Esses dois variam de acomodação pra acomodação, por isso são texto livre — o resto abaixo é um catálogo fixo, só marcar o que tem.</p>
 
-      <label><input type="checkbox" id="smokingAllowed" style="width:auto;display:inline-block;"> Permite fumar</label>
-      <p class="help-text">Desmarcado mostra "Não é permitido fumar" na página da acomodação.</p>
-
       <label>Comodidades</label>
       <div class="amenity-picker-group" id="amenityPicker"></div>
 
@@ -129,7 +126,7 @@ function renderAmenityPicker() {
       <div class="amenity-picker-grid">
         ${items.map((a) => `
           <label class="amenity-picker-item">
-            <input type="checkbox" value="${a.key}" data-amenity>
+            <input type="checkbox" value="${a.key}" data-amenity checked>
             <span class="amenity-chip-icon">${a.icon}</span>
             ${a.label}
           </label>
@@ -146,6 +143,13 @@ function getCheckedAmenities() {
 function setCheckedAmenities(keys) {
   const set = new Set(Array.isArray(keys) ? keys : []);
   document.querySelectorAll("[data-amenity]").forEach((el) => { el.checked = set.has(el.value); });
+}
+
+// Comodidades vêm marcadas por padrão pra acomodação nova — a maioria dos
+// quartos tem quase tudo do catálogo, então é mais rápido desmarcar as
+// exceções do que marcar item por item.
+function checkAllAmenities() {
+  setCheckedAmenities(VILLA_AMENITY_CATALOG.map((a) => a.key));
 }
 
 function slugify(text) {
@@ -201,7 +205,6 @@ function editRoom(id) {
   document.getElementById("basePrice").value = r.base_price;
   document.getElementById("sizeM2").value = r.size_m2 || "";
   document.getElementById("bedConfig").value = r.bed_config || "";
-  document.getElementById("smokingAllowed").checked = !!r.smoking_allowed;
   setCheckedAmenities(r.amenities);
   document.getElementById("active").checked = r.active;
   currentPhotos = Array.isArray(r.photos) ? r.photos.slice() : [];
@@ -220,8 +223,7 @@ function clearForm() {
   document.getElementById("basePrice").value = "";
   document.getElementById("sizeM2").value = "";
   document.getElementById("bedConfig").value = "";
-  document.getElementById("smokingAllowed").checked = false;
-  setCheckedAmenities([]);
+  checkAllAmenities();
   document.getElementById("active").checked = true;
   currentPhotos = [];
   renderPhotoList();
@@ -293,7 +295,6 @@ async function saveRoom() {
     base_price: Number(document.getElementById("basePrice").value),
     size_m2: document.getElementById("sizeM2").value ? Number(document.getElementById("sizeM2").value) : null,
     bed_config: document.getElementById("bedConfig").value.trim() || null,
-    smoking_allowed: document.getElementById("smokingAllowed").checked,
     amenities: getCheckedAmenities(),
     active: document.getElementById("active").checked,
     photos: currentPhotos,

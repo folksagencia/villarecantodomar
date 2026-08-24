@@ -244,30 +244,6 @@ a { color: var(--teal-700); }
 }
 .card-carousel-dot.active { background: var(--white); width: 8px; height: 8px; }
 
-/* faixa de sombra fixa no rodapé da foto — garante contraste pras bolinhas
-   e pros ícones de comodidade, não importa quão clara seja a foto */
-.room-card .photo::after {
-  content: "";
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 66px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.55));
-  pointer-events: none;
-  z-index: 1;
-}
-
-/* faixa de ícones de comodidades sobre a foto de capa */
-.room-card-amenities {
-  position: absolute;
-  bottom: 24px;
-  left: 12px;
-  right: 12px;
-  display: flex;
-  gap: 10px;
-  z-index: 2;
-}
-.room-card-amenities .amenity-chip-icon { width: 17px; height: 17px; color: var(--white); }
-
 .room-card h3 { margin: 0 0 4px; font-size: 1.1rem; }
 .room-card p { margin: 0 0 10px; color: var(--ink-600); font-size: 0.92rem; }
 .room-card-meta {
@@ -324,20 +300,7 @@ input:focus, textarea:focus, select:focus {
 
 /* ---------- comodidades (quarto.html + admin/quartos.html) ---------- */
 
-/* linha de chips compacta, logo abaixo do título da acomodação */
-.amenity-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
-.amenity-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--ink-300);
-  background: var(--white);
-  color: var(--ink-900);
-  font-size: 0.82rem;
-  font-weight: 600;
-}
+/* ícone pequeno reaproveitado nos checkboxes do admin (admin/quartos.html) */
 .amenity-chip-icon { width: 16px; height: 16px; color: var(--teal-500); display: inline-flex; flex-shrink: 0; }
 .amenity-chip-icon svg { width: 100%; height: 100%; display: block; }
 
@@ -370,8 +333,6 @@ input:focus, textarea:focus, select:focus {
 }
 .amenity-badge-icon svg { width: 100%; height: 100%; display: block; }
 .amenity-badge-label { font-size: 0.8rem; color: var(--ink-900); line-height: 1.25; }
-
-.amenity-smoking { margin-top: 22px; }
 
 /* seletor de comodidades no formulário do admin */
 .amenity-picker-group { margin-top: 10px; }

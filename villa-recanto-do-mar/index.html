@@ -25,7 +25,6 @@
 
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="/assets/amenities.js"></script>
 </head>
 <body>
 
@@ -113,7 +112,7 @@ async function loadRooms() {
   const container = document.getElementById("rooms");
   const { data: rooms, error } = await villaSupabase
     .from("rooms")
-    .select("slug,name,description,base_price,capacity,photos,amenities")
+    .select("slug,name,description,base_price,capacity,photos")
     .eq("active", true)
     .order("sort_order", { ascending: true });
 
@@ -136,16 +135,11 @@ const CARD_MAX_PHOTOS = 5;
 
 function roomCardHtml(room, i) {
   const photos = Array.isArray(room.photos) ? room.photos.slice(0, CARD_MAX_PHOTOS) : [];
-  const topAmenities = typeof villaTopAmenities === "function" ? villaTopAmenities(room, 4) : [];
-  const amenitiesHtml = topAmenities.length
-    ? `<div class="room-card-amenities">${topAmenities.map((a) => `<span class="amenity-chip-icon" title="${escapeAttr(a.label)}">${a.icon}</span>`).join("")}</div>`
-    : "";
   return `
     <a class="card room-card" id="roomCard-${i}" href="/quarto.html?slug=${encodeURIComponent(room.slug)}" style="text-decoration:none;color:inherit;">
       <div class="photo">
         <div class="room-card-gallery" id="roomCoverGallery-${i}"></div>
         <span class="room-card-badge">Café da manhã incluído</span>
-        ${amenitiesHtml}
       </div>
       <div class="card-body">
         <h3>${escapeHtml(room.name)}</h3>
