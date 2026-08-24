@@ -55,6 +55,10 @@ const VILLA_AMENITY_ICONS = {
   espaco_kids: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16"/><path d="M6 4 3.5 20M18 4l2.5 16"/><path d="M9.7 4v7M14.3 4v7"/><path d="M9.7 11h4.6"/><circle cx="12" cy="8.6" r="1.5"/><path d="M10.3 11v3.3M13.7 11v3.3"/></svg>`,
 
   frigobar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.3" width="12" height="19.4" rx="1.5"/><path d="M15 7v6"/></svg>`,
+
+  cafe_da_manha: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8h10l-1 10a2 2 0 0 1-2 1.8H9a2 2 0 0 1-2-1.8L6 8Z"/><path d="M16 10h1.5a2.2 2.2 0 0 1 0 4.4H16"/><path d="M9 5.5c0-1 .7-1 .7-2M12 5.5c0-1 .7-1 .7-2"/></svg>`,
+
+  bar: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7h9"/><path d="M6 7v3"/><path d="M15 7v3"/><path d="M6 10Q8.2 13.5 10.5 10Q12.8 13.5 15 10"/><path d="M6 10C6 14 7.5 17 10.5 17C13.5 17 15 14 15 10"/><path d="M10.5 17v3.3"/><path d="M8 21h5"/><path d="M2.5 1 10.8 10.3"/><path d="M15 7Q16.5 8.5 16.3 6.6"/><circle cx="18.2" cy="6.3" r="2.1"/></svg>`,
 };
 
 // Catálogo: chave -> { label, category, icon }
@@ -68,6 +72,8 @@ const VILLA_AMENITY_CATALOG = [
   { key: "estacionamento_24h", label: "Estacionamento privativo 24h", category: "geral" },
   { key: "roupa_de_cama", label: "Roupa de cama", category: "geral" },
   { key: "frigobar", label: "Frigobar", category: "geral" },
+  { key: "cafe_da_manha", label: "Café da manhã", category: "geral" },
+  { key: "bar", label: "Bar", category: "geral" },
   { key: "area_comum", label: "Área comum com piscina, deck, churrasqueira e sinuca", category: "geral" },
   { key: "espaco_kids", label: "Espaço Kids", category: "geral" },
   { key: "vista", label: "Vista", category: "vista" },
