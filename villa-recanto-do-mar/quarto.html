@@ -181,7 +181,7 @@ function render() {
 
       <div id="submitAlert"></div>
 
-      <button class="btn btn-primary btn-block" id="submitBtn" style="margin-top:20px;">Reservar e gerar Pix do sinal</button>
+      <button class="btn btn-primary btn-block" id="submitBtn" style="margin-top:20px;">Faça sua Reserva</button>
       <p class="help-text" style="text-align:center;margin-top:10px;">Você paga 30% agora via Pix para garantir a reserva. O restante é pago no check-in (débito, crédito, Pix ou crédito em até 3x).</p>
     </div></div>
   `;
@@ -398,7 +398,7 @@ async function onSubmit() {
     if (!res.ok) {
       submitAlert.innerHTML = `<div class="alert alert-danger">${esc(data.error || "Não foi possível reservar.")}</div>`;
       btn.disabled = false;
-      btn.innerHTML = "Reservar e gerar Pix do sinal";
+      btn.innerHTML = "Faça sua Reserva";
       return;
     }
 

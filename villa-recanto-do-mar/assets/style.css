@@ -139,6 +139,19 @@ a { color: var(--teal-700); }
 .btn-primary { background: var(--sand-500); color: var(--ink-900); }
 .btn-primary:hover { background: var(--sand-700); color: var(--white); }
 
+/* CTA de reserva ("Faça sua Reserva") — mais chamativo pra convidar o clique
+   (caixa alta, negrito, branco, uma sombra suave dando destaque de botão),
+   mas a sombra fica contida ao próprio botão pra não brigar com o texto de
+   ajuda sobre o sinal de 30% logo abaixo. */
+#submitBtn {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--white);
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(158, 107, 17, 0.38);
+}
+#submitBtn:hover { color: var(--white); }
+
 .btn-secondary { background: var(--white); color: var(--teal-900); border: 1px solid var(--ink-300); }
 .btn-secondary:hover { border-color: var(--teal-700); }
 
@@ -196,8 +209,11 @@ a { color: var(--teal-700); }
 .room-card-gallery { position: absolute; inset: 0; overflow: hidden; }
 .card-carousel-track { display: flex; width: 100%; height: 100%; transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1); }
 .card-carousel-slide { flex: 0 0 100%; height: 100%; }
-.card-carousel-slide img { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--teal-100); }
-.card-carousel-slide img.is-portrait { object-fit: contain; }
+.card-carousel-slide img, .card-carousel-slide video {
+  width: 100%; height: 100%; object-fit: cover; display: block; background: var(--teal-100);
+  opacity: 0; transition: opacity 0.25s ease;
+}
+.card-carousel-slide img.is-loaded, .card-carousel-slide video.is-loaded { opacity: 1; }
 
 .card-carousel-arrow {
   position: absolute;
@@ -207,7 +223,7 @@ a { color: var(--teal-700); }
   height: 30px;
   border-radius: 50%;
   border: none;
-  background: rgba(0,0,0,0.45);
+  background: rgba(46, 98, 133, 0.8);
   color: var(--white);
   font-size: 1.25rem;
   line-height: 1;
@@ -221,7 +237,7 @@ a { color: var(--teal-700); }
 }
 .room-card .photo:hover .card-carousel-arrow,
 .card-carousel-arrow:focus-visible { opacity: 1; }
-.card-carousel-arrow:hover { background: rgba(0,0,0,0.65); }
+.card-carousel-arrow:hover { background: rgba(24, 56, 76, 0.88); }
 .card-carousel-prev { left: 8px; }
 .card-carousel-next { right: 8px; }
 
@@ -313,27 +329,18 @@ input:focus, textarea:focus, select:focus {
 .amenity-section-title { margin: 0 0 12px; font-size: 1rem; color: var(--ink-900); }
 
 .amenity-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  gap: 16px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 28px;
+  row-gap: 14px;
 }
 
-/* badge redondo — círculo azul + anel dourado + ícone branco, no mesmo
-   estilo visual dos destaques do Instagram da pousada */
-.amenity-badge { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
-.amenity-badge-icon {
-  border-radius: 50%;
-  background: var(--teal-500);
-  border: 3px solid var(--sand-500);
-  color: var(--white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  flex-shrink: 0;
-}
-.amenity-badge-icon svg { width: 100%; height: 100%; display: block; }
-.amenity-badge-label { font-size: 0.8rem; color: var(--ink-900); line-height: 1.25; }
+/* ícone + rótulo lado a lado — compacto, sem o círculo/anel de antes (o
+   ícone ficava pequeno demais dentro do círculo e a lista tomava muita
+   altura da tela empilhando ícone-em-cima/texto-embaixo item por item) */
+.amenity-item { display: inline-flex; align-items: center; gap: 9px; font-size: 0.92rem; color: var(--ink-900); }
+.amenity-item-icon { width: 24px; height: 24px; color: var(--teal-500); flex-shrink: 0; display: inline-flex; }
+.amenity-item-icon svg { width: 100%; height: 100%; display: block; }
 
 /* seletor de comodidades no formulário do admin */
 .amenity-picker-group { margin-top: 10px; }
@@ -508,15 +515,19 @@ tr:last-child td { border-bottom: none; }
 /* ---------- galeria / carrossel de fotos ---------- */
 .gallery-main {
   position: relative;
-  aspect-ratio: 16 / 9;
+  aspect-ratio: 16 / 9; /* usado só como valor inicial, antes do JS medir a 1ª foto de verdade */
   background: var(--teal-100);
   border-radius: var(--radius);
   overflow: hidden;
+  transition: height 0.35s ease; /* anima a mudança de altura ao trocar entre foto horizontal/vertical */
 }
 .gallery-track { display: flex; width: 100%; height: 100%; transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1); }
 .gallery-slide { flex: 0 0 100%; height: 100%; }
-.gallery-slide img { width: 100%; height: 100%; object-fit: cover; display: block; background: var(--teal-100); }
-.gallery-slide img.is-portrait { object-fit: contain; }
+.gallery-slide img, .gallery-slide video {
+  width: 100%; height: 100%; object-fit: cover; display: block; background: var(--teal-100);
+  opacity: 0; transition: opacity 0.25s ease;
+}
+.gallery-slide img.is-loaded, .gallery-slide video.is-loaded { opacity: 1; }
 .gallery-arrow {
   position: absolute;
   top: 50%;
@@ -525,7 +536,7 @@ tr:last-child td { border-bottom: none; }
   height: 36px;
   border-radius: 50%;
   border: none;
-  background: rgba(0,0,0,0.45);
+  background: rgba(46, 98, 133, 0.8);
   color: var(--white);
   font-size: 1.4rem;
   line-height: 1;
@@ -534,20 +545,9 @@ tr:last-child td { border-bottom: none; }
   align-items: center;
   justify-content: center;
 }
-.gallery-arrow:hover { background: rgba(0,0,0,0.65); }
+.gallery-arrow:hover { background: rgba(24, 56, 76, 0.88); }
 .gallery-prev { left: 10px; }
 .gallery-next { right: 10px; }
-.gallery-counter {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
-  background: rgba(0,0,0,0.55);
-  color: var(--white);
-  font-size: 0.72rem;
-  font-weight: 600;
-  padding: 3px 9px;
-  border-radius: 999px;
-}
 .gallery-caption {
   position: absolute;
   bottom: 0;

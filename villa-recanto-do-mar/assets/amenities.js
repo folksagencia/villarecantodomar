@@ -106,14 +106,14 @@ function villaTopAmenities(room, limit) {
 
 // --- Renderização (usada em quarto.html) ------------------------------------
 
-// Círculo pequeno (badge) com o ícone — usado tanto no topo quanto nas seções.
-function villaAmenityBadgeHtml(amenity, opts) {
-  opts = opts || {};
-  const size = opts.size || 34;
+// Ícone + texto lado a lado, numa linha só — compacto, com o ícone grande o
+// bastante pra dar pra ver de verdade (o círculo grande de antes acabava
+// deixando o desenho pequeno demais dentro dele e tomava espaço à toa).
+function villaAmenityBadgeHtml(amenity) {
   return `
-    <span class="amenity-badge" title="${amenity.label.replace(/"/g, "&quot;")}">
-      <span class="amenity-badge-icon" style="width:${size}px;height:${size}px;">${amenity.icon}</span>
-      <span class="amenity-badge-label">${amenity.label}</span>
+    <span class="amenity-item" title="${amenity.label.replace(/"/g, "&quot;")}">
+      <span class="amenity-item-icon">${amenity.icon}</span>
+      <span class="amenity-item-label">${amenity.label}</span>
     </span>
   `;
 }

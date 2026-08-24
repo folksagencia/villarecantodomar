@@ -21,10 +21,11 @@
     <p class="section-sub">Fotos da área comum, piscina, café da manhã, serviços etc. — aparecem num carrossel único na página inicial do site (não são fotos de uma acomodação específica; para isso, use a aba "Acomodações").</p>
 
     <div class="card" style="max-width:640px;margin-bottom:24px;"><div class="card-body">
-      <label for="photoInput">Adicionar fotos</label>
-      <input type="file" id="photoInput" accept="image/*" multiple>
+      <label for="photoInput">Adicionar fotos ou vídeos</label>
+      <input type="file" id="photoInput" accept="image/*,video/*" multiple>
       <p class="help-text">Você pode escolher várias de uma vez. A ordem de chegada aqui embaixo é a ordem que elas aparecem no carrossel da página inicial — <strong>arraste pelo ⠿ pra reorganizar</strong> (ou use "↑ Subir" / "↓ Descer").</p>
       <p class="help-text"><strong>Formato recomendado:</strong> fotos na horizontal (paisagem), em torno de <strong>1600 × 1067px</strong>. Comprima antes de enviar (ex: tinypng.com) pra o site continuar rápido — evite arquivos muito grandes.</p>
+      <p class="help-text">Também aceita <strong>vídeos verticais</strong> (formato story, .mp4/.mov/.webm) — eles tocam sozinhos, mudos e em loop no carrossel, junto com as fotos.</p>
       <div id="uploadAlert"></div>
     </div></div>
 
@@ -73,7 +74,9 @@ function render() {
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">
       ${photos.map((p, i) => `
         <div class="card" data-id="${p.id}" draggable="true" data-drag-id="${p.id}">
-          <div class="photo" style="aspect-ratio:16/9;background-image:url('${esc(p.url)}');background-size:cover;background-position:center;"></div>
+          <div class="photo" style="position:relative;aspect-ratio:16/9;${isVillaVideoUrl(p.url) ? "" : `background-image:url('${esc(p.url)}');background-size:cover;background-position:center;`}">
+            ${isVillaVideoUrl(p.url) ? `<video src="${esc(p.url)}" muted autoplay loop playsinline style="width:100%;height:100%;object-fit:cover;display:block;"></video><span class="badge badge-neutral" style="position:absolute;top:6px;right:6px;">▶ Vídeo</span>` : ""}
+          </div>
           <div class="card-body">
             <label style="margin-top:0;">Legenda (opcional)</label>
             <input type="text" class="captionInput" placeholder="Ex: Piscina, Café da manhã, Área de lazer..." value="${esc(p.caption || "")}">

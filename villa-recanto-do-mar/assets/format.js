@@ -39,3 +39,10 @@ function formatDateTimeBR(isoTimestamp) {
   const timePart = d.toLocaleTimeString("pt-BR", { timeZone: "America/Sao_Paulo", hour: "2-digit", minute: "2-digit" });
   return `${datePart} ${timePart}`;
 }
+
+// Detecta se uma URL de mídia é vídeo (pela extensão do arquivo) — usado
+// tanto nas páginas públicas (carrosséis aceitam foto OU vídeo vertical
+// misturados) quanto no admin (pra saber como montar a miniatura certa).
+function isVillaVideoUrl(url) {
+  return /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(String(url || ""));
+}
