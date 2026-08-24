@@ -33,6 +33,11 @@ module.exports = async (req, res) => {
     const { room_id, check_in, check_out, guest_name, guest_email, guest_phone } = body;
     const guest_count = Number(body.guest_count);
     const children_ages = Array.isArray(body.children_ages) ? body.children_ages.map(Number) : [];
+    // Guardamos o session_id (o mesmo usado nos eventos de funil, veja
+    // assets/session.js) só para o admin conseguir limpar o evento
+    // "gerou_pix" correspondente quando excluir uma reserva de teste no
+    // painel — não identifica a pessoa, é o mesmo id anônimo por navegador.
+    const session_id = body.session_id ? String(body.session_id).slice(0, 100) : null;
 
     // ---- validação básica dos dados enviados -----------------------------
     const errors = [];
@@ -156,6 +161,7 @@ module.exports = async (req, res) => {
         status: "aguardando_pix",
         pix_txid: txid,
         pix_payload: pixPayload,
+        session_id,
       },
     ]);
 

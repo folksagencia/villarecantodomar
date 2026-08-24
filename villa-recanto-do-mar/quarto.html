@@ -12,16 +12,6 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192x192.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
 
-<meta property="og:type" content="website" />
-<meta property="og:site_name" content="Pousada Villa Recanto do Mar" />
-<meta property="og:title" content="Reservar — Villa Recanto do Mar" />
-<meta property="og:description" content="Reserve diretamente com a Pousada Villa Recanto do Mar. Sinal de 30% via Pix, sem taxas de intermediários." />
-<meta property="og:image" content="https://villarecantodomar.vercel.app/assets/img/og-image.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
-<meta name="twitter:card" content="summary_large_image" />
-<meta name="twitter:image" content="https://villarecantodomar.vercel.app/assets/img/og-image.png" />
-
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -397,6 +387,7 @@ async function onSubmit() {
         guest_phone: guestPhone,
         guest_count: guestCount,
         children_ages: childrenAges,
+        session_id: getVillaSessionId(),
       }),
     });
     const data = await res.json();

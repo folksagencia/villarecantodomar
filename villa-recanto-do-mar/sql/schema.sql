@@ -105,6 +105,9 @@ create table if not exists reservations (
   confirmed_at timestamptz,
   confirmed_by text, -- e-mail do admin que confirmou
   notes text,
+  session_id text, -- mesmo id anônimo de assets/session.js; usado só para
+                    -- o admin poder limpar o evento "gerou_pix" correspondente
+                    -- (em funnel_events) quando excluir uma reserva de teste.
   created_at timestamptz not null default now(),
 
   constraint check_dates check (check_out > check_in)
@@ -212,10 +215,13 @@ create policy "room_views_admin_select" on room_views
   using (true);
 
 -- --- funnel_events: SEM policy pública ---------------------------------------
-create policy "funnel_events_admin_select" on funnel_events
-  for select
+-- "for all" (não só select) porque o painel de reservas apaga o evento
+-- "gerou_pix" correspondente quando o admin exclui uma reserva de teste.
+create policy "funnel_events_admin_all" on funnel_events
+  for all
   to authenticated
-  using (true);
+  using (true)
+  with check (true);
 
 -- ============================================================================
 -- STORAGE: bucket para fotos dos quartos

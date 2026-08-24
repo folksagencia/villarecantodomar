@@ -139,7 +139,7 @@ async function load() {
 
   let query = villaSupabase
     .from("reservations")
-    .select("id,guest_name,guest_email,guest_phone,guest_count,children_ages,check_in,check_out,nights,total_price,deposit_amount,status,guest_marked_paid_at,confirmed_at,confirmed_by,created_at,rooms(name)")
+    .select("id,room_id,session_id,guest_name,guest_email,guest_phone,guest_count,children_ages,check_in,check_out,nights,total_price,deposit_amount,status,guest_marked_paid_at,confirmed_at,confirmed_by,created_at,rooms(name)")
     .order("created_at", { ascending: false });
 
   if (currentRange.since) query = query.gte("created_at", currentRange.since);
@@ -205,6 +205,8 @@ function renderTable() {
     if (confirmBtn) confirmBtn.addEventListener("click", () => confirmReservation(r.id));
     const cancelBtn = document.getElementById("cancel-" + r.id);
     if (cancelBtn) cancelBtn.addEventListener("click", () => cancelReservation(r.id));
+    const deleteBtn = document.getElementById("delete-" + r.id);
+    if (deleteBtn) deleteBtn.addEventListener("click", () => deleteReservation(r));
   });
 }
 
@@ -229,6 +231,7 @@ function rowHtml(r) {
   } else if (r.status === "pix_confirmado") {
     actions = `<button class="btn btn-danger btn-sm" id="cancel-${r.id}">Cancelar</button>`;
   }
+  actions += ` <button class="btn btn-outline-danger btn-sm" id="delete-${r.id}" title="Remove a reserva permanentemente — use para testes ou registros indevidos">Excluir</button>`;
   const children = Array.isArray(r.children_ages) ? r.children_ages : [];
   const guestInfo = `${r.guest_count || 1} hóspede(s)` + (children.length ? ` · ${children.length} criança(s) (${children.join(", ")} anos)` : "");
   const contact = [r.guest_email, r.guest_phone].filter(Boolean).join(" · ");
@@ -261,6 +264,35 @@ async function cancelReservation(id) {
   if (!confirm("Cancelar esta reserva?")) return;
   const { error } = await villaSupabase.from("reservations").update({ status: "cancelada" }).eq("id", id);
   showActionResult(error, "Reserva cancelada.");
+  load();
+}
+
+async function deleteReservation(r) {
+  const ok = confirm(
+    `Excluir permanentemente a reserva de "${r.guest_name || "hóspede"}"?\n\n` +
+    "Isso remove o registro por completo (não é só cancelar) — some da lista e não entra mais em nenhuma estatística do painel, " +
+    "incluindo o \"Reservas com Pix gerado\" do funil, se ela tiver chegado a gerar Pix. " +
+    "Use para reservas de teste ou lançadas por engano. Não é possível desfazer."
+  );
+  if (!ok) return;
+
+  // Apaga também o evento de funil "gerou_pix" correspondente (mesma sessão
+  // anônima + mesma acomodação), pra essa reserva de teste não continuar
+  // inflando a contagem do dashboard mesmo depois de excluída. Reservas
+  // criadas antes dessa coluna existir não têm session_id — nesse caso só
+  // a reserva é removida mesmo, sem afetar o funil.
+  if (r.session_id) {
+    const { error: funnelError } = await villaSupabase
+      .from("funnel_events")
+      .delete()
+      .eq("session_id", r.session_id)
+      .eq("room_id", r.room_id)
+      .eq("stage", "gerou_pix");
+    if (funnelError) console.error("Erro ao limpar evento de funil:", funnelError);
+  }
+
+  const { error } = await villaSupabase.from("reservations").delete().eq("id", r.id);
+  showActionResult(error, "Reserva excluída.");
   load();
 }
 
