@@ -146,6 +146,9 @@ a { color: var(--teal-700); }
 
 .btn-danger { background: var(--danger-bg); color: var(--danger); }
 
+.btn-outline-danger { background: var(--white); color: var(--danger); border: 1px solid var(--danger); }
+.btn-outline-danger:hover { background: var(--danger-bg); }
+
 .btn-block { width: 100%; }
 .btn-sm { padding: 8px 14px; font-size: 0.85rem; }
 
@@ -188,7 +191,82 @@ a { color: var(--teal-700); }
   border-radius: 6px;
   letter-spacing: 0.01em;
   box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  z-index: 2;
 }
+
+/* ---------- carrossel compacto do card de acomodação (home) ---------- */
+.room-card-gallery { position: absolute; inset: 0; }
+.room-card .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.card-carousel-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0,0,0,0.45);
+  color: var(--white);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 2;
+}
+.room-card .photo:hover .card-carousel-arrow,
+.card-carousel-arrow:focus-visible { opacity: 1; }
+.card-carousel-arrow:hover { background: rgba(0,0,0,0.65); }
+.card-carousel-prev { left: 8px; }
+.card-carousel-next { right: 8px; }
+
+.card-carousel-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  z-index: 2;
+}
+.card-carousel-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.55);
+  box-shadow: 0 0 2px rgba(0,0,0,0.4);
+  cursor: pointer;
+}
+.card-carousel-dot.active { background: var(--white); width: 8px; height: 8px; }
+
+/* faixa de sombra fixa no rodapé da foto — garante contraste pras bolinhas
+   e pros ícones de comodidade, não importa quão clara seja a foto */
+.room-card .photo::after {
+  content: "";
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 66px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.55));
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* faixa de ícones de comodidades sobre a foto de capa */
+.room-card-amenities {
+  position: absolute;
+  bottom: 24px;
+  left: 12px;
+  right: 12px;
+  display: flex;
+  gap: 10px;
+  z-index: 2;
+}
+.room-card-amenities .amenity-chip-icon { width: 17px; height: 17px; color: var(--white); }
 
 .room-card h3 { margin: 0 0 4px; font-size: 1.1rem; }
 .room-card p { margin: 0 0 10px; color: var(--ink-600); font-size: 0.92rem; }
@@ -243,6 +321,76 @@ input:focus, textarea:focus, select:focus {
 .badge-success { background: var(--success-bg); color: var(--success); }
 .badge-danger { background: var(--danger-bg); color: var(--danger); }
 .badge-neutral { background: var(--ink-300); color: var(--ink-900); }
+
+/* ---------- comodidades (quarto.html + admin/quartos.html) ---------- */
+
+/* linha de chips compacta, logo abaixo do título da acomodação */
+.amenity-chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 4px; }
+.amenity-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--ink-300);
+  background: var(--white);
+  color: var(--ink-900);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.amenity-chip-icon { width: 16px; height: 16px; color: var(--teal-500); display: inline-flex; flex-shrink: 0; }
+.amenity-chip-icon svg { width: 100%; height: 100%; display: block; }
+
+.amenity-bed-config { color: var(--ink-600); font-size: 0.9rem; margin: 6px 0 0; }
+
+.amenity-block { margin-top: 22px; }
+
+.amenity-section { margin-top: 22px; }
+.amenity-section-title { margin: 0 0 12px; font-size: 1rem; color: var(--ink-900); }
+
+.amenity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px 12px;
+}
+
+/* badge redondo — círculo azul + anel dourado + ícone branco, no mesmo
+   estilo visual dos destaques do Instagram da pousada */
+.amenity-badge { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
+.amenity-badge-icon {
+  border-radius: 50%;
+  background: var(--teal-500);
+  border: 3px solid var(--sand-500);
+  color: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  flex-shrink: 0;
+}
+.amenity-badge-icon svg { width: 100%; height: 100%; display: block; }
+.amenity-badge-label { font-size: 0.8rem; color: var(--ink-900); line-height: 1.25; }
+
+.amenity-smoking { margin-top: 22px; }
+
+/* seletor de comodidades no formulário do admin */
+.amenity-picker-group { margin-top: 10px; }
+.amenity-picker-group h4 { margin: 18px 0 8px; font-size: 0.85rem; color: var(--ink-600); text-transform: uppercase; letter-spacing: 0.03em; }
+.amenity-picker-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+.amenity-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--ink-300);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+.amenity-picker-item:has(input:checked) { border-color: var(--teal-500); background: var(--teal-100); }
+.amenity-picker-item input { width: auto; margin: 0; }
+.amenity-picker-item .amenity-chip-icon { color: var(--teal-700); }
 
 .alert { border-radius: 10px; padding: 12px 16px; font-size: 0.9rem; margin: 16px 0; }
 .alert-danger { background: var(--danger-bg); color: var(--danger); }

@@ -120,6 +120,89 @@ function renderGallery(containerId, photos, opts) {
   }
 }
 
+// renderCardCarousel: versão compacta do carrossel, pensada pra caber na
+// foto de capa de um card pequeno (listagem da home) — setas discretas (só
+// aparecem no hover) + bolinhas de posição (sem tira de miniaturas nem
+// legenda, que não cabem num card). Mesmo suporte a swipe/autoplay/pausa.
+//
+// Uso: renderCardCarousel("meuContainerId", arrayDeFotos, { alt: "...", autoplay: 4000 })
+function renderCardCarousel(containerId, photos, opts) {
+  opts = opts || {};
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  photos = (Array.isArray(photos) ? photos : []).filter(Boolean);
+  if (photos.length === 0) {
+    container.innerHTML = opts.emptyHtml || "";
+    return;
+  }
+
+  let current = 0;
+
+  container.innerHTML = `
+    <img id="${containerId}-mainImg" src="${escAttr(photos[0])}" alt="${escAttr(opts.alt || "")}" loading="lazy" decoding="async">
+    ${photos.length > 1 ? `
+      <button type="button" class="card-carousel-arrow card-carousel-prev" aria-label="Foto anterior">&#8249;</button>
+      <button type="button" class="card-carousel-arrow card-carousel-next" aria-label="Próxima foto">&#8250;</button>
+      <div class="card-carousel-dots">
+        ${photos.map((_, i) => `<span class="card-carousel-dot${i === 0 ? " active" : ""}" data-i="${i}"></span>`).join("")}
+      </div>
+    ` : ""}
+  `;
+
+  const mainImg = document.getElementById(`${containerId}-mainImg`);
+  const dots = container.querySelectorAll(".card-carousel-dot");
+
+  function show(i) {
+    current = (i + photos.length) % photos.length;
+    mainImg.src = photos[current];
+    dots.forEach((d) => d.classList.toggle("active", Number(d.dataset.i) === current));
+  }
+
+  if (photos.length > 1) {
+    const prevBtn = container.querySelector(".card-carousel-prev");
+    const nextBtn = container.querySelector(".card-carousel-next");
+    // preventDefault/stopPropagation: o card inteiro é um link (<a>) —
+    // sem isso, clicar na seta também navegaria pra página do quarto.
+    prevBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); show(current - 1); });
+    nextBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); show(current + 1); });
+    dots.forEach((d) => {
+      d.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); show(Number(d.dataset.i)); });
+    });
+  }
+
+  // swipe no celular
+  let touchStartX = null;
+  container.addEventListener("touchstart", (e) => { touchStartX = e.touches[0].clientX; }, { passive: true });
+  container.addEventListener("touchend", (e) => {
+    if (touchStartX == null) return;
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) show(current + (dx < 0 ? 1 : -1));
+    touchStartX = null;
+  }, { passive: true });
+
+  // avançar sozinho, pausando no hover/toque — mesmo padrão do renderGallery
+  const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (opts.autoplay && photos.length > 1 && !prefersReducedMotion) {
+    let timer = null;
+    const start = () => { stop(); timer = setInterval(() => show(current + 1), opts.autoplay); };
+    const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
+
+    if (window.IntersectionObserver) {
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => { if (entry.isIntersecting) start(); else stop(); });
+      }, { threshold: 0.25 });
+      io.observe(container);
+    } else {
+      start();
+    }
+
+    container.addEventListener("mouseenter", stop);
+    container.addEventListener("mouseleave", start);
+    container.addEventListener("touchstart", stop, { passive: true });
+  }
+}
+
 function escAttr(str) {
   return String(str || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }

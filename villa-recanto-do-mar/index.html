@@ -17,14 +17,15 @@
 <meta property="og:title" content="Pousada Villa Recanto do Mar — Reservas" />
 <meta property="og:description" content="Reserve diretamente com a Pousada Villa Recanto do Mar. Sinal de 30% via Pix, sem taxas de intermediários." />
 <meta property="og:image" content="https://villarecantodomar.vercel.app/assets/img/og-image.png" />
-<meta property="og:image:width" content="1200" />
-<meta property="og:image:height" content="630" />
+<meta property="og:image:width" content="1080" />
+<meta property="og:image:height" content="1080" />
 <meta property="og:url" content="https://villarecantodomar.vercel.app/" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://villarecantodomar.vercel.app/assets/img/og-image.png" />
 
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/amenities.js"></script>
 </head>
 <body>
 
@@ -112,7 +113,7 @@ async function loadRooms() {
   const container = document.getElementById("rooms");
   const { data: rooms, error } = await villaSupabase
     .from("rooms")
-    .select("slug,name,description,base_price,capacity,photos")
+    .select("slug,name,description,base_price,capacity,photos,amenities")
     .eq("active", true)
     .order("sort_order", { ascending: true });
 
@@ -128,19 +129,23 @@ async function loadRooms() {
   }
 
   container.innerHTML = rooms.map(roomCardHtml).join("");
-  setupCoverRotation(rooms);
+  setupCoverCarousels(rooms);
 }
 
+const CARD_MAX_PHOTOS = 5;
+
 function roomCardHtml(room, i) {
-  const cover = Array.isArray(room.photos) && room.photos.length > 0 ? room.photos[0] : null;
-  const coverImg = cover
-    ? `<img id="roomCoverImg-${i}" src="${escapeAttr(cover)}" alt="${escapeAttr(room.name)}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;">`
+  const photos = Array.isArray(room.photos) ? room.photos.slice(0, CARD_MAX_PHOTOS) : [];
+  const topAmenities = typeof villaTopAmenities === "function" ? villaTopAmenities(room, 4) : [];
+  const amenitiesHtml = topAmenities.length
+    ? `<div class="room-card-amenities">${topAmenities.map((a) => `<span class="amenity-chip-icon" title="${escapeAttr(a.label)}">${a.icon}</span>`).join("")}</div>`
     : "";
   return `
     <a class="card room-card" id="roomCard-${i}" href="/quarto.html?slug=${encodeURIComponent(room.slug)}" style="text-decoration:none;color:inherit;">
       <div class="photo">
-        ${coverImg}
+        <div class="room-card-gallery" id="roomCoverGallery-${i}"></div>
         <span class="room-card-badge">Café da manhã incluído</span>
+        ${amenitiesHtml}
       </div>
       <div class="card-body">
         <h3>${escapeHtml(room.name)}</h3>
@@ -155,43 +160,16 @@ function roomCardHtml(room, i) {
   `;
 }
 
-// Faz a foto de capa de cada card ir trocando sozinha entre as fotos do
-// quarto (até um limite, pra não pesar). Só liga a troca quando o card
-// está realmente visível na tela, e desliga se a pessoa prefere menos
-// animação (configuração de acessibilidade do sistema).
-function setupCoverRotation(rooms) {
-  const prefersReducedMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  if (prefersReducedMotion) return;
-
-  const MAX_PHOTOS_PER_CARD = 4;
-  const INTERVAL_MS = 3800;
-
+// Carrossel de fotos da capa de cada card, com setas (aparecem no hover),
+// bolinhas de posição e troca automática — pausa quando a pessoa interage
+// e desliga sozinho se ela prefere menos animação (config. de acessibilidade).
+function setupCoverCarousels(rooms) {
   rooms.forEach((room, i) => {
-    const photos = (Array.isArray(room.photos) ? room.photos : []).slice(0, MAX_PHOTOS_PER_CARD);
-    if (photos.length < 2) return;
-
-    const img = document.getElementById(`roomCoverImg-${i}`);
-    const card = document.getElementById(`roomCard-${i}`);
-    if (!img || !card) return;
-
-    let idx = 0;
-    let timer = null;
-
-    const advance = () => {
-      idx = (idx + 1) % photos.length;
-      img.src = photos[idx];
-    };
-    const start = () => { if (!timer) timer = setInterval(advance, INTERVAL_MS + i * 300); };
-    const stop = () => { if (timer) { clearInterval(timer); timer = null; } };
-
-    if (window.IntersectionObserver) {
-      const io = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => { if (entry.isIntersecting) start(); else stop(); });
-      }, { threshold: 0.25 });
-      io.observe(card);
-    } else {
-      start();
-    }
+    const photos = Array.isArray(room.photos) ? room.photos.slice(0, CARD_MAX_PHOTOS) : [];
+    renderCardCarousel(`roomCoverGallery-${i}`, photos, {
+      alt: room.name,
+      autoplay: 4200 + i * 300, // pequeno intervalo diferente por card, pra não trocarem todos junto
+    });
   });
 }
 

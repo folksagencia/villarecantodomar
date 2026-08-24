@@ -36,6 +36,10 @@ create table if not exists rooms (
   photos jsonb not null default '[]'::jsonb, -- array de URLs (Supabase Storage)
   active boolean not null default true,
   sort_order int not null default 0,
+  size_m2 numeric(6, 1), -- tamanho do quarto em m² (varia por acomodação, editável)
+  bed_config text, -- ex: "1 cama de solteiro e 1 cama de casal" (texto livre, varia por acomodação)
+  smoking_allowed boolean not null default false,
+  amenities jsonb not null default '[]'::jsonb, -- array de chaves do catálogo fixo (veja assets/amenities.js)
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

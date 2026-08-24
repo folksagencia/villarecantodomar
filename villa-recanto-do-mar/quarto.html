@@ -14,6 +14,7 @@
 
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/amenities.js"></script>
 </head>
 <body>
 
@@ -47,7 +48,7 @@ async function init() {
 
   const { data, error } = await villaSupabase
     .from("rooms")
-    .select("id,slug,name,description,capacity,base_price,photos")
+    .select("id,slug,name,description,capacity,base_price,photos,size_m2,bed_config,smoking_allowed,amenities")
     .eq("slug", slug)
     .eq("active", true)
     .maybeSingle();
@@ -125,6 +126,8 @@ function render() {
     <div id="roomGallery" style="margin-bottom:18px;"></div>
     <h1 class="section-title">${esc(room.name)}</h1>
     <p class="section-sub">${esc(room.description || "")} · Capacidade: ${room.capacity} pessoa(s)</p>
+
+    ${villaRenderRoomAmenities(room)}
 
     <div id="propertyGallerySection"></div>
 
