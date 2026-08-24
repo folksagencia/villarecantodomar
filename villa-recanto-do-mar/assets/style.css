@@ -411,11 +411,24 @@ tr:last-child td { border-bottom: none; }
 
 .photo-thumb-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
 .photo-thumb { width: 90px; height: 68px; object-fit: cover; border-radius: 8px; border: 1px solid var(--ink-300); position: relative; }
-.photo-thumb-wrap { position: relative; }
+.photo-thumb-wrap { position: relative; cursor: grab; }
+.photo-thumb-wrap:active { cursor: grabbing; }
 .photo-remove-btn {
   position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%;
   background: var(--danger); color: var(--white); border: none; cursor: pointer; font-size: 0.8rem; line-height: 1;
 }
+
+/* itens arrastáveis pra reordenar fotos (drag-and-drop) — quartos.html e
+   fotos.html usam essa mesma classe pra dar o feedback visual de "soltando
+   aqui". O item sendo arrastado fica soltinho (baixa opacidade) até soltar. */
+.is-dragging { opacity: 0.4; }
+.drag-handle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 6px; color: var(--ink-600);
+  background: var(--teal-100); cursor: grab; flex-shrink: 0; user-select: none;
+}
+.drag-handle:active { cursor: grabbing; }
+.drag-handle svg { width: 15px; height: 15px; }
 
 /* ---------- calendário de preços ---------- */
 .price-calendar { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin: 16px 0; }

@@ -23,7 +23,7 @@
     <div class="card" style="max-width:640px;margin-bottom:24px;"><div class="card-body">
       <label for="photoInput">Adicionar fotos</label>
       <input type="file" id="photoInput" accept="image/*" multiple>
-      <p class="help-text">Você pode escolher várias de uma vez. A ordem de chegada aqui embaixo é a ordem que elas aparecem no carrossel da página inicial — use "↑ Subir" / "↓ Descer" pra reorganizar.</p>
+      <p class="help-text">Você pode escolher várias de uma vez. A ordem de chegada aqui embaixo é a ordem que elas aparecem no carrossel da página inicial — <strong>arraste pelo ⠿ pra reorganizar</strong> (ou use "↑ Subir" / "↓ Descer").</p>
       <p class="help-text"><strong>Formato recomendado:</strong> fotos na horizontal (paisagem), em torno de <strong>1600 × 1067px</strong>. Comprima antes de enviar (ex: tinypng.com) pra o site continuar rápido — evite arquivos muito grandes.</p>
       <div id="uploadAlert"></div>
     </div></div>
@@ -72,13 +72,14 @@ function render() {
   list.innerHTML = `
     <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">
       ${photos.map((p, i) => `
-        <div class="card" data-id="${p.id}">
+        <div class="card" data-id="${p.id}" draggable="true" data-drag-id="${p.id}">
           <div class="photo" style="aspect-ratio:16/9;background-image:url('${esc(p.url)}');background-size:cover;background-position:center;"></div>
           <div class="card-body">
             <label style="margin-top:0;">Legenda (opcional)</label>
             <input type="text" class="captionInput" placeholder="Ex: Piscina, Café da manhã, Área de lazer..." value="${esc(p.caption || "")}">
             <label style="margin-top:10px;"><input type="checkbox" class="activeCheck" ${p.active ? "checked" : ""} style="width:auto;display:inline-block;"> Visível no site</label>
-            <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap;">
+              <span class="drag-handle" title="Arraste pra reordenar">${DRAG_HANDLE_ICON}</span>
               <button class="btn btn-secondary btn-sm" onclick="moveUp(${i})" ${i === 0 ? "disabled" : ""}>↑ Subir</button>
               <button class="btn btn-secondary btn-sm" onclick="moveDown(${i})" ${i === photos.length - 1 ? "disabled" : ""}>↓ Descer</button>
               <button class="btn btn-primary btn-sm" onclick="savePhoto('${p.id}', this)">Salvar</button>
@@ -91,6 +92,18 @@ function render() {
     </div>
   `;
 }
+
+const DRAG_HANDLE_ICON = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>`;
+
+// Reordenar arrastando: registrado uma vez só no container (não em cada
+// card), então continua funcionando mesmo depois que render() troca o
+// innerHTML inteiro a cada carregamento/salvamento.
+enableDragReorder(document.getElementById("list"), "[data-drag-id]", async (newOrderIds) => {
+  const updates = newOrderIds.map((id, sort_order) => ({ id, sort_order }));
+  const { error } = await villaSupabase.from("property_photos").upsert(updates);
+  if (error) { alert("Erro ao reordenar: " + error.message); }
+  await load();
+});
 
 async function savePhoto(id, btnEl) {
   const card = btnEl.closest(".card");

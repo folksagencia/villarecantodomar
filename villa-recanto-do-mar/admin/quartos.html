@@ -71,7 +71,7 @@
 
       <label for="photoInput">Fotos</label>
       <input type="file" id="photoInput" accept="image/*" multiple>
-      <p class="help-text">A <strong>primeira foto</strong> (marcada "Capa") é a que aparece na listagem de acomodações da página inicial. As demais aparecem no carrossel da página da acomodação, na ordem mostrada abaixo — use as setinhas pra reordenar.</p>
+      <p class="help-text">A <strong>primeira foto</strong> (marcada "Capa") é a que aparece na listagem de acomodações da página inicial. As demais aparecem no carrossel da página da acomodação, na ordem mostrada abaixo — <strong>arraste pelo ⠿ pra reordenar</strong> (ou use as setinhas).</p>
       <p class="help-text"><strong>Formato recomendado:</strong> fotos na horizontal (paisagem), em torno de <strong>1600 × 1067px</strong>. Comprima antes de enviar (ex: tinypng.com) pra o site continuar rápido — evite arquivos muito grandes.</p>
       <div class="photo-thumb-row" id="photoList"></div>
 
@@ -233,17 +233,29 @@ function clearForm() {
 function renderPhotoList() {
   const el = document.getElementById("photoList");
   el.innerHTML = currentPhotos.map((url, i) => `
-    <div class="photo-thumb-wrap">
+    <div class="photo-thumb-wrap" draggable="true" data-drag-id="${i}">
       ${i === 0 ? '<span class="badge badge-success" style="position:absolute;top:-8px;left:-6px;">Capa</span>' : ""}
       <img class="photo-thumb" src="${esc(url)}">
       <button class="photo-remove-btn" type="button" onclick="removePhoto(${i})">×</button>
-      <div style="display:flex;gap:3px;margin-top:3px;">
+      <div style="display:flex;align-items:center;gap:3px;margin-top:3px;">
+        <span class="drag-handle" title="Arraste pra reordenar">${DRAG_HANDLE_ICON}</span>
         <button class="btn btn-secondary btn-sm" type="button" style="padding:2px 8px;font-size:0.7rem;" onclick="movePhoto(${i}, -1)" ${i === 0 ? "disabled" : ""}>‹</button>
         <button class="btn btn-secondary btn-sm" type="button" style="padding:2px 8px;font-size:0.7rem;" onclick="movePhoto(${i}, 1)" ${i === currentPhotos.length - 1 ? "disabled" : ""}>›</button>
       </div>
     </div>
   `).join("");
 }
+
+const DRAG_HANDLE_ICON = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>`;
+
+// Reordenar arrastando: o handler fica registrado uma vez só (no container,
+// não em cada item), então continua funcionando mesmo depois que
+// renderPhotoList() troca o innerHTML inteiro a cada mudança.
+enableDragReorder(document.getElementById("photoList"), ".photo-thumb-wrap", (newOrderIds) => {
+  const old = currentPhotos.slice();
+  currentPhotos = newOrderIds.map((idStr) => old[Number(idStr)]);
+  renderPhotoList();
+});
 
 function removePhoto(i) {
   currentPhotos.splice(i, 1);

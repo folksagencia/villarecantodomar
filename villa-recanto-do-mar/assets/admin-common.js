@@ -42,3 +42,53 @@ function renderAdminNav(activeKey) {
     location.href = "/admin/login.html";
   });
 }
+
+// Deixa os itens dentro de um container arrastáveis pra reordenar (usado nas
+// listas de fotos do admin — quartos.html e fotos.html). Cada item precisa
+// de draggable="true" e um atributo data-drag-id único (o índice ou o id do
+// registro, tanto faz — só serve pra identificar cada item de volta).
+//
+// Os listeners ficam no container (não em cada item), então continuam
+// funcionando mesmo depois de re-renderizar a lista inteira com innerHTML —
+// só precisa chamar essa função uma vez, não a cada render.
+//
+// onReorder(newOrderIds) é chamado ao soltar um item, já com a nova ordem
+// (array dos data-drag-id, na ordem visual final).
+function enableDragReorder(containerEl, itemSelector, onReorder) {
+  let dragEl = null;
+
+  containerEl.addEventListener("dragstart", (e) => {
+    const item = e.target.closest(itemSelector);
+    if (!item || !containerEl.contains(item)) return;
+    dragEl = item;
+    item.classList.add("is-dragging");
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = "move";
+  });
+
+  containerEl.addEventListener("dragend", () => {
+    if (dragEl) dragEl.classList.remove("is-dragging");
+    dragEl = null;
+  });
+
+  containerEl.addEventListener("dragover", (e) => {
+    if (!dragEl) return;
+    e.preventDefault(); // necessário pra permitir o "drop"
+    const target = e.target.closest(itemSelector);
+    if (!target || target === dragEl || !containerEl.contains(target)) return;
+    const items = Array.from(containerEl.querySelectorAll(itemSelector));
+    const dragIsBefore = items.indexOf(dragEl) < items.indexOf(target);
+    // Move o elemento arrastado pra antes/depois do alvo, dependendo de qual
+    // lado ele veio — dá o feedback visual em tempo real, tipo Trello.
+    if (dragIsBefore) target.after(dragEl);
+    else target.before(dragEl);
+  });
+
+  containerEl.addEventListener("drop", (e) => {
+    if (!dragEl) return;
+    e.preventDefault();
+    const newOrderIds = Array.from(containerEl.querySelectorAll(itemSelector)).map((el) => el.dataset.dragId);
+    dragEl.classList.remove("is-dragging");
+    dragEl = null;
+    onReorder(newOrderIds);
+  });
+}
