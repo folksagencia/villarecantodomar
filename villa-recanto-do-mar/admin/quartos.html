@@ -200,10 +200,19 @@ async function load() {
 // mesmo depois que load() troca o innerHTML inteiro a cada carregamento. Só
 // grava o campo sort_order de cada acomodação — não mexe em mais nada (nome,
 // fotos, preço, comodidades etc. ficam intocados).
+//
+// Usa update() linha a linha em vez de upsert(): a tabela "rooms" tem várias
+// colunas obrigatórias (slug, name, base_price...) sem valor padrão, e o
+// upsert() do Supabase monta um INSERT ... ON CONFLICT por baixo dos panos —
+// mesmo resolvendo como atualização, o Postgres exige essas colunas na hora
+// de montar a linha do INSERT, e sem elas dá erro de "not-null constraint".
+// O update() comum não tem esse problema: ele só toca a coluna informada.
 enableDragReorder(document.getElementById("table"), "tr[data-drag-id]", async (newOrderIds) => {
   const updates = newOrderIds.map((id, sort_order) => ({ id, sort_order }));
-  const { error } = await villaSupabase.from("rooms").upsert(updates);
-  if (error) { alert("Erro ao reordenar: " + error.message); return; }
+  for (const { id, sort_order } of updates) {
+    const { error } = await villaSupabase.from("rooms").update({ sort_order }).eq("id", id);
+    if (error) { alert("Erro ao reordenar: " + error.message); return; }
+  }
   await load();
 });
 

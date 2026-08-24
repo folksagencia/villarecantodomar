@@ -101,10 +101,19 @@ const DRAG_HANDLE_ICON = `<svg viewBox="0 0 24 24" fill="currentColor"><circle c
 // Reordenar arrastando: registrado uma vez só no container (não em cada
 // card), então continua funcionando mesmo depois que render() troca o
 // innerHTML inteiro a cada carregamento/salvamento.
+//
+// Usa update() linha a linha em vez de upsert(): a coluna "url" de
+// property_photos é obrigatória e sem valor padrão, e o upsert() do Supabase
+// monta um INSERT ... ON CONFLICT por baixo dos panos — mesmo resolvendo como
+// atualização, o Postgres exige essa coluna na hora de montar a linha do
+// INSERT, e sem ela dá erro de "not-null constraint". O update() comum não
+// tem esse problema: ele só toca a coluna informada.
 enableDragReorder(document.getElementById("list"), "[data-drag-id]", async (newOrderIds) => {
   const updates = newOrderIds.map((id, sort_order) => ({ id, sort_order }));
-  const { error } = await villaSupabase.from("property_photos").upsert(updates);
-  if (error) { alert("Erro ao reordenar: " + error.message); }
+  for (const { id, sort_order } of updates) {
+    const { error } = await villaSupabase.from("property_photos").update({ sort_order }).eq("id", id);
+    if (error) { alert("Erro ao reordenar: " + error.message); return; }
+  }
   await load();
 });
 
@@ -135,10 +144,9 @@ async function moveDown(i) {
 async function swapOrder(i, j) {
   const a = photos[i], b = photos[j];
   const aOrder = a.sort_order, bOrder = b.sort_order;
-  const { error } = await villaSupabase.from("property_photos").upsert([
-    { id: a.id, sort_order: bOrder },
-    { id: b.id, sort_order: aOrder },
-  ]);
+  const { error: error1 } = await villaSupabase.from("property_photos").update({ sort_order: bOrder }).eq("id", a.id);
+  const { error: error2 } = error1 ? {} : await villaSupabase.from("property_photos").update({ sort_order: aOrder }).eq("id", b.id);
+  const error = error1 || error2;
   if (error) { alert("Erro ao reordenar: " + error.message); return; }
   await load();
 }
