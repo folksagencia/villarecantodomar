@@ -173,11 +173,13 @@ async function load() {
   }
 
   table.innerHTML = `
+    <p class="help-text" style="margin-top:0;">Arraste pelo ⠿ pra mudar a ordem que as acomodações aparecem na página inicial — isso só muda a ordem, nada mais.</p>
     <table>
-      <thead><tr><th>Acomodação</th><th>Unidades</th><th>Preço padrão</th><th>Visível</th><th>Ações</th></tr></thead>
+      <thead><tr><th></th><th>Acomodação</th><th>Unidades</th><th>Preço padrão</th><th>Visível</th><th>Ações</th></tr></thead>
       <tbody>
         ${rooms.map((r) => `
-          <tr>
+          <tr draggable="true" data-drag-id="${r.id}">
+            <td style="width:30px;"><span class="drag-handle" title="Arraste pra reordenar">${DRAG_HANDLE_ICON}</span></td>
             <td>${esc(r.name)}<br><span class="help-text">/quarto.html?slug=${esc(r.slug)}</span></td>
             <td>${r.units || 1}</td>
             <td>${formatBRL(r.base_price)}</td>
@@ -192,6 +194,18 @@ async function load() {
     </table>
   `;
 }
+
+// Reordenar arrastando as linhas da tabela: o handler fica registrado uma vez
+// só (no container #table, não na <table> em si), então continua funcionando
+// mesmo depois que load() troca o innerHTML inteiro a cada carregamento. Só
+// grava o campo sort_order de cada acomodação — não mexe em mais nada (nome,
+// fotos, preço, comodidades etc. ficam intocados).
+enableDragReorder(document.getElementById("table"), "tr[data-drag-id]", async (newOrderIds) => {
+  const updates = newOrderIds.map((id, sort_order) => ({ id, sort_order }));
+  const { error } = await villaSupabase.from("rooms").upsert(updates);
+  if (error) { alert("Erro ao reordenar: " + error.message); return; }
+  await load();
+});
 
 function editRoom(id) {
   const r = rooms.find((x) => x.id === id);
