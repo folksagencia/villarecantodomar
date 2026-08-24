@@ -11,10 +11,21 @@
 // Se omitido, não passa sozinho. Pausa quando o dedo/mouse está em cima e
 // respeita "reduzir movimento" do sistema operacional da pessoa.
 //
-// Cuidado com performance: só a PRIMEIRA foto carrega imediatamente. As
-// miniaturas usam loading="lazy" (o navegador só baixa quando estão perto de
-// aparecer na tela) e a foto grande só troca de fato quando a pessoa clica —
-// nada é pré-carregado escondido.
+// Como funciona a troca de foto: TODAS as fotos ficam lado a lado numa
+// "tira" (.gallery-track / .card-carousel-track) dentro de uma janela que
+// corta o excesso (overflow:hidden), e trocar de foto é só deslizar essa
+// tira com uma transição de CSS (transform) — nunca troca o "src" de uma
+// <img> já visível. Antigamente cada troca de foto reatribuía o src da
+// mesma <img>, e como a foto nova ainda não tinha sido baixada, aparecia um
+// piscar feio com o ícone de "imagem quebrada"/placeholder por uma fração de
+// segundo antes da foto carregar. Deslizando uma tira pré-montada, a foto
+// seguinte já está ali, pronta, então o efeito fica suave.
+//
+// Fotos na vertical (formato "story", mais alta que larga) não são
+// cortadas: em vez de preencher o quadro cortando as bordas (object-fit:
+// cover), elas aparecem inteiras dentro do quadro, com uma faixa da cor de
+// fundo da marca nas laterais (object-fit: contain) — a mesma lógica do
+// Instagram ao mostrar uma foto vertical num espaço mais largo.
 
 function renderGallery(containerId, photos, opts) {
   opts = opts || {};
@@ -35,7 +46,13 @@ function renderGallery(containerId, photos, opts) {
 
   container.innerHTML = `
     <div class="gallery-main">
-      <img id="${containerId}-mainImg" src="${escAttr(photoUrl(photos[0]))}" alt="${escAttr(opts.alt || "")}" loading="eager" decoding="async">
+      <div class="gallery-track" id="${containerId}-track">
+        ${photos.map((p, i) => `
+          <div class="gallery-slide">
+            <img src="${escAttr(photoUrl(p))}" alt="${escAttr(opts.alt || "")}" loading="${i <= 1 ? "eager" : "lazy"}" decoding="async">
+          </div>
+        `).join("")}
+      </div>
       ${photos.length > 1 ? `
         <button type="button" class="gallery-arrow gallery-prev" aria-label="Foto anterior">&#8249;</button>
         <button type="button" class="gallery-arrow gallery-next" aria-label="Próxima foto">&#8250;</button>
@@ -50,14 +67,16 @@ function renderGallery(containerId, photos, opts) {
     ` : ""}
   `;
 
-  const mainImg = document.getElementById(`${containerId}-mainImg`);
+  const track = document.getElementById(`${containerId}-track`);
+  track.querySelectorAll("img").forEach(markPortraitPhoto);
+
   const counter = document.getElementById(`${containerId}-counter`);
   const captionEl = document.getElementById(`${containerId}-caption`);
   const thumbsWrap = document.getElementById(`${containerId}-thumbs`);
 
   function show(i) {
     current = (i + photos.length) % photos.length;
-    mainImg.src = photoUrl(photos[current]);
+    track.style.transform = `translateX(-${current * 100}%)`;
     if (counter) counter.textContent = `${current + 1} / ${photos.length}`;
     if (captionEl) captionEl.textContent = photoCaption(photos[current]);
     if (thumbsWrap) {
@@ -123,7 +142,8 @@ function renderGallery(containerId, photos, opts) {
 // renderCardCarousel: versão compacta do carrossel, pensada pra caber na
 // foto de capa de um card pequeno (listagem da home) — setas discretas (só
 // aparecem no hover) + bolinhas de posição (sem tira de miniaturas nem
-// legenda, que não cabem num card). Mesmo suporte a swipe/autoplay/pausa.
+// legenda, que não cabem num card). Mesma tira deslizante (sem trocar src)
+// e mesmo suporte a foto vertical sem cortar, descritos lá em cima.
 //
 // Uso: renderCardCarousel("meuContainerId", arrayDeFotos, { alt: "...", autoplay: 4000 })
 function renderCardCarousel(containerId, photos, opts) {
@@ -140,7 +160,13 @@ function renderCardCarousel(containerId, photos, opts) {
   let current = 0;
 
   container.innerHTML = `
-    <img id="${containerId}-mainImg" src="${escAttr(photos[0])}" alt="${escAttr(opts.alt || "")}" loading="lazy" decoding="async">
+    <div class="card-carousel-track" id="${containerId}-track">
+      ${photos.map((url, i) => `
+        <div class="card-carousel-slide">
+          <img src="${escAttr(url)}" alt="${escAttr(opts.alt || "")}" loading="${i <= 1 ? "eager" : "lazy"}" decoding="async">
+        </div>
+      `).join("")}
+    </div>
     ${photos.length > 1 ? `
       <button type="button" class="card-carousel-arrow card-carousel-prev" aria-label="Foto anterior">&#8249;</button>
       <button type="button" class="card-carousel-arrow card-carousel-next" aria-label="Próxima foto">&#8250;</button>
@@ -150,12 +176,13 @@ function renderCardCarousel(containerId, photos, opts) {
     ` : ""}
   `;
 
-  const mainImg = document.getElementById(`${containerId}-mainImg`);
+  const track = document.getElementById(`${containerId}-track`);
+  track.querySelectorAll("img").forEach(markPortraitPhoto);
   const dots = container.querySelectorAll(".card-carousel-dot");
 
   function show(i) {
     current = (i + photos.length) % photos.length;
-    mainImg.src = photos[current];
+    track.style.transform = `translateX(-${current * 100}%)`;
     dots.forEach((d) => d.classList.toggle("active", Number(d.dataset.i) === current));
   }
 
@@ -201,6 +228,23 @@ function renderCardCarousel(containerId, photos, opts) {
     container.addEventListener("mouseleave", start);
     container.addEventListener("touchstart", stop, { passive: true });
   }
+}
+
+// Marca uma <img> como "retrato" (mais alta que larga — foto estilo story)
+// assim que suas dimensões reais são conhecidas, pra o CSS trocar de
+// object-fit:cover (corta pra preencher) pra object-fit:contain (mostra
+// inteira, com uma faixa da cor de fundo nas laterais). Funciona tanto pra
+// imagem já carregada do cache (img.complete) quanto pra uma que ainda vai
+// carregar (evento "load").
+function markPortraitPhoto(img) {
+  if (!img) return;
+  const apply = () => {
+    if (img.naturalWidth && img.naturalHeight && img.naturalHeight > img.naturalWidth) {
+      img.classList.add("is-portrait");
+    }
+  };
+  if (img.complete) apply();
+  else img.addEventListener("load", apply, { once: true });
 }
 
 function escAttr(str) {

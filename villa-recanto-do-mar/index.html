@@ -131,7 +131,7 @@ async function loadRooms() {
   setupCoverCarousels(rooms);
 }
 
-const CARD_MAX_PHOTOS = 5;
+const CARD_MAX_PHOTOS = 4;
 
 function roomCardHtml(room, i) {
   const photos = Array.isArray(room.photos) ? room.photos.slice(0, CARD_MAX_PHOTOS) : [];
