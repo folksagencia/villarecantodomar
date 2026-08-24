@@ -110,11 +110,19 @@ function renderGallery(containerId, photos, opts) {
     });
   });
 
+  // Adianta o carregamento da foto/vídeo VIZINHA (anterior e próxima) assim
+  // que a pessoa chega num slide — assim, quando ela clicar em "próxima" de
+  // novo, aquela foto já está (ou já está quase) carregada, em vez de só
+  // começar a baixar depois do clique. Isso é o que faz a navegação parecer
+  // instantânea em vez de "esperar carregar" a cada passo.
+  preloadNeighbors(slideMedia, current);
+
   const captionEl = document.getElementById(`${containerId}-caption`);
   const thumbsWrap = document.getElementById(`${containerId}-thumbs`);
 
   function show(i) {
     current = (i + photos.length) % photos.length;
+    preloadNeighbors(slideMedia, current);
     track.style.transform = `translateX(-${current * 100}%)`;
     syncMainHeight();
     syncVideoPlayback();
@@ -245,6 +253,7 @@ function renderCardCarousel(containerId, photos, opts) {
   const track = document.getElementById(`${containerId}-track`);
   const slideMedia = Array.from(track.querySelectorAll("img, video"));
   slideMedia.forEach((el) => onMediaReady(el, () => fadeIn(el)));
+  preloadNeighbors(slideMedia, current);
   const dots = container.querySelectorAll(".card-carousel-dot");
 
   function syncVideoPlayback() {
@@ -257,6 +266,7 @@ function renderCardCarousel(containerId, photos, opts) {
 
   function show(i) {
     current = (i + photos.length) % photos.length;
+    preloadNeighbors(slideMedia, current);
     track.style.transform = `translateX(-${current * 100}%)`;
     dots.forEach((d) => d.classList.toggle("active", Number(d.dataset.i) === current));
     syncVideoPlayback();
@@ -356,6 +366,25 @@ function onMediaReady(el, cb) {
 
 function mediaWidth(el) { return el.tagName === "VIDEO" ? el.videoWidth : el.naturalWidth; }
 function mediaHeight(el) { return el.tagName === "VIDEO" ? el.videoHeight : el.naturalHeight; }
+
+// Adianta o download da foto/vídeo anterior e da próxima em relação ao slide
+// atual — troca loading="lazy" por "eager" numa <img> (o navegador refaz o
+// carregamento assim que o atributo muda) e sobe o preload de um <video> de
+// "metadata" pra "auto". Só mexe em quem ainda não carregou, então não
+// desperdiça banda refazendo o que já está pronto.
+function preloadNeighbors(slideMedia, current) {
+  const n = slideMedia.length;
+  if (n <= 1) return;
+  [current, (current + 1) % n, (current - 1 + n) % n].forEach((idx) => {
+    const el = slideMedia[idx];
+    if (!el) return;
+    if (el.tagName === "VIDEO") {
+      if (el.preload !== "auto") el.preload = "auto";
+    } else if (el.loading === "lazy") {
+      el.loading = "eager";
+    }
+  });
+}
 
 // Fade-in suave em vez da foto/vídeo "estourar" de repente na tela assim
 // que termina de carregar — dá a sensação de algo elegante acontecendo, não

@@ -231,12 +231,10 @@ a { color: var(--teal-700); }
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.15s ease;
   z-index: 2;
 }
-.room-card .photo:hover .card-carousel-arrow,
-.card-carousel-arrow:focus-visible { opacity: 1; }
 .card-carousel-arrow:hover { background: rgba(24, 56, 76, 0.88); }
 .card-carousel-prev { left: 8px; }
 .card-carousel-next { right: 8px; }
@@ -323,7 +321,7 @@ input:focus, textarea:focus, select:focus {
 
 .amenity-bed-config { color: var(--ink-600); font-size: 0.9rem; margin: 6px 0 0; }
 
-.amenity-block { margin-top: 22px; }
+.amenity-block { margin-top: 22px; margin-bottom: 26px; }
 
 .amenity-section { margin-top: 22px; }
 .amenity-section-title { margin: 0 0 12px; font-size: 1rem; color: var(--ink-900); }
@@ -515,6 +513,10 @@ tr:last-child td { border-bottom: none; }
 /* ---------- galeria / carrossel de fotos ---------- */
 .gallery-main {
   position: relative;
+  width: 100%; /* trava a largura no tamanho do container — sem isso, o aspect-ratio abaixo
+                  "puxava" a largura pra combinar com a altura sempre que o JS define uma
+                  altura alta (foto vertical), estourando a largura pra fora do container
+                  inteiro e desconfigurando a página */
   aspect-ratio: 16 / 9; /* usado só como valor inicial, antes do JS medir a 1ª foto de verdade */
   background: var(--teal-100);
   border-radius: var(--radius);

@@ -76,7 +76,7 @@ const VILLA_AMENITY_CATALOG = [
   { key: "bar", label: "Bar", category: "geral" },
   { key: "area_comum", label: "Área comum com piscina, deck, churrasqueira e sinuca", category: "geral" },
   { key: "espaco_kids", label: "Espaço Kids", category: "geral" },
-  { key: "vista", label: "Vista", category: "vista" },
+  { key: "vista", label: "Vista", category: "geral" },
   { key: "produtos_banho", label: "Produtos de banho grátis", category: "banheiro" },
   { key: "chuveiro", label: "Chuveiro", category: "banheiro" },
   { key: "toalhas", label: "Toalhas", category: "banheiro" },
