@@ -3,363 +3,453 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Acomodações — Painel Villa Recanto do Mar</title>
+<title>Reservar — Villa Recanto do Mar</title>
+<meta name="description" content="Reserve diretamente com a Pousada Villa Recanto do Mar. Sinal de 30% via Pix, sem taxas de intermediários." />
+
 <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico" />
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png" />
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192x192.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/amenities.js"></script>
 </head>
 <body>
 
-<div class="admin-shell">
-  <nav class="admin-sidebar" id="adminNav"></nav>
-  <main class="admin-main">
-    <h1 class="section-title">Acomodações</h1>
-    <p class="section-sub">Cadastre as acomodações, fotos, descrição e o preço padrão por noite.</p>
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="/index.html"><img src="/assets/img/logo.png" alt="Villa Recanto do Mar" class="brand-logo"><small>RESERVAS</small></a>
+  </div>
+</header>
 
-    <div class="table-wrap" id="table"></div>
-
-    <h3 style="margin-top:32px;" id="formTitle">Nova acomodação</h3>
-    <div class="card"><div class="card-body">
-      <input type="hidden" id="roomId">
-
-      <label for="name">Nome da acomodação</label>
-      <input type="text" id="name" placeholder="Ex: Vista Mar">
-
-      <label for="slug">Identificador na URL (slug)</label>
-      <input type="text" id="slug" placeholder="quarto-vista-mar">
-      <p class="help-text">Gerado automaticamente a partir do nome — só edite se quiser mudar o link da acomodação.</p>
-
-      <label for="description">Descrição</label>
-      <textarea id="description" rows="3" placeholder="O que tem nessa acomodação, vista, cama, etc."></textarea>
-
-      <div class="field-row">
-        <div>
-          <label for="capacity">Capacidade (pessoas por unidade)</label>
-          <input type="number" id="capacity" min="1" value="2">
-        </div>
-        <div>
-          <label for="basePrice">Preço padrão / noite (R$)</label>
-          <input type="number" id="basePrice" min="0" step="0.01" placeholder="250.00">
-        </div>
-      </div>
-
-      <label for="units">Quantidade de unidades desse tipo de acomodação</label>
-      <input type="number" id="units" min="1" value="1">
-      <p class="help-text">Ex: se você tem 3 acomodações iguais do tipo "Vista Mar", coloque 3 — o sistema aceita até 3 reservas ao mesmo tempo pra mesma noite, e bloqueia automaticamente a 4ª. Se não sabe, deixe 1.</p>
-
-      <div class="field-row">
-        <div>
-          <label for="sizeM2">Tamanho do quarto (m²)</label>
-          <input type="number" id="sizeM2" min="0" step="0.1" placeholder="22">
-        </div>
-        <div>
-          <label for="bedConfig">Camas</label>
-          <input type="text" id="bedConfig" placeholder="Ex: 1 cama de solteiro e 1 cama de casal">
-        </div>
-      </div>
-      <p class="help-text">Esses dois variam de acomodação pra acomodação, por isso são texto livre — o resto abaixo é um catálogo fixo, só marcar o que tem.</p>
-
-      <label>Comodidades</label>
-      <div class="amenity-picker-group" id="amenityPicker"></div>
-
-      <label><input type="checkbox" id="active" checked style="width:auto;display:inline-block;"> Acomodação visível no site</label>
-
-      <label for="photoInput">Fotos e vídeos</label>
-      <input type="file" id="photoInput" accept="image/*,video/*" multiple>
-      <p class="help-text">A <strong>primeira foto</strong> (marcada "Capa") é a que aparece na listagem de acomodações da página inicial. As demais aparecem no carrossel da página da acomodação, na ordem mostrada abaixo — <strong>arraste pelo ⠿ pra reordenar</strong> (ou use as setinhas).</p>
-      <p class="help-text"><strong>Formato recomendado:</strong> fotos na horizontal (paisagem), em torno de <strong>1600 × 1067px</strong>. Comprima antes de enviar (ex: tinypng.com) pra o site continuar rápido — evite arquivos muito grandes.</p>
-      <p class="help-text">Também aceita <strong>vídeos verticais</strong> (formato story, .mp4/.mov/.webm) — eles tocam sozinhos, mudos e em loop no carrossel, junto com as fotos.</p>
-      <div class="photo-thumb-row" id="photoList"></div>
-
-      <div id="formAlert"></div>
-
-      <div style="display:flex;gap:10px;margin-top:20px;">
-        <button class="btn btn-primary" id="saveBtn">Salvar acomodação</button>
-        <button class="btn btn-secondary" id="clearBtn">Limpar / nova acomodação</button>
-      </div>
-    </div></div>
-  </main>
+<div class="container-narrow" id="page" style="padding-top:28px;padding-bottom:60px;">
+  <div class="empty-state"><span class="spinner"></span><p>Carregando…</p></div>
 </div>
 
 <script src="/assets/supabase-client.js"></script>
 <script src="/assets/format.js"></script>
-<script src="/assets/admin-common.js"></script>
+<script src="/assets/gallery.js"></script>
+<script src="/lib/pricing.js"></script>
+<script src="/assets/session.js"></script>
 <script>
-let rooms = [];
-let currentPhotos = [];
+const params = new URLSearchParams(location.search);
+const slug = params.get("slug");
+let room = null;
 
 async function init() {
-  const session = await requireAdminAuth();
-  if (!session) return;
-  renderAdminNav("quartos");
+  const page = document.getElementById("page");
 
-  document.getElementById("name").addEventListener("input", (e) => {
-    if (!document.getElementById("roomId").value) {
-      document.getElementById("slug").value = slugify(e.target.value);
-    }
-  });
-  document.getElementById("saveBtn").addEventListener("click", saveRoom);
-  document.getElementById("clearBtn").addEventListener("click", clearForm);
-  document.getElementById("photoInput").addEventListener("change", uploadPhotos);
-
-  renderAmenityPicker();
-  await load();
-}
-
-function renderAmenityPicker() {
-  const el = document.getElementById("amenityPicker");
-  const byCategory = {};
-  VILLA_AMENITY_CATALOG.forEach((a) => {
-    if (!byCategory[a.category]) byCategory[a.category] = [];
-    byCategory[a.category].push(a);
-  });
-
-  el.innerHTML = Object.keys(VILLA_AMENITY_CATEGORIES).map((catKey) => {
-    const items = byCategory[catKey] || [];
-    if (items.length === 0) return "";
-    return `
-      <h4>${VILLA_AMENITY_CATEGORIES[catKey].label}</h4>
-      <div class="amenity-picker-grid">
-        ${items.map((a) => `
-          <label class="amenity-picker-item">
-            <input type="checkbox" value="${a.key}" data-amenity checked>
-            <span class="amenity-chip-icon">${a.icon}</span>
-            ${a.label}
-          </label>
-        `).join("")}
-      </div>
-    `;
-  }).join("");
-}
-
-function getCheckedAmenities() {
-  return Array.from(document.querySelectorAll("[data-amenity]:checked")).map((el) => el.value);
-}
-
-function setCheckedAmenities(keys) {
-  const set = new Set(Array.isArray(keys) ? keys : []);
-  document.querySelectorAll("[data-amenity]").forEach((el) => { el.checked = set.has(el.value); });
-}
-
-// Comodidades vêm marcadas por padrão pra acomodação nova — a maioria dos
-// quartos tem quase tudo do catálogo, então é mais rápido desmarcar as
-// exceções do que marcar item por item.
-function checkAllAmenities() {
-  setCheckedAmenities(VILLA_AMENITY_CATALOG.map((a) => a.key));
-}
-
-function slugify(text) {
-  return text
-    .toLowerCase()
-    .normalize("NFD").replace(/[̀-ͯ]/g, "") // remove acentos (ã -> a, ç -> c, etc.)
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
-
-async function load() {
-  const { data, error } = await villaSupabase.from("rooms").select("*").order("sort_order", { ascending: true });
-  const table = document.getElementById("table");
-  if (error) { table.innerHTML = '<div class="empty-state">Erro ao carregar acomodações.</div>'; return; }
-  rooms = data || [];
-
-  if (rooms.length === 0) {
-    table.innerHTML = '<div class="empty-state">Nenhuma acomodação cadastrada ainda — use o formulário abaixo.</div>';
+  if (!slug) {
+    page.innerHTML = '<div class="empty-state">Acomodação não especificada.</div>';
     return;
   }
 
-  table.innerHTML = `
-    <p class="help-text" style="margin-top:0;">Arraste pelo ⠿ pra mudar a ordem que as acomodações aparecem na página inicial — isso só muda a ordem, nada mais.</p>
-    <table>
-      <thead><tr><th></th><th>Acomodação</th><th>Unidades</th><th>Preço padrão</th><th>Visível</th><th>Ações</th></tr></thead>
-      <tbody>
-        ${rooms.map((r) => `
-          <tr draggable="true" data-drag-id="${r.id}">
-            <td style="width:30px;"><span class="drag-handle" title="Arraste pra reordenar">${DRAG_HANDLE_ICON}</span></td>
-            <td>${esc(r.name)}<br><span class="help-text">/quarto.html?slug=${esc(r.slug)}</span></td>
-            <td>${r.units || 1}</td>
-            <td>${formatBRL(r.base_price)}</td>
-            <td>${r.active ? '<span class="badge badge-success">Sim</span>' : '<span class="badge badge-neutral">Não</span>'}</td>
-            <td>
-              <button class="btn btn-secondary btn-sm" onclick="editRoom('${r.id}')">Editar</button>
-              <button class="btn btn-danger btn-sm" onclick="deleteRoom('${r.id}')">Excluir</button>
-            </td>
-          </tr>
-        `).join("")}
-      </tbody>
-    </table>
+  const { data, error } = await villaSupabase
+    .from("rooms")
+    .select("id,slug,name,description,capacity,base_price,photos,size_m2,bed_config,amenities")
+    .eq("slug", slug)
+    .eq("active", true)
+    .maybeSingle();
+
+  if (error || !data) {
+    page.innerHTML = '<div class="empty-state">Esta acomodação não foi encontrada ou não está mais disponível.</div>';
+    return;
+  }
+
+  room = data;
+  logVillaEvent({ type: "view", room_id: room.id, stage: "viu_quarto" });
+  render();
+  loadAvailability();
+}
+
+let fullyBookedSet = new Set();
+
+async function loadAvailability() {
+  try {
+    const res = await fetch(`/api/room-availability?room_id=${encodeURIComponent(room.id)}`);
+    const data = await res.json();
+    if (res.ok && Array.isArray(data.fullyBookedDates)) {
+      fullyBookedSet = new Set(data.fullyBookedDates);
+      if (lastStay) recalculate(); // reavalia caso as datas já escolhidas tenham acabado de lotar
+    }
+  } catch (e) {
+    console.warn("Não foi possível checar disponibilidade agora:", e);
+    // Não impede o uso do site — o servidor confere de novo na hora de reservar.
+  }
+}
+
+function findNextAvailableRange(nightsCount, searchFromDate) {
+  const maxDate = addDaysISO(todayISODate(), 170);
+  let cursor = searchFromDate;
+  while (cursor < maxDate) {
+    let ok = true;
+    for (let i = 0; i < nightsCount; i++) {
+      if (fullyBookedSet.has(addDaysISO(cursor, i))) { ok = false; break; }
+    }
+    if (ok) return { checkIn: cursor, checkOut: addDaysISO(cursor, nightsCount) };
+    cursor = addDaysISO(cursor, 1);
+  }
+  return null;
+}
+
+async function loadPropertyGallery() {
+  const section = document.getElementById("propertyGallerySection");
+  if (!section) return;
+  const { data: photos, error } = await villaSupabase
+    .from("property_photos")
+    .select("url,caption")
+    .eq("active", true)
+    .order("sort_order", { ascending: true });
+
+  if (error || !photos || photos.length === 0) {
+    section.innerHTML = "";
+    return;
+  }
+
+  section.innerHTML = `
+    <h3 style="margin:20px 0 8px;">Conheça a pousada</h3>
+    <div id="propertyGallery" style="margin-bottom:20px;"></div>
+  `;
+  renderGallery("propertyGallery", photos, { alt: "Pousada Villa Recanto do Mar", showCaption: true, autoplay: 4500 });
+}
+
+function render() {
+  const page = document.getElementById("page");
+  const photos = Array.isArray(room.photos) && room.photos.length > 0 ? room.photos : [];
+
+  const today = todayISODate();
+  const minCheckout = addDaysISO(today, 1);
+
+  page.innerHTML = `
+    <div id="roomGallery" style="margin-bottom:18px;"></div>
+    <h1 class="section-title">${esc(room.name)}</h1>
+    <p class="section-sub">${esc(room.description || "")} · Capacidade: ${room.capacity} pessoa(s)${room.size_m2 ? ` · ${room.size_m2} m²` : ""}</p>
+
+    ${villaRenderRoomAmenities(room)}
+
+    <div id="propertyGallerySection"></div>
+
+    <div class="card"><div class="card-body">
+      <div class="field-row">
+        <div>
+          <label for="checkin">Check-in</label>
+          <input type="date" id="checkin" min="${today}" value="${today}">
+        </div>
+        <div>
+          <label for="checkout">Check-out</label>
+          <input type="date" id="checkout" min="${minCheckout}" value="${minCheckout}">
+        </div>
+      </div>
+
+      <div id="priceSummary" style="margin-top:16px;"></div>
+      <div id="calcAlert"></div>
+    </div></div>
+
+    <div class="card" style="margin-top:20px;"><div class="card-body">
+      <h3 style="margin-top:0;">Seus dados</h3>
+      <label for="guestName">Nome completo</label>
+      <input type="text" id="guestName" placeholder="Seu nome">
+
+      <label for="guestPhone">WhatsApp para contato</label>
+      <input type="tel" id="guestPhone" placeholder="(00) 00000-0000">
+
+      <label for="guestEmail">E-mail (opcional)</label>
+      <input type="email" id="guestEmail" placeholder="voce@email.com">
+
+      <div class="field-row">
+        <div>
+          <label for="adultCount">Nº de adultos</label>
+          <select id="adultCount"></select>
+        </div>
+        <div>
+          <label for="childCount">Nº de crianças</label>
+          <select id="childCount"></select>
+        </div>
+      </div>
+      <p class="help-text" id="capacityHint"></p>
+
+      <div id="childAgesWrap"></div>
+
+      <div id="submitAlert"></div>
+
+      <button class="btn btn-primary btn-block" id="submitBtn" style="margin-top:20px;">Faça sua Reserva</button>
+      <p class="help-text" style="text-align:center;margin-top:10px;">Você paga 30% agora via Pix para garantir a reserva. O restante é pago no check-in (débito, crédito, Pix ou crédito em até 3x).</p>
+    </div></div>
+  `;
+
+  renderGallery("roomGallery", photos, { alt: room.name, autoplay: 5000 });
+  loadPropertyGallery();
+
+  document.getElementById("checkin").addEventListener("change", onDatesChange);
+  document.getElementById("checkout").addEventListener("change", onDatesChange);
+  document.getElementById("submitBtn").addEventListener("click", onSubmit);
+
+  const capacity = Math.max(1, Number(room.capacity) || 1);
+  populateAdultOptions(capacity, 1);
+  populateChildOptions(capacity - Number(document.getElementById("adultCount").value || 1), 0);
+  document.getElementById("capacityHint").textContent = `Esta acomodação acomoda até ${capacity} pessoa(s) no total, somando adultos e crianças (é preciso pelo menos 1 adulto).`;
+
+  document.getElementById("adultCount").addEventListener("change", onAdultCountChange);
+  document.getElementById("childCount").addEventListener("change", onChildCountChange);
+  renderChildAges(0);
+
+  applyPrefill();
+
+  recalculate();
+}
+
+function applyPrefill() {
+  const prefillName = params.get("name");
+  const prefillPhone = params.get("phone");
+  const prefillEmail = params.get("email");
+  if (prefillName) document.getElementById("guestName").value = prefillName;
+  if (prefillPhone) document.getElementById("guestPhone").value = prefillPhone;
+  if (prefillEmail) document.getElementById("guestEmail").value = prefillEmail;
+}
+
+function range(start, end) {
+  const out = [];
+  for (let i = start; i <= end; i++) out.push(i);
+  return out;
+}
+
+// O total de hóspedes (adultos + crianças) nunca pode passar da capacidade
+// da acomodação, e é sempre preciso pelo menos 1 adulto — por isso as duas
+// caixas de seleção "conversam" entre si: mudar os adultos recalcula o
+// máximo de crianças possível (e ajusta pra baixo se preciso); a caixa de
+// crianças nunca deixa passar desse máximo.
+function populateAdultOptions(capacity, preferredValue) {
+  const sel = document.getElementById("adultCount");
+  const current = preferredValue != null ? preferredValue : Number(sel.value || 1);
+  const clamped = Math.max(1, Math.min(current, capacity));
+  sel.innerHTML = range(1, capacity).map((n) => `<option value="${n}">${n}</option>`).join("");
+  sel.value = String(clamped);
+}
+
+function populateChildOptions(maxChildren, preferredValue) {
+  const sel = document.getElementById("childCount");
+  const safeMax = Math.max(0, maxChildren);
+  const current = preferredValue != null ? preferredValue : Number(sel.value || 0);
+  const clamped = Math.max(0, Math.min(current, safeMax));
+  sel.innerHTML = range(0, safeMax).map((n) => `<option value="${n}">${n === 0 ? "Nenhuma" : n}</option>`).join("");
+  sel.value = String(clamped);
+}
+
+function onAdultCountChange() {
+  const capacity = Math.max(1, Number(room.capacity) || 1);
+  const adults = Number(document.getElementById("adultCount").value || 1);
+  const childSel = document.getElementById("childCount");
+  const prevChildren = Number(childSel.value || 0);
+  const maxChildren = Math.max(0, capacity - adults);
+  const newChildren = Math.min(prevChildren, maxChildren);
+  populateChildOptions(maxChildren, newChildren);
+  // Só reconstrói os campos de idade se a QUANTIDADE de crianças realmente
+  // mudou (precisou reduzir por causa do limite) — assim, se o número de
+  // crianças continuar o mesmo, as idades que a pessoa já tinha escolhido
+  // não se perdem à toa só por ter mudado o número de adultos.
+  if (newChildren !== prevChildren) {
+    renderChildAges(newChildren);
+  }
+}
+
+function onChildCountChange() {
+  renderChildAges(Number(document.getElementById("childCount").value || 0));
+}
+
+function renderChildAges(count) {
+  const wrap = document.getElementById("childAgesWrap");
+  if (!count) {
+    wrap.innerHTML = "";
+    return;
+  }
+  // Crianças aqui = até 6 anos — acima disso, conte a pessoa como adulto no
+  // campo de Adultos.
+  const ageOptions = range(0, 6).map((a) => `<option value="${a}">${a === 0 ? "menos de 1 ano" : a + " anos"}</option>`).join("");
+  let html = '<div class="field-row" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));">';
+  for (let i = 1; i <= count; i++) {
+    html += `
+      <div>
+        <label for="childAge${i}">Idade da criança ${i}</label>
+        <select id="childAge${i}">${ageOptions}</select>
+      </div>
+    `;
+  }
+  html += "</div>";
+  wrap.innerHTML = html;
+}
+
+let lastStay = null;
+
+async function recalculate() {
+  const checkin = document.getElementById("checkin").value;
+  const checkout = document.getElementById("checkout").value;
+  const summary = document.getElementById("priceSummary");
+  const alertBox = document.getElementById("calcAlert");
+  alertBox.innerHTML = "";
+  lastStay = null;
+
+  if (!checkin || !checkout || checkout <= checkin) {
+    summary.innerHTML = "";
+    return;
+  }
+
+  summary.innerHTML = '<span class="spinner"></span>';
+
+  const { data: overrides, error } = await villaSupabase
+    .from("price_overrides")
+    .select("date,price,is_blocked")
+    .eq("room_id", room.id)
+    .gte("date", checkin)
+    .lt("date", checkout);
+
+  if (error) {
+    summary.innerHTML = "";
+    alertBox.innerHTML = '<div class="alert alert-danger">Não foi possível calcular o preço agora.</div>';
+    return;
+  }
+
+  const stay = VillaPricing.calculateStay({
+    checkIn: checkin,
+    checkOut: checkout,
+    basePrice: room.base_price,
+    overrides: overrides || [],
+    depositPercent: 30,
+  });
+
+  lastStay = stay;
+
+  if (stay.blockedDates.length > 0) {
+    summary.innerHTML = "";
+    alertBox.innerHTML = `<div class="alert alert-danger">Datas indisponíveis nesse período (${stay.blockedDates.map(formatDateBR).join(", ")}). Escolha outro período.</div>`;
+    lastStay = null;
+    return;
+  }
+
+  const fullNights = stay.nightly.map((n) => n.date).filter((d) => fullyBookedSet.has(d));
+  if (fullNights.length > 0) {
+    summary.innerHTML = "";
+    lastStay = null;
+    const suggestion = findNextAvailableRange(stay.nights, checkout);
+    const suggestionHtml = suggestion
+      ? `Encontramos uma opção livre pra você: <strong>${formatDateBR(suggestion.checkIn)} a ${formatDateBR(suggestion.checkOut)}</strong> (mesmas ${stay.nights} noite(s)). <button type="button" class="btn btn-sm btn-primary" id="useSuggestedBtn" style="margin-top:8px;">Usar essas datas</button>`
+      : `No momento não achamos automaticamente outra data livre pra essa acomodação nos próximos meses — fale com a pousada pelo WhatsApp que a gente ajuda a encontrar uma opção.`;
+    alertBox.innerHTML = `<div class="alert alert-warn">Essa acomodação já está com a lotação cheia em ${fullNights.map(formatDateBR).join(", ")}. ${suggestionHtml}</div>`;
+    if (suggestion) {
+      document.getElementById("useSuggestedBtn").addEventListener("click", () => {
+        document.getElementById("checkin").value = suggestion.checkIn;
+        document.getElementById("checkout").min = addDaysISO(suggestion.checkIn, 1);
+        document.getElementById("checkout").value = suggestion.checkOut;
+        recalculate();
+      });
+    }
+    return;
+  }
+
+  summary.innerHTML = `
+    <div class="alert alert-info" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;">
+      <span>${stay.nights} noite(s)</span>
+      <span>Total: <strong>${formatBRL(stay.totalPrice)}</strong></span>
+      <span>Sinal (30%) hoje: <strong>${formatBRL(stay.depositAmount)}</strong></span>
+    </div>
   `;
 }
 
-// Reordenar arrastando as linhas da tabela: o handler fica registrado uma vez
-// só (no container #table, não na <table> em si), então continua funcionando
-// mesmo depois que load() troca o innerHTML inteiro a cada carregamento. Só
-// grava o campo sort_order de cada acomodação — não mexe em mais nada (nome,
-// fotos, preço, comodidades etc. ficam intocados).
-enableDragReorder(document.getElementById("table"), "tr[data-drag-id]", async (newOrderIds) => {
-  const updates = newOrderIds.map((id, sort_order) => ({ id, sort_order }));
-  const { error } = await villaSupabase.from("rooms").upsert(updates);
-  if (error) { alert("Erro ao reordenar: " + error.message); return; }
-  await load();
-});
+function onDatesChange() {
+  const checkin = document.getElementById("checkin");
+  const checkout = document.getElementById("checkout");
+  const today = todayISODate();
 
-function editRoom(id) {
-  const r = rooms.find((x) => x.id === id);
-  if (!r) return;
-  document.getElementById("formTitle").textContent = "Editando: " + r.name;
-  document.getElementById("roomId").value = r.id;
-  document.getElementById("name").value = r.name;
-  document.getElementById("slug").value = r.slug;
-  document.getElementById("description").value = r.description || "";
-  document.getElementById("capacity").value = r.capacity;
-  document.getElementById("units").value = r.units || 1;
-  document.getElementById("basePrice").value = r.base_price;
-  document.getElementById("sizeM2").value = r.size_m2 || "";
-  document.getElementById("bedConfig").value = r.bed_config || "";
-  setCheckedAmenities(r.amenities);
-  document.getElementById("active").checked = r.active;
-  currentPhotos = Array.isArray(r.photos) ? r.photos.slice() : [];
-  renderPhotoList();
-  window.scrollTo({ top: document.getElementById("formTitle").offsetTop - 20, behavior: "smooth" });
+  // Segurança extra: alguns navegadores de celular não bloqueiam
+  // visualmente datas passadas no seletor nativo, mesmo com "min" definido.
+  if (checkin.value && checkin.value < today) {
+    checkin.value = today;
+  }
+
+  const minCheckout = addDaysISO(checkin.value, 1);
+  checkout.min = minCheckout;
+  if (checkout.value <= checkin.value) checkout.value = minCheckout;
+  recalculate();
 }
 
-function clearForm() {
-  document.getElementById("formTitle").textContent = "Nova acomodação";
-  document.getElementById("roomId").value = "";
-  document.getElementById("name").value = "";
-  document.getElementById("slug").value = "";
-  document.getElementById("description").value = "";
-  document.getElementById("capacity").value = 2;
-  document.getElementById("units").value = 1;
-  document.getElementById("basePrice").value = "";
-  document.getElementById("sizeM2").value = "";
-  document.getElementById("bedConfig").value = "";
-  checkAllAmenities();
-  document.getElementById("active").checked = true;
-  currentPhotos = [];
-  renderPhotoList();
-  document.getElementById("formAlert").innerHTML = "";
-}
+async function onSubmit() {
+  const submitAlert = document.getElementById("submitAlert");
+  submitAlert.innerHTML = "";
 
-function renderPhotoList() {
-  const el = document.getElementById("photoList");
-  el.innerHTML = currentPhotos.map((url, i) => `
-    <div class="photo-thumb-wrap" draggable="true" data-drag-id="${i}">
-      ${i === 0 ? '<span class="badge badge-success" style="position:absolute;top:-8px;left:-6px;">Capa</span>' : ""}
-      ${isVillaVideoUrl(url)
-        ? `<video class="photo-thumb" src="${esc(url)}" muted autoplay loop playsinline></video><span class="badge badge-neutral" style="position:absolute;bottom:24px;right:-4px;">▶ Vídeo</span>`
-        : `<img class="photo-thumb" src="${esc(url)}">`}
-      <button class="photo-remove-btn" type="button" onclick="removePhoto(${i})">×</button>
-      <div style="display:flex;align-items:center;gap:3px;margin-top:3px;">
-        <span class="drag-handle" title="Arraste pra reordenar">${DRAG_HANDLE_ICON}</span>
-        <button class="btn btn-secondary btn-sm" type="button" style="padding:2px 8px;font-size:0.7rem;" onclick="movePhoto(${i}, -1)" ${i === 0 ? "disabled" : ""}>‹</button>
-        <button class="btn btn-secondary btn-sm" type="button" style="padding:2px 8px;font-size:0.7rem;" onclick="movePhoto(${i}, 1)" ${i === currentPhotos.length - 1 ? "disabled" : ""}>›</button>
-      </div>
-    </div>
-  `).join("");
-}
+  const checkin = document.getElementById("checkin").value;
+  const checkout = document.getElementById("checkout").value;
+  const guestName = document.getElementById("guestName").value.trim();
+  const guestEmail = document.getElementById("guestEmail").value.trim();
+  const guestPhone = document.getElementById("guestPhone").value.trim();
+  const adultCount = Number(document.getElementById("adultCount").value || 1);
+  const childCount = Number(document.getElementById("childCount").value || 0);
+  const guestCount = adultCount + childCount; // total (adultos + crianças) — é isso que a API e a capacidade da acomodação enxergam
+  const childrenAges = [];
+  for (let i = 1; i <= childCount; i++) {
+    childrenAges.push(Number(document.getElementById("childAge" + i).value));
+  }
 
-const DRAG_HANDLE_ICON = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>`;
+  if (checkin < todayISODate()) {
+    submitAlert.innerHTML = '<div class="alert alert-danger">A data de check-in não pode estar no passado. Escolha outra data.</div>';
+    return;
+  }
+  if (!lastStay) {
+    submitAlert.innerHTML = '<div class="alert alert-danger">Escolha datas disponíveis antes de reservar.</div>';
+    return;
+  }
+  if (!guestName || !guestPhone) {
+    submitAlert.innerHTML = '<div class="alert alert-danger">Preencha nome e WhatsApp.</div>';
+    return;
+  }
+  if (adultCount < 1) {
+    submitAlert.innerHTML = '<div class="alert alert-danger">É necessário pelo menos 1 adulto na reserva.</div>';
+    return;
+  }
+  if (guestCount > room.capacity) {
+    submitAlert.innerHTML = `<div class="alert alert-danger">Esta acomodação acomoda no máximo ${room.capacity} pessoa(s) no total.</div>`;
+    return;
+  }
 
-// Reordenar arrastando: o handler fica registrado uma vez só (no container,
-// não em cada item), então continua funcionando mesmo depois que
-// renderPhotoList() troca o innerHTML inteiro a cada mudança.
-enableDragReorder(document.getElementById("photoList"), ".photo-thumb-wrap", (newOrderIds) => {
-  const old = currentPhotos.slice();
-  currentPhotos = newOrderIds.map((idStr) => old[Number(idStr)]);
-  renderPhotoList();
-});
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Reservando…';
 
-function removePhoto(i) {
-  currentPhotos.splice(i, 1);
-  renderPhotoList();
-}
+  logVillaEvent({ type: "funnel", room_id: room.id, stage: "iniciou_reserva" });
 
-function movePhoto(i, delta) {
-  const j = i + delta;
-  if (j < 0 || j >= currentPhotos.length) return;
-  [currentPhotos[i], currentPhotos[j]] = [currentPhotos[j], currentPhotos[i]];
-  renderPhotoList();
-}
+  try {
+    const res = await fetch("/api/create-reservation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        room_id: room.id,
+        check_in: checkin,
+        check_out: checkout,
+        guest_name: guestName,
+        guest_email: guestEmail,
+        guest_phone: guestPhone,
+        guest_count: guestCount,
+        children_ages: childrenAges,
+        session_id: getVillaSessionId(),
+      }),
+    });
+    const data = await res.json();
 
-async function uploadPhotos(e) {
-  const files = Array.from(e.target.files || []);
-  if (files.length === 0) return;
-  const alertBox = document.getElementById("formAlert");
-  alertBox.innerHTML = '<div class="alert alert-info"><span class="spinner"></span> Enviando fotos…</div>';
-
-  const slugPrefix = document.getElementById("slug").value || "quarto";
-
-  for (const file of files) {
-    const path = `${slugPrefix}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
-    const { error } = await villaSupabase.storage.from("room-photos").upload(path, file, { upsert: false });
-    if (error) {
-      alertBox.innerHTML = `<div class="alert alert-danger">Erro ao enviar ${esc(file.name)}: ${esc(error.message)}</div>`;
-      continue;
+    if (!res.ok) {
+      submitAlert.innerHTML = `<div class="alert alert-danger">${esc(data.error || "Não foi possível reservar.")}</div>`;
+      btn.disabled = false;
+      btn.innerHTML = "Faça sua Reserva";
+      return;
     }
-    const { data: pub } = villaSupabase.storage.from("room-photos").getPublicUrl(path);
-    currentPhotos.push(pub.publicUrl);
+
+    logVillaEvent({ type: "funnel", room_id: room.id, stage: "gerou_pix" });
+    location.href = "/reserva.html?id=" + encodeURIComponent(data.id);
+  } catch (e) {
+    console.error(e);
+    submitAlert.innerHTML = '<div class="alert alert-danger">Erro de conexão. Tente novamente.</div>';
+    btn.disabled = false;
+    btn.innerHTML = "Reservar e gerar Pix do sinal";
   }
-
-  alertBox.innerHTML = '<div class="alert alert-success">Fotos enviadas.</div>';
-  renderPhotoList();
-  e.target.value = "";
-}
-
-async function saveRoom() {
-  const alertBox = document.getElementById("formAlert");
-  alertBox.innerHTML = "";
-
-  const id = document.getElementById("roomId").value;
-  const payload = {
-    name: document.getElementById("name").value.trim(),
-    slug: document.getElementById("slug").value.trim(),
-    description: document.getElementById("description").value.trim(),
-    capacity: Number(document.getElementById("capacity").value) || 1,
-    units: Math.max(1, Number(document.getElementById("units").value) || 1),
-    base_price: Number(document.getElementById("basePrice").value),
-    size_m2: document.getElementById("sizeM2").value ? Number(document.getElementById("sizeM2").value) : null,
-    bed_config: document.getElementById("bedConfig").value.trim() || null,
-    amenities: getCheckedAmenities(),
-    active: document.getElementById("active").checked,
-    photos: currentPhotos,
-    updated_at: new Date().toISOString(),
-  };
-
-  if (!payload.name || !payload.slug || !(payload.base_price > 0)) {
-    alertBox.innerHTML = '<div class="alert alert-danger">Preencha nome, slug e um preço padrão válido.</div>';
-    return;
-  }
-
-  const query = id
-    ? villaSupabase.from("rooms").update(payload).eq("id", id)
-    : villaSupabase.from("rooms").insert([payload]);
-
-  const { error } = await query;
-
-  if (error) {
-    alertBox.innerHTML = `<div class="alert alert-danger">Erro ao salvar: ${esc(error.message)}</div>`;
-    return;
-  }
-
-  alertBox.innerHTML = '<div class="alert alert-success">Acomodação salva com sucesso.</div>';
-  clearForm();
-  await load();
-}
-
-async function deleteRoom(id) {
-  const room = rooms.find((r) => r.id === id);
-  if (!confirm(`Excluir a acomodação "${room ? room.name : ""}"? Isso não pode ser desfeito. Reservas antigas dessa acomodação continuam guardadas.`)) return;
-  const { error } = await villaSupabase.from("rooms").delete().eq("id", id);
-  if (error) {
-    alert("Erro ao excluir: " + error.message + "\n\nDica: se houver reservas ligadas a esta acomodação, considere só desmarcar 'visível no site' em vez de excluir.");
-    return;
-  }
-  await load();
 }
 
 function esc(str) {
