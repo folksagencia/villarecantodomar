@@ -51,7 +51,11 @@ module.exports = async (req, res) => {
     if (!guest_phone || guest_phone.replace(/\D/g, "").length < 10) errors.push("Telefone/WhatsApp inválido.");
     if (!Number.isInteger(guest_count) || guest_count < 1) errors.push("Número de hóspedes inválido.");
     if (children_ages.length > guest_count) errors.push("Número de crianças não pode ser maior que o total de hóspedes.");
-    if (children_ages.some((a) => !Number.isInteger(a) || a < 0 || a > 17)) errors.push("Idade de criança inválida.");
+    if (children_ages.some((a) => !Number.isInteger(a) || a < 0 || a > 6)) errors.push("Idade de criança inválida (crianças são consideradas até 6 anos — acima disso, conte como adulto).");
+    // Pelo menos 1 adulto: guest_count é o total (adultos + crianças), então
+    // se todo mundo for criança (children_ages.length === guest_count), não
+    // sobra nenhum adulto responsável pela reserva.
+    if (children_ages.length >= guest_count) errors.push("É necessário pelo menos 1 adulto na reserva.");
 
     if (errors.length > 0) {
       res.status(400).json({ error: errors.join(" ") });
