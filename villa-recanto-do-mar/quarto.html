@@ -160,19 +160,12 @@ function render() {
 
       <div class="field-row">
         <div>
-          <label for="guestCount">Nº de hóspedes</label>
-          <select id="guestCount"></select>
+          <label for="adultCount">Nº de adultos</label>
+          <select id="adultCount"></select>
         </div>
         <div>
-          <label for="childCount">Crianças</label>
-          <select id="childCount">
-            <option value="0">Nenhuma</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
-          </select>
+          <label for="childCount">Nº de crianças</label>
+          <select id="childCount"></select>
         </div>
       </div>
       <p class="help-text" id="capacityHint"></p>
@@ -193,11 +186,12 @@ function render() {
   document.getElementById("checkout").addEventListener("change", onDatesChange);
   document.getElementById("submitBtn").addEventListener("click", onSubmit);
 
-  const guestCountSel = document.getElementById("guestCount");
   const capacity = Math.max(1, Number(room.capacity) || 1);
-  guestCountSel.innerHTML = range(1, capacity).map((n) => `<option value="${n}">${n}</option>`).join("");
-  document.getElementById("capacityHint").textContent = `Esta acomodação acomoda até ${capacity} pessoa(s) no total (inclua as crianças na contagem).`;
+  populateAdultOptions(capacity, 1);
+  populateChildOptions(capacity - Number(document.getElementById("adultCount").value || 1), 0);
+  document.getElementById("capacityHint").textContent = `Esta acomodação acomoda até ${capacity} pessoa(s) no total, somando adultos e crianças (é preciso pelo menos 1 adulto).`;
 
+  document.getElementById("adultCount").addEventListener("change", onAdultCountChange);
   document.getElementById("childCount").addEventListener("change", onChildCountChange);
   renderChildAges(0);
 
@@ -221,6 +215,45 @@ function range(start, end) {
   return out;
 }
 
+// O total de hóspedes (adultos + crianças) nunca pode passar da capacidade
+// da acomodação, e é sempre preciso pelo menos 1 adulto — por isso as duas
+// caixas de seleção "conversam" entre si: mudar os adultos recalcula o
+// máximo de crianças possível (e ajusta pra baixo se preciso); a caixa de
+// crianças nunca deixa passar desse máximo.
+function populateAdultOptions(capacity, preferredValue) {
+  const sel = document.getElementById("adultCount");
+  const current = preferredValue != null ? preferredValue : Number(sel.value || 1);
+  const clamped = Math.max(1, Math.min(current, capacity));
+  sel.innerHTML = range(1, capacity).map((n) => `<option value="${n}">${n}</option>`).join("");
+  sel.value = String(clamped);
+}
+
+function populateChildOptions(maxChildren, preferredValue) {
+  const sel = document.getElementById("childCount");
+  const safeMax = Math.max(0, maxChildren);
+  const current = preferredValue != null ? preferredValue : Number(sel.value || 0);
+  const clamped = Math.max(0, Math.min(current, safeMax));
+  sel.innerHTML = range(0, safeMax).map((n) => `<option value="${n}">${n === 0 ? "Nenhuma" : n}</option>`).join("");
+  sel.value = String(clamped);
+}
+
+function onAdultCountChange() {
+  const capacity = Math.max(1, Number(room.capacity) || 1);
+  const adults = Number(document.getElementById("adultCount").value || 1);
+  const childSel = document.getElementById("childCount");
+  const prevChildren = Number(childSel.value || 0);
+  const maxChildren = Math.max(0, capacity - adults);
+  const newChildren = Math.min(prevChildren, maxChildren);
+  populateChildOptions(maxChildren, newChildren);
+  // Só reconstrói os campos de idade se a QUANTIDADE de crianças realmente
+  // mudou (precisou reduzir por causa do limite) — assim, se o número de
+  // crianças continuar o mesmo, as idades que a pessoa já tinha escolhido
+  // não se perdem à toa só por ter mudado o número de adultos.
+  if (newChildren !== prevChildren) {
+    renderChildAges(newChildren);
+  }
+}
+
 function onChildCountChange() {
   renderChildAges(Number(document.getElementById("childCount").value || 0));
 }
@@ -231,7 +264,9 @@ function renderChildAges(count) {
     wrap.innerHTML = "";
     return;
   }
-  const ageOptions = range(0, 17).map((a) => `<option value="${a}">${a === 0 ? "menos de 1 ano" : a + " anos"}</option>`).join("");
+  // Crianças aqui = até 6 anos — acima disso, conte a pessoa como adulto no
+  // campo de Adultos.
+  const ageOptions = range(0, 6).map((a) => `<option value="${a}">${a === 0 ? "menos de 1 ano" : a + " anos"}</option>`).join("");
   let html = '<div class="field-row" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));">';
   for (let i = 1; i <= count; i++) {
     html += `
@@ -347,8 +382,9 @@ async function onSubmit() {
   const guestName = document.getElementById("guestName").value.trim();
   const guestEmail = document.getElementById("guestEmail").value.trim();
   const guestPhone = document.getElementById("guestPhone").value.trim();
-  const guestCount = Number(document.getElementById("guestCount").value);
+  const adultCount = Number(document.getElementById("adultCount").value || 1);
   const childCount = Number(document.getElementById("childCount").value || 0);
+  const guestCount = adultCount + childCount; // total (adultos + crianças) — é isso que a API e a capacidade da acomodação enxergam
   const childrenAges = [];
   for (let i = 1; i <= childCount; i++) {
     childrenAges.push(Number(document.getElementById("childAge" + i).value));
@@ -366,8 +402,12 @@ async function onSubmit() {
     submitAlert.innerHTML = '<div class="alert alert-danger">Preencha nome e WhatsApp.</div>';
     return;
   }
-  if (childCount > guestCount) {
-    submitAlert.innerHTML = '<div class="alert alert-danger">O número de crianças não pode ser maior que o número total de hóspedes.</div>';
+  if (adultCount < 1) {
+    submitAlert.innerHTML = '<div class="alert alert-danger">É necessário pelo menos 1 adulto na reserva.</div>';
+    return;
+  }
+  if (guestCount > room.capacity) {
+    submitAlert.innerHTML = `<div class="alert alert-danger">Esta acomodação acomoda no máximo ${room.capacity} pessoa(s) no total.</div>`;
     return;
   }
 
