@@ -43,12 +43,15 @@
 
     <div class="stat-grid" id="statusGrid"></div>
 
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
-      <button class="btn btn-sm btn-secondary" data-filter="todas">Todas</button>
-      <button class="btn btn-sm btn-secondary" data-filter="aguardando_pix">Aguardando Pix</button>
-      <button class="btn btn-sm btn-secondary" data-filter="pix_confirmado">Confirmadas</button>
-      <button class="btn btn-sm btn-secondary" data-filter="cancelada">Canceladas</button>
-      <button class="btn btn-sm btn-secondary" data-filter="concluida">Concluídas</button>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-sm btn-secondary" data-filter="todas">Todas</button>
+        <button class="btn btn-sm btn-secondary" data-filter="aguardando_pix">Aguardando Pix</button>
+        <button class="btn btn-sm btn-secondary" data-filter="pix_confirmado">Confirmadas</button>
+        <button class="btn btn-sm btn-secondary" data-filter="cancelada">Canceladas</button>
+        <button class="btn btn-sm btn-secondary" data-filter="concluida">Concluídas</button>
+      </div>
+      <button class="btn btn-sm btn-secondary" id="exportCsvBtn">⬇ Baixar planilha (.csv)</button>
     </div>
 
     <div id="actionAlert"></div>
@@ -111,6 +114,8 @@ async function init() {
     });
   });
   document.querySelector('[data-filter="todas"]').classList.add("btn-primary");
+
+  document.getElementById("exportCsvBtn").addEventListener("click", exportToCsv);
 
   document.querySelectorAll("[data-range]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -210,6 +215,76 @@ function renderTable() {
   });
 }
 
+// Baixa em .csv (abre direto no Excel/Google Sheets) exatamente as reservas
+// que estão sendo mostradas na tela agora — mesmo filtro de status e mesmo
+// período escolhido lá em cima. Usa ";" como separador (em vez de ",") e um
+// BOM no começo do arquivo porque é o que o Excel em português espera pra
+// abrir acentos corretamente sem precisar configurar nada na importação.
+function exportToCsv() {
+  const data = currentFilter === "todas" ? allReservations : allReservations.filter((r) => r.status === currentFilter);
+  if (!data || data.length === 0) {
+    alert("Não há reservas para baixar nesse filtro/período.");
+    return;
+  }
+
+  const statusLabel = {
+    aguardando_pix: "Aguardando Pix",
+    pix_confirmado: "Confirmada",
+    cancelada: "Cancelada",
+    concluida: "Concluída",
+  };
+
+  const headers = [
+    "Status", "Hóspede", "E-mail", "WhatsApp", "Acomodação",
+    "Check-in", "Check-out", "Noites", "Adultos", "Crianças", "Idades das crianças",
+    "Valor total (R$)", "Sinal Pix (R$)", "Registrado em", "Confirmado em", "Confirmado por",
+  ];
+
+  const rows = data.map((r) => {
+    const children = Array.isArray(r.children_ages) ? r.children_ages : [];
+    const adults = Math.max(0, (r.guest_count || 1) - children.length);
+    return [
+      statusLabel[r.status] || r.status,
+      r.guest_name || "",
+      r.guest_email || "",
+      r.guest_phone || "",
+      r.rooms ? r.rooms.name : "",
+      formatDateBR(r.check_in),
+      formatDateBR(r.check_out),
+      r.nights,
+      adults,
+      children.length,
+      children.join(" / "),
+      Number(r.total_price || 0).toFixed(2).replace(".", ","),
+      Number(r.deposit_amount || 0).toFixed(2).replace(".", ","),
+      formatDateTimeBR(r.created_at),
+      r.confirmed_at ? formatDateTimeBR(r.confirmed_at) : "",
+      r.confirmed_by || "",
+    ];
+  });
+
+  downloadCsv(headers, rows, `reservas-villa-recanto-do-mar-${todayISODate()}.csv`);
+}
+
+function csvEscape(value) {
+  const str = String(value == null ? "" : value);
+  return /[";\n]/.test(str) ? `"${str.replace(/"/g, '""')}"` : str;
+}
+
+function downloadCsv(headers, rows, filename) {
+  const lines = [headers, ...rows].map((row) => row.map(csvEscape).join(";"));
+  const csvContent = "\uFEFF" + lines.join("\r\n"); // \uFEFF = BOM, garante acentos certos no Excel
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
 function statusBadge(status) {
   const map = {
     aguardando_pix: '<span class="badge badge-warn">Aguardando Pix</span>',
@@ -233,7 +308,8 @@ function rowHtml(r) {
   }
   actions += ` <button class="btn btn-outline-danger btn-sm" id="delete-${r.id}" title="Remove a reserva permanentemente — use para testes ou registros indevidos">Excluir</button>`;
   const children = Array.isArray(r.children_ages) ? r.children_ages : [];
-  const guestInfo = `${r.guest_count || 1} hóspede(s)` + (children.length ? ` · ${children.length} criança(s) (${children.join(", ")} anos)` : "");
+  const adults = Math.max(0, (r.guest_count || 1) - children.length);
+  const guestInfo = `${adults} adulto(s)` + (children.length ? ` + ${children.length} criança(s) (${children.join(", ")} ano(s))` : "");
   const contact = [r.guest_email, r.guest_phone].filter(Boolean).join(" · ");
   return `
     <tr>
