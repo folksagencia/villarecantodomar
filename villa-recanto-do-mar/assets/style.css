@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
 /* assets/style.css — estilo único, compartilhado por todo o site e pelo painel admin. */
 
 :root {
@@ -646,3 +647,110 @@ tr:last-child td { border-bottom: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-600); }
+
+/* Títulos e nome da marca passam a usar uma fonte serifada elegante,
+   igual à usada no novo site. Não altera tamanho de nada, só a fonte. */
+.brand,
+.section-title,
+.room-card h3,
+.serv-card h3,
+.stat-card .value,
+.price-tag {
+  font-family: "Fraunces", Georgia, serif;
+}
+
+/* O nome da marca no cabeçalho ganha o mesmo tratamento do logo: "Villa"
+   em negrito dourado, "Recanto do Mar" fino e elegante. */
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.brand small {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+/* Sombras um pouco mais ricas nos cartões. */
+:root {
+  --shadow: 0 4px 16px rgba(17, 41, 54, 0.12);
+  --shadow-lg: 0 16px 40px rgba(17, 41, 54, 0.18);
+}
+
+@media (hover: hover) {
+  .room-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .room-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.btn-primary:hover {
+  box-shadow: 0 10px 24px rgba(158, 107, 17, 0.32);
+}
+
+/* Esconde o cabeçalho com a logo e "RESERVAS". */
+header.site-header {
+  display: none !important;
+}
+
+/* Esconde a seção "Conheça a pousada" (fotos). */
+#propertyGallerySection {
+  display: none !important;
+}
+
+/* Esconde o rodapé "Localização" (mapa e endereço). */
+footer.site-footer {
+  display: none !important;
+}
+
+/* Um respiro no topo da página, já que o cabeçalho não aparece mais. */
+.home-hero > .container {
+  padding-top: 28px;
+}
+
+/* Carrossel horizontal dos quartos no computador e no tablet. */
+@media (min-width: 641px) {
+  .room-grid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 14px !important;
+  }
+  .room-grid > .room-card {
+    flex: 0 0 340px !important;
+    scroll-snap-align: start !important;
+  }
+  .room-grid::-webkit-scrollbar {
+    height: 8px;
+  }
+  .room-grid::-webkit-scrollbar-thumb {
+    background: #e09818;
+    border-radius: 999px;
+  }
+}
+
+/* Estilo do botão "Voltar aos quartos" (o link em si vem na Parte B). */
+.voltar-quartos {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 18px 0 6px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #18384c;
+  text-decoration: none;
+}
+.voltar-quartos:hover {
+  color: #9e6b11;
+}
+.voltar-quartos svg {
+  width: 16px;
+  height: 16px;
+}
