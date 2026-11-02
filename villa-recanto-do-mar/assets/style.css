@@ -715,27 +715,6 @@ footer.site-footer {
   padding-top: 28px;
 }
 
-/* Carrossel horizontal dos quartos no computador e no tablet. */
-@media (min-width: 641px) {
-  .room-grid {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    scroll-snap-type: x mandatory !important;
-    -webkit-overflow-scrolling: touch !important;
-    padding-bottom: 14px !important;
-  }
-  .room-grid > .room-card {
-    flex: 0 0 340px !important;
-    scroll-snap-align: start !important;
-  }
-  .room-grid::-webkit-scrollbar {
-    height: 8px;
-  }
-  .room-grid::-webkit-scrollbar-thumb {
-    background: #e09818;
-    border-radius: 999px;
-  }
 }
 
 /* Estilo do botão "Voltar aos quartos" (o link em si vem na Parte B). */
@@ -996,30 +975,6 @@ footer.site-footer {
 /* Um respiro no topo da pÃ¡gina, jÃ¡ que o cabeÃ§alho nÃ£o aparece mais. */
 .home-hero > .container {
   padding-top: 28px;
-}
-
-/* 4) Carrossel horizontal dos quartos no computador e no tablet.
-   No celular (telas atÃ© 640px) nada muda. */
-@media (min-width: 641px) {
-  .room-grid {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    scroll-snap-type: x mandatory !important;
-    -webkit-overflow-scrolling: touch !important;
-    padding-bottom: 14px !important;
-  }
-  .room-grid > .room-card {
-    flex: 0 0 340px !important;
-    scroll-snap-align: start !important;
-  }
-  .room-grid::-webkit-scrollbar {
-    height: 8px;
-  }
-  .room-grid::-webkit-scrollbar-thumb {
-    background: #e09818;
-    border-radius: 999px;
-  }
 }
 
 /* 5) Estilo do botÃ£o "Voltar aos quartos" que aparece na pÃ¡gina de cada
