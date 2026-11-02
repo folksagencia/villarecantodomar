@@ -1,3 +1,4 @@
+   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
 /* assets/style.css — estilo único, compartilhado por todo o site e pelo painel admin. */
 
@@ -755,27 +756,34 @@ footer.site-footer {
   height: 16px;
 }
 /* ========================================================================
-   PARTE 4 (ATUALIZADA) â€” CartÃµes de quarto parecidos com a referÃªncia do novo site
+   PARTE 4 (ATUALIZADA v2) â€” CartÃµes de quarto parecidos com a referÃªncia do novo site
    ========================================================================
-   Esta versÃ£o SUBSTITUI o bloco "PARTE 4" que vocÃª colou antes. Ela corrige
-   trÃªs coisas que ficaram erradas na primeira versÃ£o:
+   Esta versÃ£o SUBSTITUI o bloco "PARTE 4" (ou "PARTE 4 ATUALIZADA") que
+   vocÃª colou antes. O que mudou agora:
 
-   1) A seta de "Reservar este quarto" aparecia com caracteres estranhos
-      (tipo "Ã¢â€ '") por um problema de acentuaÃ§Ã£o do arquivo. Agora ela usa
-      um cÃ³digo que funciona em qualquer editor, sem esse problema.
-   2) O texto "Reservar este quarto" agora tem cara de botÃ£o mesmo: fundo
-      dourado claro, texto dourado escuro, e vira um "pill" sÃ³lido dourado
-      ao passar o mouse.
-   3) Os 5 cartÃµes de quarto agora ficam lado a lado (um grid de verdade),
-      sem precisar rolar, igual Ã  seÃ§Ã£o "AcomodaÃ§Ãµes" do novo site â€”
-      substitui o carrossel de rolagem horizontal que a Parte 2 criava.
-      TambÃ©m esconde o tÃ­tulo "Nossas acomodaÃ§Ãµes" e o texto abaixo dele,
-      jÃ¡ que essa informaÃ§Ã£o jÃ¡ aparece no novo site, logo acima.
+   1) A seta de "Reservar este quarto" nÃ£o quebra mais (sem "Ã¢â€ '").
+   2) O texto "Reservar este quarto" tem cara de botÃ£o (pill dourado).
+   3) Os cartÃµes de quarto nÃ£o ficam mais "esticados" nem cortados: antes,
+      o grid forÃ§ava TODOS os cartÃµes a terem a mesma altura do cartÃ£o
+      mais alto (e os seus cartÃµes tÃªm bastante texto â€” descriÃ§Ã£o, preÃ§o,
+      capacidade, selo "CafÃ© da manhÃ£ incluÃ­do" â€” entÃ£o ficavam bem
+      altos), e algo parecia cortar a parte de baixo. Agora cada cartÃ£o
+      respeita a prÃ³pria altura (nÃ£o estica mais) e a largura mÃ­nima de
+      cada cartÃ£o aumentou, pra caber esse tanto de informaÃ§Ã£o sem precisar
+      quebrar tanta linha de texto.
+   4) Esconde o tÃ­tulo "Nossas acomodaÃ§Ãµes" e o texto abaixo dele, jÃ¡ que
+      essa informaÃ§Ã£o jÃ¡ aparece no novo site, logo acima.
 
    Como instalar: apague o bloco antigo "PARTE 4" inteiro (da linha
    "PARTE 4 â€” CartÃµes de quarto..." atÃ© o fim dele) de dentro do arquivo
-   assets/style.css, e cole este bloco no lugar (pode ser no mesmo ponto,
-   no final do arquivo).
+   assets/style.css, e cole este bloco no lugar.
+
+   IMPORTANTE: se depois de colar isto o cartÃ£o ainda aparecer cortado
+   embaixo (sem conseguir ver o botÃ£o "Reservar este quarto"), me avise â€”
+   pode ser que exista algum outro elemento ao redor do grid (um container
+   de altura fixa) que eu nÃ£o vejo sÃ³ pelos arquivos CSS que vocÃª me
+   mandou, e aÃ­ preciso que vocÃª me mande um print da tela cheia (do
+   topo atÃ© o fim da seÃ§Ã£o de quartos) pra eu identificar.
    ======================================================================== */
 
 /* Fundo claro atrÃ¡s da seÃ§Ã£o "Nossas acomodaÃ§Ãµes" (em vez do degradÃª
@@ -820,35 +828,98 @@ footer.site-footer {
   color: #fff;
 }
 
-/* Os 5 quartos lado a lado, sem carrossel, igual Ã  seÃ§Ã£o "AcomodaÃ§Ãµes"
-   do novo site (substitui o carrossel de rolagem horizontal da Parte 2). */
-@media (min-width: 1150px) {
+/* Os quartos lado a lado, sem carrossel (substitui o carrossel de rolagem
+   horizontal da Parte 2). Cada cartÃ£o mantÃ©m a prÃ³pria altura â€” nÃ£o
+   estica mais pra ficar igual ao cartÃ£o mais alto â€” e a largura mÃ­nima
+   ficou maior (290px) pra caber bem o preÃ§o, a capacidade e o selo de
+   cafÃ© da manhÃ£ sem precisar quebrar demais o texto. */
+@media (min-width: 641px) {
   .room-grid {
     display: grid !important;
-    grid-template-columns: repeat(5, 1fr) !important;
-    gap: 20px !important;
+    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)) !important;
+    align-items: start !important;
+    gap: 22px !important;
     flex-wrap: unset !important;
-    overflow-x: visible !important;
+    overflow: visible !important;
     scroll-snap-type: none !important;
     padding-bottom: 0 !important;
+    max-height: none !important;
+    height: auto !important;
   }
   .room-grid > .room-card {
     flex: unset !important;
     scroll-snap-align: unset !important;
+    height: auto !important;
+    max-height: none !important;
   }
 }
-@media (min-width: 641px) and (max-width: 1149px) {
-  .room-grid {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
-    gap: 20px !important;
-    flex-wrap: unset !important;
-    overflow-x: visible !important;
-    scroll-snap-type: none !important;
-    padding-bottom: 0 !important;
+/* ========================================================================
+   ESTILO VISUAL ADICIONAL â€” Villa Recanto do Mar
+   ========================================================================
+   Isto NÃƒO substitui o assets/style.css existente. Ã‰ um complemento:
+   sÃ³ adiciona uma fonte serifada nos tÃ­tulos e aprofunda um pouco as
+   sombras dos cartÃµes, para o sistema de reservas ficar visualmente mais
+   parecido com o novo site (mesmas cores, mesma estrutura, mesmo tamanho
+   de fotos e Ã­cones de sempre).
+
+   Como instalar (2 passos, veja o LEIA-ME.md para o passo a passo
+   detalhado pelo GitHub):
+
+   PASSO 1 â€” cole esta linha bem no topo do arquivo assets/style.css,
+   antes de tudo o resto (precisa ser a primeira linha do arquivo):
+
+   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+   PASSO 2 â€” cole todo o conteÃºdo abaixo desta linha no final do arquivo
+   assets/style.css (depois da Ãºltima linha que jÃ¡ existe lÃ¡).
+   ======================================================================== */
+
+/* TÃ­tulos e nome da marca passam a usar uma fonte serifada elegante,
+   igual Ã  usada no novo site. NÃ£o altera tamanho de nada, sÃ³ a fonte. */
+.brand,
+.section-title,
+.room-card h3,
+.serv-card h3,
+.stat-card .value,
+.price-tag {
+  font-family: "Fraunces", Georgia, serif;
+}
+
+/* O nome da marca no cabeÃ§alho ganha o mesmo tratamento do logo: "Villa"
+   em negrito dourado, "Recanto do Mar" fino e elegante. */
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.brand small {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+/* Sombras um pouco mais ricas nos cartÃµes (quartos, estatÃ­sticas do
+   admin, etc.) â€” mesmo tamanho de cartÃ£o, sÃ³ uma profundidade maior. */
+:root {
+  --shadow: 0 4px 16px rgba(17, 41, 54, 0.12);
+  --shadow-lg: 0 16px 40px rgba(17, 41, 54, 0.18);
+}
+
+/* Leve elevaÃ§Ã£o ao passar o mouse nos cartÃµes de quarto, sÃ³ nos
+   navegadores de computador (nÃ£o afeta toque em celular). */
+@media (hover: hover) {
+  .room-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
   }
-  .room-grid > .room-card {
-    flex: unset !important;
-    scroll-snap-align: unset !important;
+  .room-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
   }
+}
+
+/* BotÃ£o principal de reserva com um toque mais premium no hover,
+   sem mudar o tamanho do botÃ£o. */
+.btn-primary:hover {
+  box-shadow: 0 10px 24px rgba(158, 107, 17, 0.32);
 }
