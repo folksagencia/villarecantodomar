@@ -828,33 +828,59 @@ footer.site-footer {
   width: 16px;
   height: 16px;
 }
-
-/* Os quartos lado a lado, sem carrossel (substitui o carrossel de rolagem
-   horizontal da Parte 2). Cada cartÃ£o mantÃ©m a prÃ³pria altura â€” nÃ£o
-   estica mais pra ficar igual ao cartÃ£o mais alto â€” e a largura mÃ­nima
-   ficou maior (290px) pra caber bem o preÃ§o, a capacidade e o selo de
-   cafÃ© da manhÃ£ sem precisar quebrar demais o texto. */
-@media (min-width: 641px) {
-  .room-grid {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    justify-content: center !important;
-    align-items: flex-start !important;
-    gap: 22px !important;
-    overflow: visible !important;
-    scroll-snap-type: none !important;
-    padding-bottom: 0 !important;
-    max-height: none !important;
-    height: auto !important;
+/* Os quartos lado a lado, 5 por linha, sem rolar e sem cortar as fotos.
+   As fotos nÃ£o mudam (mesma proporÃ§Ã£o de sempre) â€” sÃ³ o texto e os
+   espaÃ§amentos do cartÃ£o ficam mais compactos para caber os 5 juntos. */
+@media (min-width: 820px) {
+  #rooms.room-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 14px !important;
+    margin: 28px 0 48px !important;
   }
-  .room-grid > .room-card {
-    flex: 1 1 290px !important;
-    max-width: 360px !important;
-    scroll-snap-align: unset !important;
-    height: auto !important;
-    max-height: none !important;
+  #rooms.room-grid .room-card {
+    min-width: 0 !important;
+    max-width: none !important;
+    flex: none !important;
   }
-}
+  #rooms.room-grid .card-body {
+    padding: 14px 14px 16px !important;
+    gap: 8px !important;
+  }
+  #rooms.room-grid .room-card h3 {
+    font-size: 0.95rem !important;
+    line-height: 1.2 !important;
+    margin: 0 0 2px !important;
+  }
+  #rooms.room-grid .room-card p {
+    font-size: 0.76rem !important;
+    line-height: 1.35 !important;
+    margin: 0 0 6px !important;
+  }
+  #rooms.room-grid .room-card-meta {
+    font-size: 0.68rem !important;
+    margin: -2px 0 8px !important;
+    gap: 4px !important;
+  }
+  #rooms.room-grid .price-tag {
+    font-size: 0.92rem !important;
+  }
+  #rooms.room-grid .price-tag small {
+    font-size: 0.68rem !important;
+  }
+  #rooms.room-grid .room-card-badge {
+    font-size: 0.6rem !important;
+    padding: 4px 8px !important;
+    top: 8px !important;
+    left: 8px !important;
+  }
+  #rooms.room-grid .card-body::after {
+    font-size: 0.66rem !important;
+    padding: 6px 10px !important;
+    margin: 10px 0 0 !important;
+    white-space: nowrap !important;
+  }
+}  
 /* ========================================================================
    ESTILO VISUAL ADICIONAL â€” Villa Recanto do Mar
    ========================================================================
