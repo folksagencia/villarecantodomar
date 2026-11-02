@@ -806,11 +806,11 @@ footer.site-footer {
   border-top: 5px solid #e09818 !important;
 }
 
-/* "Reservar este quarto â†’" no final de cada cartÃ£o, com cara de botÃ£o de
-   verdade (fundo em pill, fica sÃ³lido dourado ao passar o mouse). O
-   cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel â€” isto Ã© sÃ³ o texto/seta visual. */
+/* "Reservar este quarto" no final de cada cartÃ£o, com cara de botÃ£o de
+   verdade (fundo em pill, fica sÃ³lido dourado ao passar o mouse). Sem
+   seta â€” o cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel, isto Ã© sÃ³ o texto/rÃ³tulo. */
 .card-body::after {
-  content: "Reservar este quarto \2192";
+  content: "Reservar este quarto";
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -829,6 +829,27 @@ footer.site-footer {
   color: #fff;
 }
 
+/* BotÃ£o "Voltar aos quartos" (usado pelo trecho que cola no quarto.html,
+   veja trecho-para-colar-no-quarto-html.txt) â€” incluÃ­do aqui pra nÃ£o
+   depender da Parte 2. */
+.voltar-quartos {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 18px 0 6px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #18384c;
+  text-decoration: none;
+}
+.voltar-quartos:hover {
+  color: #9e6b11;
+}
+.voltar-quartos svg {
+  width: 16px;
+  height: 16px;
+}
+
 /* Os quartos lado a lado, sem carrossel (substitui o carrossel de rolagem
    horizontal da Parte 2). Cada cartÃ£o mantÃ©m a prÃ³pria altura â€” nÃ£o
    estica mais pra ficar igual ao cartÃ£o mais alto â€” e a largura mÃ­nima
@@ -836,11 +857,11 @@ footer.site-footer {
    cafÃ© da manhÃ£ sem precisar quebrar demais o texto. */
 @media (min-width: 641px) {
   .room-grid {
-    display: grid !important;
-    grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)) !important;
-    align-items: start !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    align-items: flex-start !important;
     gap: 22px !important;
-    flex-wrap: unset !important;
     overflow: visible !important;
     scroll-snap-type: none !important;
     padding-bottom: 0 !important;
@@ -848,7 +869,8 @@ footer.site-footer {
     height: auto !important;
   }
   .room-grid > .room-card {
-    flex: unset !important;
+    flex: 1 1 290px !important;
+    max-width: 360px !important;
     scroll-snap-align: unset !important;
     height: auto !important;
     max-height: none !important;
@@ -923,4 +945,101 @@ footer.site-footer {
    sem mudar o tamanho do botÃ£o. */
 .btn-primary:hover {
   box-shadow: 0 10px 24px rgba(158, 107, 17, 0.32);
+}
+   /* ========================================================================
+   AJUSTES PARA A PÃGINA INCORPORADA â€” Villa Recanto do Mar
+   ========================================================================
+   Este arquivo Ã© opcional e independente do "estilo-visual-adicional.css".
+   Ele faz trÃªs coisas, porque agora o sistema de reservas vai aparecer
+   dentro do novo site (incorporado), que jÃ¡ tem seu prÃ³prio cabeÃ§alho,
+   galeria de fotos e seÃ§Ã£o de localizaÃ§Ã£o:
+
+   1) Esconde o cabeÃ§alho com a logo e "RESERVAS" (o novo site jÃ¡ tem um
+      cabeÃ§alho prÃ³prio logo acima).
+   2) Esconde a seÃ§Ã£o "ConheÃ§a a pousada" com as fotos (a galeria de fotos
+      jÃ¡ aparece em outra parte do novo site).
+   3) Esconde o rodapÃ© "LocalizaÃ§Ã£o" com o mapa e o endereÃ§o (o novo site
+      jÃ¡ tem a seÃ§Ã£o de localizaÃ§Ã£o prÃ³pria).
+   4) Transforma a lista de quartos em um carrossel horizontal no
+      computador e no tablet â€” no celular continua exatamente como jÃ¡
+      estÃ¡ hoje, sem nenhuma mudanÃ§a.
+
+   IMPORTANTE: depois de colar isto, se alguÃ©m acessar o link do sistema
+   de reservas sozinho (fora do novo site), vai ver a pÃ¡gina sÃ³ com os
+   quartos, sem cabeÃ§alho, fotos ou localizaÃ§Ã£o. Se isso for um problema
+   (por exemplo, se esse link ainda for usado em algum outro lugar, como
+   em posts antigos do Instagram), me avise antes de aplicar este arquivo
+   que a gente ajusta para esconder essas seÃ§Ãµes sÃ³ quando a pÃ¡gina estÃ¡
+   dentro do novo site.
+
+   Como instalar: veja o LEIA-ME.md â€” Ã© o mesmo passo a passo do arquivo
+   "estilo-visual-adicional.css", sÃ³ que colando o conteÃºdo abaixo no
+   final do arquivo assets/style.css, depois de tudo que jÃ¡ estÃ¡ lÃ¡
+   (inclusive depois do outro bloco, se vocÃª jÃ¡ tiver colado o outro).
+   ======================================================================== */
+
+/* 1) Esconde o cabeÃ§alho com a logo e "RESERVAS". */
+header.site-header {
+  display: none !important;
+}
+
+/* 2) Esconde a seÃ§Ã£o "ConheÃ§a a pousada" (fotos). */
+#propertyGallerySection {
+  display: none !important;
+}
+
+/* 3) Esconde o rodapÃ© "LocalizaÃ§Ã£o" (mapa e endereÃ§o). */
+footer.site-footer {
+  display: none !important;
+}
+
+/* Um respiro no topo da pÃ¡gina, jÃ¡ que o cabeÃ§alho nÃ£o aparece mais. */
+.home-hero > .container {
+  padding-top: 28px;
+}
+
+/* 4) Carrossel horizontal dos quartos no computador e no tablet.
+   No celular (telas atÃ© 640px) nada muda. */
+@media (min-width: 641px) {
+  .room-grid {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding-bottom: 14px !important;
+  }
+  .room-grid > .room-card {
+    flex: 0 0 340px !important;
+    scroll-snap-align: start !important;
+  }
+  .room-grid::-webkit-scrollbar {
+    height: 8px;
+  }
+  .room-grid::-webkit-scrollbar-thumb {
+    background: #e09818;
+    border-radius: 999px;
+  }
+}
+
+/* 5) Estilo do botÃ£o "Voltar aos quartos" que aparece na pÃ¡gina de cada
+   quarto (quarto.html). O link em si Ã© criado por um pequeno trecho que
+   vai colado no arquivo quarto.html â€” veja o arquivo
+   "trecho-para-colar-no-quarto-html.txt" e o LEIA-ME.md. */
+.voltar-quartos {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 18px 0 6px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #18384c;
+  text-decoration: none;
+}
+.voltar-quartos:hover {
+  color: #9e6b11;
+}
+.voltar-quartos svg {
+  width: 16px;
+  height: 16px;
 }
