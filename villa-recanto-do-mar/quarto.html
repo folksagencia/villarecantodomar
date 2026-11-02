@@ -484,16 +484,48 @@ funciona de qualquer forma, mas colar antes do </body> é o ideal.)
   back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Voltar aos quartos';
   page.insertBefore(back, page.firstChild);
 })();
+<script>
+(function(){
+  function addBackLink(page){
+    if (!page || page.querySelector('.voltar-quartos')) return;
+    var back = document.createElement('a');
+    back.href = 'index.html';
+    back.className = 'voltar-quartos';
+    back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Voltar aos quartos';
+    page.insertBefore(back, page.firstChild);
+  }
+  var existing = document.getElementById('page');
+  if (existing) { addBackLink(existing); return; }
+  var observer = new MutationObserver(function(){
+    var page = document.getElementById('page');
+    if (page) {
+      observer.disconnect();
+      addBackLink(page);
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  setTimeout(function(){ observer.disconnect(); }, 15000);
+})();
 </script>
---------------------------------------------------------------------
+<script>
+(function () {
+  if (window.self === window.top) return;
+  function enviarAltura() {
+    var altura = Math.max(
+      document.body ? document.body.scrollHeight : 0,
+      document.documentElement ? document.documentElement.scrollHeight : 0
+    );
+    window.parent.postMessage({ villaReservaAltura: altura }, '*');
+  }
+  window.addEventListener('load', enviarAltura);
+  window.addEventListener('resize', enviarAltura);
+  var obs = new MutationObserver(enviarAltura);
+  obs.observe(document.body, { childList: true, subtree: true });
+  setTimeout(enviarAltura, 300);
+  setTimeout(enviarAltura, 1000);
+  setTimeout(enviarAltura, 2500);
+})();
+</script>
 
-Depois de colar, role até o final da página e clique em "Commit
-changes..." para salvar. O estilo do botão (cor, espaçamento) já está
-incluído no arquivo "ajustes-para-pagina-incorporada.css" — então para o
-botão ficar bonito, você também precisa ter colado aquele arquivo no
-style.css (só a parte 5 dele, sobre ".voltar-quartos", é só sobre este
-botão — o resto da Parte 2 é opcional e separada, como explica o
-LEIA-ME).
-</script>
 </body>
 </html>
