@@ -755,20 +755,27 @@ footer.site-footer {
   height: 16px;
 }
 /* ========================================================================
-   PARTE 4 â€” CartÃµes de quarto parecidos com a referÃªncia do novo site
+   PARTE 4 (ATUALIZADA) â€” CartÃµes de quarto parecidos com a referÃªncia do novo site
    ========================================================================
-   Deixa os cartÃµes de "Nossas acomodaÃ§Ãµes" com a mesma cara elegante da
-   seÃ§Ã£o de quartos do novo site: fundo claro atrÃ¡s dos cartÃµes (em vez
-   do degradÃª azul escuro), um friso dourado no topo de cada cartÃ£o, e um
-   "Reservar este quarto â†’" no final de cada um, como um botÃ£o/CTA.
+   Esta versÃ£o SUBSTITUI o bloco "PARTE 4" que vocÃª colou antes. Ela corrige
+   trÃªs coisas que ficaram erradas na primeira versÃ£o:
 
-   NÃƒO muda nenhum texto, preÃ§o, foto ou informaÃ§Ã£o dos quartos â€” sÃ³ o
-   visual ao redor. O "Reservar este quarto â†’" Ã© sÃ³ texto estilizado
-   (o cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel, igual jÃ¡ era antes).
+   1) A seta de "Reservar este quarto" aparecia com caracteres estranhos
+      (tipo "Ã¢â€ '") por um problema de acentuaÃ§Ã£o do arquivo. Agora ela usa
+      um cÃ³digo que funciona em qualquer editor, sem esse problema.
+   2) O texto "Reservar este quarto" agora tem cara de botÃ£o mesmo: fundo
+      dourado claro, texto dourado escuro, e vira um "pill" sÃ³lido dourado
+      ao passar o mouse.
+   3) Os 5 cartÃµes de quarto agora ficam lado a lado (um grid de verdade),
+      sem precisar rolar, igual Ã  seÃ§Ã£o "AcomodaÃ§Ãµes" do novo site â€”
+      substitui o carrossel de rolagem horizontal que a Parte 2 criava.
+      TambÃ©m esconde o tÃ­tulo "Nossas acomodaÃ§Ãµes" e o texto abaixo dele,
+      jÃ¡ que essa informaÃ§Ã£o jÃ¡ aparece no novo site, logo acima.
 
-   Como instalar: igual Ã s outras partes â€” cole no final do arquivo
-   assets/style.css (depois das Partes 1, 2 e 3, se vocÃª jÃ¡ tiver colado
-   elas).
+   Como instalar: apague o bloco antigo "PARTE 4" inteiro (da linha
+   "PARTE 4 â€” CartÃµes de quarto..." atÃ© o fim dele) de dentro do arquivo
+   assets/style.css, e cole este bloco no lugar (pode ser no mesmo ponto,
+   no final do arquivo).
    ======================================================================== */
 
 /* Fundo claro atrÃ¡s da seÃ§Ã£o "Nossas acomodaÃ§Ãµes" (em vez do degradÃª
@@ -778,13 +785,11 @@ footer.site-footer {
   background-color: #fbfaf7 !important;
 }
 
-/* TÃ­tulo e texto da seÃ§Ã£o passam a usar cores escuras, jÃ¡ que o fundo
-   nÃ£o Ã© mais escuro. */
-.home-hero .section-title {
-  color: #18384c !important;
-}
+/* Esconde o tÃ­tulo "Nossas acomodaÃ§Ãµes" e o texto abaixo dele â€” essa
+   informaÃ§Ã£o jÃ¡ aparece no novo site, bem acima do sistema de reservas. */
+.home-hero .section-title,
 .home-hero .section-sub {
-  color: #52636a !important;
+  display: none !important;
 }
 
 /* Friso dourado no topo de cada cartÃ£o de quarto. */
@@ -792,16 +797,58 @@ footer.site-footer {
   border-top: 5px solid #e09818 !important;
 }
 
-/* "Reservar este quarto â†’" no final de cada cartÃ£o, como um CTA. O
+/* "Reservar este quarto â†’" no final de cada cartÃ£o, com cara de botÃ£o de
+   verdade (fundo em pill, fica sÃ³lido dourado ao passar o mouse). O
    cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel â€” isto Ã© sÃ³ o texto/seta visual. */
 .card-body::after {
-  content: "Reservar este quarto â†’";
-  display: block;
+  content: "Reservar este quarto \2192";
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   margin-top: 14px;
-  color: #2e6285;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: rgba(224, 152, 24, 0.14);
+  color: #9e6b11;
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: 0.88rem;
+  letter-spacing: 0.01em;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 .room-card:hover .card-body::after {
-  color: #9e6b11;
+  background: #e09818;
+  color: #fff;
+}
+
+/* Os 5 quartos lado a lado, sem carrossel, igual Ã  seÃ§Ã£o "AcomodaÃ§Ãµes"
+   do novo site (substitui o carrossel de rolagem horizontal da Parte 2). */
+@media (min-width: 1150px) {
+  .room-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 20px !important;
+    flex-wrap: unset !important;
+    overflow-x: visible !important;
+    scroll-snap-type: none !important;
+    padding-bottom: 0 !important;
+  }
+  .room-grid > .room-card {
+    flex: unset !important;
+    scroll-snap-align: unset !important;
+  }
+}
+@media (min-width: 641px) and (max-width: 1149px) {
+  .room-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+    gap: 20px !important;
+    flex-wrap: unset !important;
+    overflow-x: visible !important;
+    scroll-snap-type: none !important;
+    padding-bottom: 0 !important;
+  }
+  .room-grid > .room-card {
+    flex: unset !important;
+    scroll-snap-align: unset !important;
+  }
 }
