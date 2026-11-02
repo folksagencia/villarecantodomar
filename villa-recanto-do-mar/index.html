@@ -194,5 +194,94 @@ copyAddressBtn.addEventListener("click", () => {
 loadPropertyGallery();
 loadRooms();
 </script>
+  PARTE 5 (ATUALIZADA) — Descrição curta nos cartões + "Café da manhã incluso"
+================================================================================
+Entrei na página de reservas ao vivo para conferir e encontrei duas coisas
+importantes, por isso esta versão substitui a que te mandei antes:
+
+1) "Café da manhã incluído" → "incluso": ESSA PARTE JÁ ESTÁ FEITA. Conferi
+   agora mesmo no site e o selo já aparece como "Café da manhã incluso" em
+   todos os quartos. Nada a fazer aqui.
+
+2) Descrições curtas: o trecho ainda NÃO foi colado no index.html (conferi
+   e ele não está lá ainda) — por isso os textos continuam aparecendo
+   completos. Além disso, percebi que 2 dos 5 nomes de quarto mudaram
+   desde a última vez:
+     - "Flat Superior com Vista e Varanda" agora está cadastrado como
+       "Flat Superior com vista e varanda" (v minúsculo).
+     - "Quarto Triplo Reformado" agora está cadastrado como
+       "Quarto Triplo • Novidade".
+   Já corrigi o trecho abaixo para casar com os nomes atuais, e também
+   fiz a comparação ignorar maiúsculas/minúsculas — assim, se o nome
+   mudar de novo só na caixa (maiúscula/minúscula), continua funcionando.
+   Se o nome mudar de verdade (palavras diferentes), me avise que
+   atualizo de novo.
+
+
+COMO FUNCIONA (reforçando a garantia):
+Cada cartão de quarto é montado assim —
+
+    <div class="card-body">
+      <h3>Nome do quarto</h3>
+      <p>Descrição (vem do banco de dados)</p>
+      <p class="room-card-meta">até X pessoa(s)</p>
+      <div class="price-tag">...</div>
+    </div>
+
+O trecho abaixo só troca o texto que já está na tela, só dentro do cartão
+da lista (div com id "rooms"), e só vai ser colado no "index.html" — a
+página de detalhes (quarto.html) é um arquivo separado, então ele nem
+existe lá. A descrição original, completa, continua intacta no banco de
+dados e aparece normalmente quando alguém clica no quarto.
+
+ONDE COLAR:
+No GitHub, abra "index.html", clique no lápis, role até o FINAL do
+arquivo e cole o trecho abaixo logo ANTES de:
+
+  </body>
+
+(Se você já tinha colado uma versão anterior deste trecho, apague ela
+inteira antes de colar esta.)
+
+--------------------------------------------------------------------
+<script>
+(function () {
+  var descricoesCurtas = {
+    "flat superior com vista e varanda": "Amplo espaço no 2º andar, com cozinha equipada, varanda privativa com rede e vista privilegiada.",
+    "quarto família": "Espaço amplo e confortável para toda a família, com cama de casal e três camas de solteiro.",
+    "quarto triplo • novidade": "Ambiente contemporâneo, com cama de casal, cama de solteiro e quintal arborizado.",
+    "quarto triplo": "Ambiente acolhedor, com cama de casal e cama de solteiro, ideal para uma estadia com conforto e comodidade.",
+    "quarto duplo": "Ambiente elegante e aconchegante, com cama de casal e detalhes pensados para uma estadia confortável."
+  };
+
+  function aplicarDescricoesCurtas() {
+    var cartoes = document.querySelectorAll("#rooms .room-card");
+    cartoes.forEach(function (cartao) {
+      var titulo = cartao.querySelector(".card-body > h3");
+      var paragrafo = cartao.querySelector(".card-body > p:not(.room-card-meta)");
+      if (!titulo || !paragrafo) return;
+      var nome = titulo.textContent.trim().toLowerCase();
+      if (Object.prototype.hasOwnProperty.call(descricoesCurtas, nome)) {
+        paragrafo.textContent = descricoesCurtas[nome];
+      }
+    });
+  }
+
+  // "subtree: false" é de propósito: observamos só a chegada dos cartões
+  // (filhos diretos de #rooms), nunca o texto dentro deles — senão a
+  // própria troca de texto disparava o observador de novo, travando a
+  // página num loop.
+  var container = document.getElementById("rooms");
+  if (!container) return;
+  var observador = new MutationObserver(aplicarDescricoesCurtas);
+  observador.observe(container, { childList: true, subtree: false });
+  aplicarDescricoesCurtas();
+})();
+</script>
+--------------------------------------------------------------------
+
+Role até o fim e clique em "Commit changes...". Não cole este trecho em
+quarto.html — só em index.html.
+
 </body>
 </html>
