@@ -754,3 +754,54 @@ footer.site-footer {
   width: 16px;
   height: 16px;
 }
+/* ========================================================================
+   PARTE 4 â€” CartÃµes de quarto parecidos com a referÃªncia do novo site
+   ========================================================================
+   Deixa os cartÃµes de "Nossas acomodaÃ§Ãµes" com a mesma cara elegante da
+   seÃ§Ã£o de quartos do novo site: fundo claro atrÃ¡s dos cartÃµes (em vez
+   do degradÃª azul escuro), um friso dourado no topo de cada cartÃ£o, e um
+   "Reservar este quarto â†’" no final de cada um, como um botÃ£o/CTA.
+
+   NÃƒO muda nenhum texto, preÃ§o, foto ou informaÃ§Ã£o dos quartos â€” sÃ³ o
+   visual ao redor. O "Reservar este quarto â†’" Ã© sÃ³ texto estilizado
+   (o cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel, igual jÃ¡ era antes).
+
+   Como instalar: igual Ã s outras partes â€” cole no final do arquivo
+   assets/style.css (depois das Partes 1, 2 e 3, se vocÃª jÃ¡ tiver colado
+   elas).
+   ======================================================================== */
+
+/* Fundo claro atrÃ¡s da seÃ§Ã£o "Nossas acomodaÃ§Ãµes" (em vez do degradÃª
+   azul escuro que tinha antes). */
+.home-hero {
+  background-image: none !important;
+  background-color: #fbfaf7 !important;
+}
+
+/* TÃ­tulo e texto da seÃ§Ã£o passam a usar cores escuras, jÃ¡ que o fundo
+   nÃ£o Ã© mais escuro. */
+.home-hero .section-title {
+  color: #18384c !important;
+}
+.home-hero .section-sub {
+  color: #52636a !important;
+}
+
+/* Friso dourado no topo de cada cartÃ£o de quarto. */
+.room-card {
+  border-top: 5px solid #e09818 !important;
+}
+
+/* "Reservar este quarto â†’" no final de cada cartÃ£o, como um CTA. O
+   cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel â€” isto Ã© sÃ³ o texto/seta visual. */
+.card-body::after {
+  content: "Reservar este quarto â†’";
+  display: block;
+  margin-top: 14px;
+  color: #2e6285;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+.room-card:hover .card-body::after {
+  color: #9e6b11;
+}
