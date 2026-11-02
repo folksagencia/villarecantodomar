@@ -232,6 +232,36 @@ loadRooms();
 
 Role até o fim e clique em "Commit changes...". Não cole este trecho em
 quarto.html — só em index.html.
+<script>
+(function () {
+  var descricoesCurtas = {
+    "flat superior com vista e varanda": "Amplo espaço no 2º andar, com cozinha equipada, varanda privativa com rede e vista privilegiada.",
+    "quarto família": "Espaço amplo e confortável para toda a família, com cama de casal e três camas de solteiro.",
+    "quarto triplo • novidade": "Ambiente contemporâneo, com cama de casal, cama de solteiro e quintal arborizado.",
+    "quarto triplo": "Ambiente acolhedor, com cama de casal e cama de solteiro, ideal para uma estadia com conforto e comodidade.",
+    "quarto duplo": "Ambiente elegante e aconchegante, com cama de casal e detalhes pensados para uma estadia confortável."
+  };
+
+  function aplicarDescricoesCurtas() {
+    var cartoes = document.querySelectorAll("#rooms .room-card");
+    cartoes.forEach(function (cartao) {
+      var titulo = cartao.querySelector(".card-body > h3");
+      var paragrafo = cartao.querySelector(".card-body > p:not(.room-card-meta)");
+      if (!titulo || !paragrafo) return;
+      var nome = titulo.textContent.trim().toLowerCase();
+      if (Object.prototype.hasOwnProperty.call(descricoesCurtas, nome)) {
+        paragrafo.textContent = descricoesCurtas[nome];
+      }
+    });
+  }
+
+  var container = document.getElementById("rooms");
+  if (!container) return;
+  var observador = new MutationObserver(aplicarDescricoesCurtas);
+  observador.observe(container, { childList: true, subtree: false });
+  aplicarDescricoesCurtas();
+})();
+</script>
 
 </body>
 </html>
