@@ -259,5 +259,27 @@ loadRooms();
 })();
 </script>
 
+<script>
+(function () {
+  if (window.self === window.top) return;
+  var ultimaAltura = 0;
+  function enviarAltura() {
+    var altura = Math.max(
+      document.body ? document.body.scrollHeight : 0,
+      document.documentElement ? document.documentElement.scrollHeight : 0
+    );
+    if (Math.abs(altura - ultimaAltura) < 2) return;
+    ultimaAltura = altura;
+    window.parent.postMessage({ villaReservaAltura: altura }, '*');
+  }
+  window.addEventListener('load', enviarAltura);
+  var obs = new MutationObserver(enviarAltura);
+  obs.observe(document.body, { childList: true, subtree: true });
+  setTimeout(enviarAltura, 300);
+  setTimeout(enviarAltura, 1000);
+  setTimeout(enviarAltura, 2500);
+})();
+</script>
+
 </body>
 </html>
