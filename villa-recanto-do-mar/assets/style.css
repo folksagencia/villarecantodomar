@@ -274,6 +274,7 @@ a { color: var(--teal-700); }
 }
 .price-tag { font-weight: 800; color: var(--teal-700); font-size: 1.15rem; }
 .price-tag small { font-weight: 400; color: var(--ink-600); font-size: 0.8rem; }
+.price-tag .price-label { display: block; font-weight: 500; font-size: 0.78em; color: var(--ink-600); margin-bottom: 1px; }
 
 /* ---------- formulários ---------- */
 label { display: block; font-weight: 600; font-size: 0.85rem; margin: 14px 0 6px; color: var(--ink-900); }
