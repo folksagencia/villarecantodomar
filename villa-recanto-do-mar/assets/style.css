@@ -797,23 +797,22 @@ footer.site-footer {
    verdade (fundo em pill, fica sÃ³lido dourado ao passar o mouse). Sem
    seta â€” o cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel, isto Ã© sÃ³ o texto/rÃ³tulo. */
 .room-card .card-body::after {
-  content: "Reservar este quarto →";
+  content: "Reservar este quarto";
   display: inline-flex;
   align-items: center;
-  gap: 6px;
   margin-top: 14px;
-  padding: 0;
-  border-radius: 0;
-  background: none;
-  color: var(--teal-700);
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: rgba(224, 152, 24, 0.14);
+  color: #9e6b11;
   font-weight: 700;
   font-size: 0.92rem;
   letter-spacing: 0.01em;
-  transition: color 0.2s ease;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 .room-card:hover .card-body::after {
-  background: none;
-  color: var(--sand-700);
+  background: #e09818;
+  color: #fff;
 }
 
 /* BotÃ£o "Voltar aos quartos" (usado pelo trecho que cola no quarto.html,
