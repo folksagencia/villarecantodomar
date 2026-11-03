@@ -197,13 +197,13 @@ a { color: var(--teal-700); }
   position: absolute;
   top: 10px;
   left: 10px;
-  background: var(--success);
+  background: rgba(24, 56, 76, 0.88);
   color: var(--white);
-  font-size: 0.7rem;
+  font-size: 0.66rem;
   font-weight: 700;
   padding: 5px 11px;
-  border-radius: 6px;
-  letter-spacing: 0.01em;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
   box-shadow: 0 2px 8px rgba(0,0,0,0.18);
   z-index: 2;
 }
@@ -222,23 +222,24 @@ a { color: var(--teal-700); }
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   border: none;
-  background: rgba(46, 98, 133, 0.8);
+  background: rgba(46, 98, 133, 0.55);
   color: var(--white);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 1;
-  transition: opacity 0.15s ease;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, background 0.15s ease;
   z-index: 2;
 }
-.card-carousel-arrow:hover { background: rgba(24, 56, 76, 0.88); }
+.card-carousel-arrow:hover { background: rgba(24, 56, 76, 0.88); opacity: 1; }
+.room-card:hover .card-carousel-arrow, .room-card:focus-within .card-carousel-arrow { opacity: 1; }
 .card-carousel-prev { left: 8px; }
 .card-carousel-next { right: 8px; }
 
@@ -790,23 +791,23 @@ footer.site-footer {
    verdade (fundo em pill, fica sÃ³lido dourado ao passar o mouse). Sem
    seta â€” o cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel, isto Ã© sÃ³ o texto/rÃ³tulo. */
 .room-card .card-body::after {
-  content: "Reservar este quarto";
+  content: "Reservar este quarto →";
   display: inline-flex;
   align-items: center;
   gap: 6px;
   margin-top: 14px;
-  padding: 9px 18px;
-  border-radius: 999px;
-  background: rgba(224, 152, 24, 0.14);
-  color: #9e6b11;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--teal-700);
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   letter-spacing: 0.01em;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: color 0.2s ease;
 }
 .room-card:hover .card-body::after {
-  background: #e09818;
-  color: #fff;
+  background: none;
+  color: var(--sand-700);
 }
 
 /* BotÃ£o "Voltar aos quartos" (usado pelo trecho que cola no quarto.html,
@@ -836,7 +837,7 @@ footer.site-footer {
   #rooms.room-grid {
     display: grid !important;
     grid-template-columns: repeat(5, 1fr) !important;
-    gap: 16px !important;
+    gap: 20px !important;
     margin: 28px 0 48px !important;
   }
   #rooms.room-grid .room-card {
@@ -876,12 +877,19 @@ footer.site-footer {
     left: 9px !important;
   }
   #rooms.room-grid .card-body::after {
-    font-size: 0.7rem !important;
-    padding: 7px 11px !important;
+    font-size: 0.78rem !important;
+    padding: 0 !important;
     margin: 11px 0 0 !important;
     white-space: nowrap !important;
   }
 }  
+
+/* O bloco de quartos usa um container um pouco mais largo em telas
+   grandes, pra ficar na mesma proporção/tamanho do bloco de
+   acomodações que fica mais acima na página (fora do iframe). */
+@media (min-width: 1150px) {
+  .container-wide { max-width: 1320px; }
+}
 /* ========================================================================
    ESTILO VISUAL ADICIONAL â€” Villa Recanto do Mar
    ========================================================================
