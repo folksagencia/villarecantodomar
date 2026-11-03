@@ -46,7 +46,7 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: var(--bg);
   color: var(--ink-900);
   line-height: 1.5;
@@ -197,14 +197,16 @@ a { color: var(--teal-700); }
   position: absolute;
   top: 10px;
   left: 10px;
-  background: rgba(24, 56, 76, 0.88);
-  color: var(--white);
+  background: linear-gradient(135deg, var(--sand-500), var(--sand-700));
+  color: var(--teal-900);
   font-size: 0.66rem;
   font-weight: 700;
-  padding: 5px 11px;
+  padding: 5px 12px;
   border-radius: 999px;
-  letter-spacing: 0.02em;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: 1px solid rgba(255,255,255,0.55);
+  box-shadow: 0 3px 10px rgba(158, 107, 17, 0.35), inset 0 1px 0 rgba(255,255,255,0.45);
   z-index: 2;
 }
 
@@ -893,7 +895,7 @@ footer.site-footer {
    grandes, pra ficar na mesma proporção/tamanho do bloco de
    acomodações que fica mais acima na página (fora do iframe). */
 @media (min-width: 1150px) {
-  .container-wide { max-width: 1320px; }
+  .container-wide { max-width: 1440px; }
 }
 /* ========================================================================
    ESTILO VISUAL ADICIONAL â€” Villa Recanto do Mar
