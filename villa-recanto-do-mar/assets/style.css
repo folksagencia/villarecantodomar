@@ -721,10 +721,14 @@ footer.site-footer {
 
 /* Estilo do botão "Voltar aos quartos" (o link em si vem na Parte B). */
 .voltar-quartos {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 7px;
-  margin: 18px 0 6px;
+  width: 100%;
+  max-width: 560px;
+  box-sizing: border-box;
+  margin: 18px auto 6px;
+  padding: 0 20px;
   font-weight: 700;
   font-size: 0.92rem;
   color: #18384c;
@@ -734,8 +738,9 @@ footer.site-footer {
   color: #9e6b11;
 }
 .voltar-quartos svg {
-  width: 16px;
-  height: 16px;
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
 }
 /* ========================================================================
    PARTE 4 (ATUALIZADA v2) â€” CartÃµes de quarto parecidos com a referÃªncia do novo site
