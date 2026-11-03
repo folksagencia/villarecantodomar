@@ -197,17 +197,16 @@ a { color: var(--teal-700); }
   position: absolute;
   top: 10px;
   left: 10px;
-  background: linear-gradient(135deg, var(--sand-500), var(--sand-700));
-  color: var(--teal-900);
-  font-size: 0.66rem;
+  background: var(--success);
+  color: var(--white);
   font-weight: 700;
-  padding: 5px 12px;
-  border-radius: 999px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  border: 1px solid rgba(255,255,255,0.55);
-  box-shadow: 0 3px 10px rgba(158, 107, 17, 0.35), inset 0 1px 0 rgba(255,255,255,0.45);
+  padding: 5px 11px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.18);
   z-index: 2;
+  font-size: 0.7rem;
+  border-radius: 6px;
+  letter-spacing: 0.01em;
+}
 }
 
 /* ---------- carrossel compacto do card de acomodação (home) ---------- */
