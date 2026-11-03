@@ -788,7 +788,7 @@ footer.site-footer {
 /* "Reservar este quarto" no final de cada cartÃ£o, com cara de botÃ£o de
    verdade (fundo em pill, fica sÃ³lido dourado ao passar o mouse). Sem
    seta â€” o cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel, isto Ã© sÃ³ o texto/rÃ³tulo. */
-.card-body::after {
+.room-card .card-body::after {
   content: "Reservar este quarto";
   display: inline-flex;
   align-items: center;
@@ -835,7 +835,7 @@ footer.site-footer {
   #rooms.room-grid {
     display: grid !important;
     grid-template-columns: repeat(5, 1fr) !important;
-    gap: 14px !important;
+    gap: 16px !important;
     margin: 28px 0 48px !important;
   }
   #rooms.room-grid .room-card {
@@ -844,40 +844,40 @@ footer.site-footer {
     flex: none !important;
   }
   #rooms.room-grid .card-body {
-    padding: 14px 14px 16px !important;
-    gap: 8px !important;
+    padding: 16px 16px 18px !important;
+    gap: 9px !important;
   }
   #rooms.room-grid .room-card h3 {
-    font-size: 0.95rem !important;
-    line-height: 1.2 !important;
+    font-size: 1.05rem !important;
+    line-height: 1.22 !important;
     margin: 0 0 2px !important;
   }
   #rooms.room-grid .room-card p {
-    font-size: 0.76rem !important;
-    line-height: 1.35 !important;
-    margin: 0 0 6px !important;
+    font-size: 0.82rem !important;
+    line-height: 1.38 !important;
+    margin: 0 0 7px !important;
   }
   #rooms.room-grid .room-card-meta {
-    font-size: 0.68rem !important;
-    margin: -2px 0 8px !important;
-    gap: 4px !important;
+    font-size: 0.72rem !important;
+    margin: -2px 0 9px !important;
+    gap: 5px !important;
   }
   #rooms.room-grid .price-tag {
-    font-size: 0.92rem !important;
+    font-size: 1.02rem !important;
   }
   #rooms.room-grid .price-tag small {
-    font-size: 0.68rem !important;
+    font-size: 0.72rem !important;
   }
   #rooms.room-grid .room-card-badge {
-    font-size: 0.6rem !important;
-    padding: 4px 8px !important;
-    top: 8px !important;
-    left: 8px !important;
+    font-size: 0.64rem !important;
+    padding: 5px 9px !important;
+    top: 9px !important;
+    left: 9px !important;
   }
   #rooms.room-grid .card-body::after {
-    font-size: 0.66rem !important;
-    padding: 6px 10px !important;
-    margin: 10px 0 0 !important;
+    font-size: 0.7rem !important;
+    padding: 7px 11px !important;
+    margin: 11px 0 0 !important;
     white-space: nowrap !important;
   }
 }  
