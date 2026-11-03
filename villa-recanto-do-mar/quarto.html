@@ -460,39 +460,14 @@ init();
 </script>
   <script>
 (function(){
-  var page = document.getElementById('page');
-  if (!page || page.querySelector('.voltar-quartos')) return;
-  var back = document.createElement('a');
-  back.href = 'index.html';
-  back.className = 'voltar-quartos';
-  back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Voltar aos quartos';
-  page.insertBefore(back, page.firstChild);
-})();
-  </body>
-
-(Se não achar essa linha exata, cole bem no final do arquivo mesmo —
-funciona de qualquer forma, mas colar antes do </body> é o ideal.)
-
---------------------------------------------------------------------
-<script>
-(function(){
-  var page = document.getElementById('page');
-  if (!page || page.querySelector('.voltar-quartos')) return;
-  var back = document.createElement('a');
-  back.href = 'index.html';
-  back.className = 'voltar-quartos';
-  back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Voltar aos quartos';
-  page.insertBefore(back, page.firstChild);
-})();
-<script>
-(function(){
   function addBackLink(page){
-    if (!page || page.querySelector('.voltar-quartos')) return;
+    if (!page || !page.parentNode) return;
+    if (page.parentNode.querySelector('.voltar-quartos')) return;
     var back = document.createElement('a');
     back.href = 'index.html';
     back.className = 'voltar-quartos';
     back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Voltar aos quartos';
-    page.insertBefore(back, page.firstChild);
+    page.parentNode.insertBefore(back, page);
   }
   var existing = document.getElementById('page');
   if (existing) { addBackLink(existing); return; }
@@ -506,7 +481,7 @@ funciona de qualquer forma, mas colar antes do </body> é o ideal.)
   observer.observe(document.body, { childList: true, subtree: true });
   setTimeout(function(){ observer.disconnect(); }, 15000);
 })();
-</script>
+  </script>
 <script>
 (function () {
   if (window.self === window.top) return;
