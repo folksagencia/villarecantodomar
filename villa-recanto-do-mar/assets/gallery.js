@@ -360,8 +360,25 @@ function onMediaReady(el, cb) {
     else el.addEventListener("loadedmetadata", cb, { once: true });
   } else {
     if (el.complete && el.naturalWidth) cb();
-    else el.addEventListener("load", cb, { once: true });
+    else {
+      el.addEventListener("load", cb, { once: true });
+      el.addEventListener("error", () => retryMedia(el, cb, 1), { once: true });
+    }
   }
+}
+
+// Às vezes o carregamento de uma foto falha por uma instabilidade
+// passageira de rede (não porque o arquivo não existe) — em vez de
+// deixar o card preso no placeholder azul pra sempre, tenta de novo
+// algumas vezes antes de desistir.
+function retryMedia(el, cb, attempt) {
+  if (attempt > 3) return;
+  setTimeout(() => {
+    const base = el.src.split("?")[0];
+    el.addEventListener("load", cb, { once: true });
+    el.addEventListener("error", () => retryMedia(el, cb, attempt + 1), { once: true });
+    el.src = base + "?retry=" + attempt + "-" + Date.now();
+  }, 700 * attempt);
 }
 
 function mediaWidth(el) { return el.tagName === "VIDEO" ? el.videoWidth : el.naturalWidth; }
