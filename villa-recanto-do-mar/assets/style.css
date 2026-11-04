@@ -190,7 +190,7 @@ a { color: var(--teal-700); }
 .room-card .photo {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: var(--teal-100);
+  background: var(--sand-100);
 }
 
 .room-card-badge {
@@ -214,7 +214,7 @@ a { color: var(--teal-700); }
 .card-carousel-track { display: flex; width: 100%; height: 100%; transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1); }
 .card-carousel-slide { flex: 0 0 100%; height: 100%; }
 .card-carousel-slide img, .card-carousel-slide video {
-  width: 100%; height: 100%; object-fit: cover; display: block; background: var(--teal-100);
+  width: 100%; height: 100%; object-fit: cover; display: block; background: var(--sand-100);
   opacity: 0; transition: opacity 0.25s ease;
 }
 .card-carousel-slide img.is-loaded, .card-carousel-slide video.is-loaded { opacity: 1; }
@@ -623,6 +623,14 @@ tr:last-child td { border-bottom: none; }
 @media (max-width: 560px) {
   .wave-divider { height: 40px; }
   .wave-front { top: 8px; }
+}
+
+/* esconde a onda decorativa e o rodape do sistema de reservas quando a
+   pagina esta dentro do iframe do site da pousada - evita espaco
+   duplicado, ja que o site principal ja tem localizacao/rodape proprios */
+.is-embed .wave-divider,
+.is-embed .site-footer {
+  display: none !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
