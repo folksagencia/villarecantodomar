@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8" />
+<script>if (window.self !== window.top) document.documentElement.classList.add('is-embed');</script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Pousada Villa Recanto do Mar — Reservas</title>
 <meta name="description" content="Reserve diretamente com a Pousada Villa Recanto do Mar. Sinal de 30% via Pix, sem taxas de intermediários." />
@@ -24,7 +25,7 @@
 <meta name="twitter:image" content="https://villarecantodomar.vercel.app/assets/img/og-image.png" />
 
 <link rel="stylesheet" href="/assets/style.css" />
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 </head>
 <body>
 
@@ -84,9 +85,9 @@
   </div>
 </footer>
 
-<script src="/assets/supabase-client.js"></script>
-<script src="/assets/format.js"></script>
-<script src="/assets/gallery.js"></script>
+<script src="/assets/supabase-client.js" defer></script>
+<script src="/assets/format.js" defer></script>
+<script src="/assets/gallery.js" defer></script>
 <script>
 async function loadPropertyGallery() {
   const section = document.getElementById("propertyGallerySection");
