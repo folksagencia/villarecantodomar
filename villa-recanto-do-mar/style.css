@@ -1,3 +1,6 @@
+   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
 /* assets/style.css — estilo único, compartilhado por todo o site e pelo painel admin. */
 
 :root {
@@ -43,7 +46,7 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: "Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: var(--bg);
   color: var(--ink-900);
   line-height: 1.5;
@@ -187,7 +190,7 @@ a { color: var(--teal-700); }
 .room-card .photo {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: var(--teal-100);
+  background: var(--sand-100);
 }
 
 .room-card-badge {
@@ -196,13 +199,14 @@ a { color: var(--teal-700); }
   left: 10px;
   background: var(--success);
   color: var(--white);
-  font-size: 0.7rem;
   font-weight: 700;
   padding: 5px 11px;
-  border-radius: 6px;
-  letter-spacing: 0.01em;
   box-shadow: 0 2px 8px rgba(0,0,0,0.18);
   z-index: 2;
+  font-size: 0.7rem;
+  border-radius: 6px;
+  letter-spacing: 0.01em;
+}
 }
 
 /* ---------- carrossel compacto do card de acomodação (home) ---------- */
@@ -210,7 +214,7 @@ a { color: var(--teal-700); }
 .card-carousel-track { display: flex; width: 100%; height: 100%; transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1); }
 .card-carousel-slide { flex: 0 0 100%; height: 100%; }
 .card-carousel-slide img, .card-carousel-slide video {
-  width: 100%; height: 100%; object-fit: cover; display: block; background: var(--teal-100);
+  width: 100%; height: 100%; object-fit: cover; display: block; background: var(--sand-100);
   opacity: 0; transition: opacity 0.25s ease;
 }
 .card-carousel-slide img.is-loaded, .card-carousel-slide video.is-loaded { opacity: 1; }
@@ -219,23 +223,24 @@ a { color: var(--teal-700); }
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   border: none;
-  background: rgba(46, 98, 133, 0.8);
+  background: rgba(46, 98, 133, 0.55);
   color: var(--white);
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   line-height: 1;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 1;
-  transition: opacity 0.15s ease;
+  opacity: 0.7;
+  transition: opacity 0.15s ease, background 0.15s ease;
   z-index: 2;
 }
-.card-carousel-arrow:hover { background: rgba(24, 56, 76, 0.88); }
+.card-carousel-arrow:hover { background: rgba(24, 56, 76, 0.88); opacity: 1; }
+.room-card:hover .card-carousel-arrow, .room-card:focus-within .card-carousel-arrow { opacity: 1; }
 .card-carousel-prev { left: 8px; }
 .card-carousel-next { right: 8px; }
 
@@ -271,6 +276,7 @@ a { color: var(--teal-700); }
 }
 .price-tag { font-weight: 800; color: var(--teal-700); font-size: 1.15rem; }
 .price-tag small { font-weight: 400; color: var(--ink-600); font-size: 0.8rem; }
+.price-tag .price-label { display: block; font-weight: 500; font-size: 0.78em; color: var(--ink-600); margin-bottom: 1px; }
 
 /* ---------- formulários ---------- */
 label { display: block; font-weight: 600; font-size: 0.85rem; margin: 14px 0 6px; color: var(--ink-900); }
@@ -619,6 +625,14 @@ tr:last-child td { border-bottom: none; }
   .wave-front { top: 8px; }
 }
 
+/* esconde a onda decorativa e o rodape do sistema de reservas quando a
+   pagina esta dentro do iframe do site da pousada - evita espaco
+   duplicado, ja que o site principal ja tem localizacao/rodape proprios */
+.is-embed .wave-divider,
+.is-embed .site-footer {
+  display: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .wave-back, .wave-front { animation: none; }
 }
@@ -646,3 +660,389 @@ tr:last-child td { border-bottom: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-600); }
+
+/* Títulos e nome da marca passam a usar uma fonte serifada elegante,
+   igual à usada no novo site. Não altera tamanho de nada, só a fonte. */
+.brand,
+.section-title,
+.room-card h3,
+.serv-card h3,
+.stat-card .value,
+.price-tag {
+  font-family: "Fraunces", Georgia, serif;
+}
+
+/* O nome da marca no cabeçalho ganha o mesmo tratamento do logo: "Villa"
+   em negrito dourado, "Recanto do Mar" fino e elegante. */
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.brand small {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+/* Sombras um pouco mais ricas nos cartões. */
+:root {
+  --shadow: 0 4px 16px rgba(17, 41, 54, 0.12);
+  --shadow-lg: 0 16px 40px rgba(17, 41, 54, 0.18);
+}
+
+@media (hover: hover) {
+  .room-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .room-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+.btn-primary:hover {
+  box-shadow: 0 10px 24px rgba(158, 107, 17, 0.32);
+}
+
+/* Esconde o cabeçalho com a logo e "RESERVAS". */
+header.site-header {
+  display: none !important;
+}
+
+/* Esconde a seção "Conheça a pousada" (fotos). */
+#propertyGallerySection {
+  display: none !important;
+}
+
+/* Esconde o rodapé "Localização" (mapa e endereço). */
+footer.site-footer {
+  display: none !important;
+}
+
+/* Um respiro no topo da página, já que o cabeçalho não aparece mais. */
+.home-hero > .container {
+  padding-top: 28px;
+}
+
+}
+
+/* Estilo do botão "Voltar aos quartos" (o link em si vem na Parte B). */
+.voltar-quartos {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  max-width: 560px;
+  box-sizing: border-box;
+  margin: 18px auto 6px;
+  padding: 0 20px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #18384c;
+  text-decoration: none;
+}
+.voltar-quartos:hover {
+  color: #9e6b11;
+}
+.voltar-quartos svg {
+  width: 19px;
+  height: 19px;
+  flex-shrink: 0;
+}
+/* ========================================================================
+   PARTE 4 (ATUALIZADA v2) â€” CartÃµes de quarto parecidos com a referÃªncia do novo site
+   ========================================================================
+   Esta versÃ£o SUBSTITUI o bloco "PARTE 4" (ou "PARTE 4 ATUALIZADA") que
+   vocÃª colou antes. O que mudou agora:
+
+   1) A seta de "Reservar este quarto" nÃ£o quebra mais (sem "Ã¢â€ '").
+   2) O texto "Reservar este quarto" tem cara de botÃ£o (pill dourado).
+   3) Os cartÃµes de quarto nÃ£o ficam mais "esticados" nem cortados: antes,
+      o grid forÃ§ava TODOS os cartÃµes a terem a mesma altura do cartÃ£o
+      mais alto (e os seus cartÃµes tÃªm bastante texto â€” descriÃ§Ã£o, preÃ§o,
+      capacidade, selo "CafÃ© da manhÃ£ incluÃ­do" â€” entÃ£o ficavam bem
+      altos), e algo parecia cortar a parte de baixo. Agora cada cartÃ£o
+      respeita a prÃ³pria altura (nÃ£o estica mais) e a largura mÃ­nima de
+      cada cartÃ£o aumentou, pra caber esse tanto de informaÃ§Ã£o sem precisar
+      quebrar tanta linha de texto.
+   4) Esconde o tÃ­tulo "Nossas acomodaÃ§Ãµes" e o texto abaixo dele, jÃ¡ que
+      essa informaÃ§Ã£o jÃ¡ aparece no novo site, logo acima.
+
+   Como instalar: apague o bloco antigo "PARTE 4" inteiro (da linha
+   "PARTE 4 â€” CartÃµes de quarto..." atÃ© o fim dele) de dentro do arquivo
+   assets/style.css, e cole este bloco no lugar.
+
+   IMPORTANTE: se depois de colar isto o cartÃ£o ainda aparecer cortado
+   embaixo (sem conseguir ver o botÃ£o "Reservar este quarto"), me avise â€”
+   pode ser que exista algum outro elemento ao redor do grid (um container
+   de altura fixa) que eu nÃ£o vejo sÃ³ pelos arquivos CSS que vocÃª me
+   mandou, e aÃ­ preciso que vocÃª me mande um print da tela cheia (do
+   topo atÃ© o fim da seÃ§Ã£o de quartos) pra eu identificar.
+   ======================================================================== */
+
+/* Fundo claro atrÃ¡s da seÃ§Ã£o "Nossas acomodaÃ§Ãµes" (em vez do degradÃª
+   azul escuro que tinha antes). */
+.home-hero {
+  background-image: none !important;
+  background-color: #fbfaf7 !important;
+}
+
+/* Esconde o tÃ­tulo "Nossas acomodaÃ§Ãµes" e o texto abaixo dele â€” essa
+   informaÃ§Ã£o jÃ¡ aparece no novo site, bem acima do sistema de reservas. */
+.home-hero .section-title,
+.home-hero .section-sub {
+  display: none !important;
+}
+
+/* Friso dourado no topo de cada cartÃ£o de quarto. */
+.room-card {
+  border-top: 5px solid #e09818 !important;
+}
+
+/* "Reservar este quarto" no final de cada cartÃ£o, com cara de botÃ£o de
+   verdade (fundo em pill, fica sÃ³lido dourado ao passar o mouse). Sem
+   seta â€” o cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel, isto Ã© sÃ³ o texto/rÃ³tulo. */
+.room-card .card-body::after {
+  content: "Reservar este quarto";
+  display: inline-flex;
+  align-items: center;
+  margin-top: 14px;
+  padding: 9px 18px;
+  border-radius: 999px;
+  background: rgba(224, 152, 24, 0.14);
+  color: #9e6b11;
+  font-weight: 700;
+  font-size: 0.92rem;
+  letter-spacing: 0.01em;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.room-card:hover .card-body::after {
+  background: #e09818;
+  color: #fff;
+}
+
+/* BotÃ£o "Voltar aos quartos" (usado pelo trecho que cola no quarto.html,
+   veja trecho-para-colar-no-quarto-html.txt) â€” incluÃ­do aqui pra nÃ£o
+   depender da Parte 2. */
+.voltar-quartos {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 18px 0 6px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #18384c;
+  text-decoration: none;
+}
+.voltar-quartos:hover {
+  color: #9e6b11;
+}
+.voltar-quartos svg {
+  width: 16px;
+  height: 16px;
+}
+/* Os quartos lado a lado, 5 por linha, sem rolar e sem cortar as fotos.
+   As fotos nÃ£o mudam (mesma proporÃ§Ã£o de sempre) â€” sÃ³ o texto e os
+   espaÃ§amentos do cartÃ£o ficam mais compactos para caber os 5 juntos. */
+@media (min-width: 820px) {
+  #rooms.room-grid {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 20px !important;
+    margin: 28px 0 48px !important;
+  }
+  #rooms.room-grid .room-card {
+    min-width: 0 !important;
+    max-width: none !important;
+    flex: none !important;
+  }
+  #rooms.room-grid .card-body {
+    padding: 16px 16px 18px !important;
+    gap: 9px !important;
+  }
+  #rooms.room-grid .room-card h3 {
+    font-size: 1.05rem !important;
+    line-height: 1.22 !important;
+    margin: 0 0 2px !important;
+  }
+  #rooms.room-grid .room-card p {
+    font-size: 0.82rem !important;
+    line-height: 1.38 !important;
+    margin: 0 0 7px !important;
+  }
+  #rooms.room-grid .room-card-meta {
+    font-size: 0.72rem !important;
+    margin: -2px 0 9px !important;
+    gap: 5px !important;
+  }
+  #rooms.room-grid .price-tag {
+    font-size: 1.02rem !important;
+  }
+  #rooms.room-grid .price-tag small {
+    font-size: 0.72rem !important;
+  }
+  #rooms.room-grid .room-card-badge {
+    font-size: 0.64rem !important;
+    padding: 5px 9px !important;
+    top: 9px !important;
+    left: 9px !important;
+  }
+ #rooms.room-grid .card-body::after {
+    font-size: 0.78rem !important;
+    padding: 7px 11px !important;
+    margin: 11px 0 0 !important;
+    white-space: nowrap !important;
+  }
+}  
+
+/* O bloco de quartos usa um container um pouco mais largo em telas
+   grandes, pra ficar na mesma proporção/tamanho do bloco de
+   acomodações que fica mais acima na página (fora do iframe). */
+@media (min-width: 1150px) {
+  .container-wide { max-width: 1440px; }
+}
+/* ========================================================================
+   ESTILO VISUAL ADICIONAL â€” Villa Recanto do Mar
+   ========================================================================
+   Isto NÃƒO substitui o assets/style.css existente. Ã‰ um complemento:
+   sÃ³ adiciona uma fonte serifada nos tÃ­tulos e aprofunda um pouco as
+   sombras dos cartÃµes, para o sistema de reservas ficar visualmente mais
+   parecido com o novo site (mesmas cores, mesma estrutura, mesmo tamanho
+   de fotos e Ã­cones de sempre).
+
+   Como instalar (2 passos, veja o LEIA-ME.md para o passo a passo
+   detalhado pelo GitHub):
+
+   PASSO 1 â€” cole esta linha bem no topo do arquivo assets/style.css,
+   antes de tudo o resto (precisa ser a primeira linha do arquivo):
+
+   @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+   PASSO 2 â€” cole todo o conteÃºdo abaixo desta linha no final do arquivo
+   assets/style.css (depois da Ãºltima linha que jÃ¡ existe lÃ¡).
+   ======================================================================== */
+
+/* TÃ­tulos e nome da marca passam a usar uma fonte serifada elegante,
+   igual Ã  usada no novo site. NÃ£o altera tamanho de nada, sÃ³ a fonte. */
+.brand,
+.section-title,
+.room-card h3,
+.serv-card h3,
+.stat-card .value,
+.price-tag {
+  font-family: "Fraunces", Georgia, serif;
+}
+
+/* O nome da marca no cabeÃ§alho ganha o mesmo tratamento do logo: "Villa"
+   em negrito dourado, "Recanto do Mar" fino e elegante. */
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+.brand small {
+  font-family: "Fraunces", Georgia, serif;
+  font-style: italic;
+  font-weight: 300;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+/* Sombras um pouco mais ricas nos cartÃµes (quartos, estatÃ­sticas do
+   admin, etc.) â€” mesmo tamanho de cartÃ£o, sÃ³ uma profundidade maior. */
+:root {
+  --shadow: 0 4px 16px rgba(17, 41, 54, 0.12);
+  --shadow-lg: 0 16px 40px rgba(17, 41, 54, 0.18);
+}
+
+/* Leve elevaÃ§Ã£o ao passar o mouse nos cartÃµes de quarto, sÃ³ nos
+   navegadores de computador (nÃ£o afeta toque em celular). */
+@media (hover: hover) {
+  .room-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .room-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+/* BotÃ£o principal de reserva com um toque mais premium no hover,
+   sem mudar o tamanho do botÃ£o. */
+.btn-primary:hover {
+  box-shadow: 0 10px 24px rgba(158, 107, 17, 0.32);
+}
+   /* ========================================================================
+   AJUSTES PARA A PÃGINA INCORPORADA â€” Villa Recanto do Mar
+   ========================================================================
+   Este arquivo Ã© opcional e independente do "estilo-visual-adicional.css".
+   Ele faz trÃªs coisas, porque agora o sistema de reservas vai aparecer
+   dentro do novo site (incorporado), que jÃ¡ tem seu prÃ³prio cabeÃ§alho,
+   galeria de fotos e seÃ§Ã£o de localizaÃ§Ã£o:
+
+   1) Esconde o cabeÃ§alho com a logo e "RESERVAS" (o novo site jÃ¡ tem um
+      cabeÃ§alho prÃ³prio logo acima).
+   2) Esconde a seÃ§Ã£o "ConheÃ§a a pousada" com as fotos (a galeria de fotos
+      jÃ¡ aparece em outra parte do novo site).
+   3) Esconde o rodapÃ© "LocalizaÃ§Ã£o" com o mapa e o endereÃ§o (o novo site
+      jÃ¡ tem a seÃ§Ã£o de localizaÃ§Ã£o prÃ³pria).
+   4) Transforma a lista de quartos em um carrossel horizontal no
+      computador e no tablet â€” no celular continua exatamente como jÃ¡
+      estÃ¡ hoje, sem nenhuma mudanÃ§a.
+
+   IMPORTANTE: depois de colar isto, se alguÃ©m acessar o link do sistema
+   de reservas sozinho (fora do novo site), vai ver a pÃ¡gina sÃ³ com os
+   quartos, sem cabeÃ§alho, fotos ou localizaÃ§Ã£o. Se isso for um problema
+   (por exemplo, se esse link ainda for usado em algum outro lugar, como
+   em posts antigos do Instagram), me avise antes de aplicar este arquivo
+   que a gente ajusta para esconder essas seÃ§Ãµes sÃ³ quando a pÃ¡gina estÃ¡
+   dentro do novo site.
+
+   Como instalar: veja o LEIA-ME.md â€” Ã© o mesmo passo a passo do arquivo
+   "estilo-visual-adicional.css", sÃ³ que colando o conteÃºdo abaixo no
+   final do arquivo assets/style.css, depois de tudo que jÃ¡ estÃ¡ lÃ¡
+   (inclusive depois do outro bloco, se vocÃª jÃ¡ tiver colado o outro).
+   ======================================================================== */
+
+/* 1) Esconde o cabeÃ§alho com a logo e "RESERVAS". */
+header.site-header {
+  display: none !important;
+}
+
+/* 2) Esconde a seÃ§Ã£o "ConheÃ§a a pousada" (fotos). */
+#propertyGallerySection {
+  display: none !important;
+}
+
+/* 3) Esconde o rodapÃ© "LocalizaÃ§Ã£o" (mapa e endereÃ§o). */
+footer.site-footer {
+  display: none !important;
+}
+
+/* Um respiro no topo da pÃ¡gina, jÃ¡ que o cabeÃ§alho nÃ£o aparece mais. */
+.home-hero > .container {
+  padding-top: 28px;
+}
+
+/* 5) Estilo do botÃ£o "Voltar aos quartos" que aparece na pÃ¡gina de cada
+   quarto (quarto.html). O link em si Ã© criado por um pequeno trecho que
+   vai colado no arquivo quarto.html â€” veja o arquivo
+   "trecho-para-colar-no-quarto-html.txt" e o LEIA-ME.md. */
+.voltar-quartos {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 18px 0 6px;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #18384c;
+  text-decoration: none;
+}
+.voltar-quartos:hover {
+  color: #9e6b11;
+}
+.voltar-quartos svg {
+  width: 16px;
+  height: 16px;
+}
