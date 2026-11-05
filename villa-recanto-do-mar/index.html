@@ -276,6 +276,23 @@ loadRooms();
   window.addEventListener('load', enviarAltura);
   var obs = new MutationObserver(enviarAltura);
   obs.observe(document.body, { childList: true, subtree: true });
+  // ResizeObserver pega mudanças de altura que nao vem de um elemento
+  // sendo adicionado/removido (ex: foto terminando de carregar, fonte
+  // trocando e empurrando o texto) - o MutationObserver sozinho nao
+  // pega esses casos.
+  if (window.ResizeObserver) {
+    var ro = new ResizeObserver(enviarAltura);
+    ro.observe(document.body);
+  }
+  // Checagem extra por um tempo: cobre o caso de navegar de uma pagina
+  // mais alta (quarto.html) de volta pra essa, pra garantir que o
+  // iframe realmente encolhe de volta pro tamanho certo.
+  var tentativas = 0;
+  var intervalo = setInterval(function () {
+    enviarAltura();
+    tentativas++;
+    if (tentativas > 12) clearInterval(intervalo);
+  }, 500);
   setTimeout(enviarAltura, 300);
   setTimeout(enviarAltura, 1000);
   setTimeout(enviarAltura, 2500);
