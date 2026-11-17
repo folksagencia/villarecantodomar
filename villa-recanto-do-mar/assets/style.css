@@ -190,7 +190,7 @@ a { color: var(--teal-700); }
 .room-card .photo {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: var(--white);
+  background: var(--sand-100);
 }
 
 .room-card-badge {
@@ -207,14 +207,13 @@ a { color: var(--teal-700); }
   border-radius: 6px;
   letter-spacing: 0.01em;
 }
-}
 
 /* ---------- carrossel compacto do card de acomodação (home) ---------- */
 .room-card-gallery { position: absolute; inset: 0; overflow: hidden; }
 .card-carousel-track { display: flex; width: 100%; height: 100%; transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1); }
 .card-carousel-slide { flex: 0 0 100%; height: 100%; }
 .card-carousel-slide img, .card-carousel-slide video {
-  width: 100%; height: 100%; object-fit: cover; display: block; background: var(--white);
+  width: 100%; height: 100%; object-fit: cover; display: block; background: var(--sand-100);
   opacity: 0; transition: opacity 0.25s ease;
 }
 .card-carousel-slide img.is-loaded, .card-carousel-slide video.is-loaded { opacity: 1; }
@@ -726,9 +725,7 @@ footer.site-footer {
   padding-top: 28px;
 }
 
-}
-
-/* Estilo do botão "Voltar aos quartos" (o link em si vem na Parte B). */
+/* Estilo do botão "Voltar às acomodações" (o link em si vem na Parte B). */
 .voltar-quartos {
   display: flex;
   align-items: center;
@@ -796,13 +793,16 @@ footer.site-footer {
   display: none !important;
 }
 
-
+/* Friso dourado no topo de cada cartÃ£o de quarto. */
+.room-card {
+  border-top: 5px solid #e09818 !important;
+}
 
 /* "Reservar este quarto" no final de cada cartÃ£o, com cara de botÃ£o de
    verdade (fundo em pill, fica sÃ³lido dourado ao passar o mouse). Sem
    seta â€” o cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel, isto Ã© sÃ³ o texto/rÃ³tulo. */
 .room-card .card-body::after {
-  content: "Reservar este quarto";
+  content: "Reservar esta acomodação";
   display: inline-flex;
   align-items: center;
   margin-top: 14px;
@@ -820,33 +820,14 @@ footer.site-footer {
   color: #fff;
 }
 
-/* BotÃ£o "Voltar aos quartos" (usado pelo trecho que cola no quarto.html,
-   veja trecho-para-colar-no-quarto-html.txt) â€” incluÃ­do aqui pra nÃ£o
-   depender da Parte 2. */
-.voltar-quartos {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin: 18px 0 6px;
-  font-weight: 700;
-  font-size: 0.92rem;
-  color: #18384c;
-  text-decoration: none;
-}
-.voltar-quartos:hover {
-  color: #9e6b11;
-}
-.voltar-quartos svg {
-  width: 16px;
-  height: 16px;
-}
-/* Os quartos lado a lado, 5 por linha, sem rolar e sem cortar as fotos.
-   As fotos nÃ£o mudam (mesma proporÃ§Ã£o de sempre) â€” sÃ³ o texto e os
-   espaÃ§amentos do cartÃ£o ficam mais compactos para caber os 5 juntos. */
+/* As acomodações lado a lado, sem rolar e sem cortar as fotos. O número de
+   colunas aqui precisa acompanhar quantas acomodações estão ativas no
+   admin (hoje: 4 - Mirante, Ipê, Triplo e Família). Se o número mudar de
+   novo, ajuste o "repeat(4, 1fr)" abaixo para bater com o total. */
 @media (min-width: 820px) {
   #rooms.room-grid {
     display: grid !important;
-    grid-template-columns: repeat(5, 1fr) !important;
+    grid-template-columns: repeat(4, 1fr) !important;
     gap: 20px !important;
     margin: 28px 0 48px !important;
   }
@@ -1022,24 +1003,3 @@ footer.site-footer {
   padding-top: 28px;
 }
 
-/* 5) Estilo do botÃ£o "Voltar aos quartos" que aparece na pÃ¡gina de cada
-   quarto (quarto.html). O link em si Ã© criado por um pequeno trecho que
-   vai colado no arquivo quarto.html â€” veja o arquivo
-   "trecho-para-colar-no-quarto-html.txt" e o LEIA-ME.md. */
-.voltar-quartos {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin: 18px 0 6px;
-  font-weight: 700;
-  font-size: 0.92rem;
-  color: #18384c;
-  text-decoration: none;
-}
-.voltar-quartos:hover {
-  color: #9e6b11;
-}
-.voltar-quartos svg {
-  width: 16px;
-  height: 16px;
-}
