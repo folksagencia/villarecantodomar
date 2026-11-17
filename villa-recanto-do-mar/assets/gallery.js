@@ -253,7 +253,22 @@ function renderCardCarousel(containerId, photos, opts) {
   const track = document.getElementById(`${containerId}-track`);
   const slideMedia = Array.from(track.querySelectorAll("img, video"));
   slideMedia.forEach((el) => onMediaReady(el, () => fadeIn(el)));
-  preloadNeighbors(slideMedia, current);
+  // Antes isso rodava de cara pra TODOS os cards de quarto ao mesmo tempo,
+  // assim que a página carregava — ou seja, com 4-5 quartos na lista, eram
+  // 12-15 fotos "eager" baixando juntas, competindo por banda, mesmo pros
+  // quartos que a pessoa ainda nem rolou até ver. Isso deixava a seção de
+  // acomodações mais lenta pra aparecer no celular. Agora só adianta o
+  // download das vizinhas quando o card de fato está perto da tela.
+  if (window.IntersectionObserver) {
+    const preloadIo = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) { preloadNeighbors(slideMedia, current); preloadIo.disconnect(); }
+      });
+    }, { rootMargin: "500px 0px" });
+    preloadIo.observe(container);
+  } else {
+    preloadNeighbors(slideMedia, current);
+  }
   const dots = container.querySelectorAll(".card-carousel-dot");
 
   function syncVideoPlayback() {

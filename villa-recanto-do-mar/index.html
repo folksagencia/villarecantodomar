@@ -198,6 +198,32 @@ copyAddressBtn.addEventListener("click", () => {
 loadPropertyGallery();
 loadRooms();
 </script>
+<script>
+(function () {
+  // No celular, o card do quarto inteiro é um link (<a>) — isso é ótimo
+  // pra área de toque grande, mas tinha um problema: ao começar a rolar a
+  // página tocando em cima de um card, se o dedo saía quase na mesma
+  // posição (rolagem lenta/curta, bem comum), o toque era interpretado
+  // como um clique normal e abria o quarto sem querer. Agora, qualquer
+  // movimento de verdade do dedo entre o toque e a soltura cancela a
+  // navegação — só abre o quarto se for um toque parado, sem arrastar.
+  var startX = null, startY = null, moved = false;
+  document.addEventListener("pointerdown", function (e) {
+    if (!e.target.closest || !e.target.closest(".room-card")) return;
+    startX = e.clientX; startY = e.clientY; moved = false;
+  }, { passive: true });
+  document.addEventListener("pointermove", function (e) {
+    if (startX == null) return;
+    if (Math.abs(e.clientX - startX) > 8 || Math.abs(e.clientY - startY) > 8) moved = true;
+  }, { passive: true });
+  document.addEventListener("click", function (e) {
+    var card = e.target.closest && e.target.closest(".room-card");
+    if (!card) return;
+    if (moved) { e.preventDefault(); e.stopPropagation(); }
+    startX = null; moved = false;
+  }, true);
+})();
+</script>
 <!-- O bloco de "descrições curtas" fixas no código foi removido daqui.
      Ele sobrescrevia à força o texto de descrição de alguns quartos
      (Mirante, Ipê, Triplo/Casal, Família) toda vez que a página carregava
