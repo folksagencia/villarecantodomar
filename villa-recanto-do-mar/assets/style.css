@@ -1,6 +1,4 @@
    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
 /* assets/style.css — estilo único, compartilhado por todo o site e pelo painel admin. */
 
 :root {
@@ -55,6 +53,17 @@ body {
 img { max-width: 100%; display: block; }
 
 a { color: var(--teal-700); }
+
+/* remove o flash/contorno azul padrão do navegador ao tocar/clicar em
+   links, botões e nos cartões de acomodação (que são um <a> clicável
+   inteiro) — mantém o contorno só pra quem navega pelo teclado, usando a
+   cor dourada da marca em vez do azul padrão do navegador. */
+a, button, .room-card { -webkit-tap-highlight-color: transparent; }
+a:focus, button:focus, .room-card:focus { outline: none; }
+a:focus-visible, button:focus-visible, .room-card:focus-visible {
+  outline: 2px solid var(--sand-500);
+  outline-offset: 3px;
+}
 
 .container {
   width: 100%;
@@ -831,6 +840,9 @@ footer.site-footer {
     gap: 20px !important;
     margin: 28px 0 48px !important;
   }
+  #rooms.room-grid .room-card .photo {
+    aspect-ratio: 16 / 11 !important;
+  }
   #rooms.room-grid .room-card {
     min-width: 0 !important;
     max-width: none !important;
@@ -877,9 +889,12 @@ footer.site-footer {
 
 /* O bloco de quartos usa um container um pouco mais largo em telas
    grandes, pra ficar na mesma proporção/tamanho do bloco de
-   acomodações que fica mais acima na página (fora do iframe). */
+   acomodações que fica mais acima na página (fora do iframe).
+   Reduzido de 1440px pra 1180px: com 4 colunas, 1440px deixava cada
+   cartão (e a foto dentro dele) grande demais, ocupando a tela quase
+   inteira — mais apertado fica mais discreto e elegante. */
 @media (min-width: 1150px) {
-  .container-wide { max-width: 1440px; }
+  .container-wide { max-width: 1180px; }
 }
 /* ========================================================================
    ESTILO VISUAL ADICIONAL â€” Villa Recanto do Mar
