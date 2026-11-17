@@ -28,7 +28,11 @@ function renderAdminNav(activeKey) {
     { key: "reservas", href: "/admin/reservas.html", label: "Reservas" },
     { key: "quartos", href: "/admin/quartos.html", label: "Acomodações" },
     { key: "precos", href: "/admin/precos.html", label: "Preços & disponibilidade" },
-    { key: "fotos", href: "/admin/fotos.html", label: "Fotos da pousada" },
+    // "Fotos da pousada" foi ocultada do menu a pedido (não está mais em uso),
+    // mas a página /admin/fotos.html continua existindo e funcionando
+    // normalmente — pra trazer o link de volta ao menu, é só descomentar a
+    // linha abaixo.
+    // { key: "fotos", href: "/admin/fotos.html", label: "Fotos da pousada" },
   ];
 
   el.innerHTML =
