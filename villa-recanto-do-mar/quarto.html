@@ -12,6 +12,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192x192.png" />
 <link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
 
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://gqsuaezvjonwyguqcxpt.supabase.co">
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/amenities.js"></script>
@@ -37,6 +39,17 @@
 const params = new URLSearchParams(location.search);
 const slug = params.get("slug");
 let room = null;
+
+// Começa a buscar as fotos da pousada (seção "Conheça a pousada") já aqui,
+// em paralelo com a busca dos dados do quarto - essa busca não depende do
+// quarto, então não precisa esperar ele chegar pra começar. Antes, só
+// começava depois que os dados do quarto já tinham voltado, perdendo uma
+// rodada inteira de ida-e-volta ao servidor à toa.
+const propertyPhotosPromise = villaSupabase
+  .from("property_photos")
+  .select("url,caption")
+  .eq("active", true)
+  .order("sort_order", { ascending: true });
 
 async function init() {
   const page = document.getElementById("page");
@@ -97,11 +110,7 @@ function findNextAvailableRange(nightsCount, searchFromDate) {
 async function loadPropertyGallery() {
   const section = document.getElementById("propertyGallerySection");
   if (!section) return;
-  const { data: photos, error } = await villaSupabase
-    .from("property_photos")
-    .select("url,caption")
-    .eq("active", true)
-    .order("sort_order", { ascending: true });
+  const { data: photos, error } = await propertyPhotosPromise;
 
   if (error || !photos || photos.length === 0) {
     section.innerHTML = "";
@@ -125,7 +134,7 @@ function render() {
   page.innerHTML = `
     <div id="roomGallery" style="margin-bottom:18px;"></div>
     <h1 class="section-title">${esc(room.name)}</h1>
-    <p class="section-sub">${esc(room.description || "")} · Capacidade: ${room.capacity} pessoa(s)${room.size_m2 ? ` · ${room.size_m2} m²` : ""}</p>
+    <p class="section-sub">${room.description ? esc(room.description) + " · " : ""}Capacidade: ${room.capacity} pessoa(s)${room.size_m2 ? ` · ${room.size_m2} m²` : ""}</p>
 
     ${villaRenderRoomAmenities(room)}
 
@@ -466,7 +475,7 @@ init();
     var back = document.createElement('a');
     back.href = 'index.html';
     back.className = 'voltar-quartos';
-    back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Voltar aos quartos';
+    back.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg> Voltar às acomodações';
     page.parentNode.insertBefore(back, page);
   }
   var existing = document.getElementById('page');

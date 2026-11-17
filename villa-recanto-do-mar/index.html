@@ -24,6 +24,8 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://villarecantodomar.vercel.app/assets/img/og-image.png" />
 
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link rel="preconnect" href="https://gqsuaezvjonwyguqcxpt.supabase.co">
 <link rel="stylesheet" href="/assets/style.css" />
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -144,7 +146,7 @@ function roomCardHtml(room, i) {
       </div>
       <div class="card-body">
         <h3>${escapeHtml(room.name)}</h3>
-        <p>${escapeHtml(room.description || "")}</p>
+        ${room.description ? `<p>${escapeHtml(room.description)}</p>` : ""}
         <p class="room-card-meta">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           até ${room.capacity || 1} pessoa(s)
@@ -198,23 +200,36 @@ loadRooms();
 <script>
 (function () {
   var descricoesCurtas = {
-    "flat superior com vista e varanda": "Amplo espaço no 2º andar, com cozinha equipada, varanda privativa com rede e vista privilegiada.",
-    "quarto família": "Espaço amplo e confortável para toda a família, com cama de casal e três camas de solteiro.",
-    "quarto triplo • novidade": "Ambiente contemporâneo, com cama de casal, cama de solteiro e quintal arborizado.",
+    // nomes de agora (antes de você renomear no painel admin) - mantidos
+    // aqui pra funcionar enquanto a troca de nome não é feita.
+    "flat superior com vista e varanda": "Amplo espaço no 2º andar, com cozinha equipada, varanda privativa com rede, sofá-cama e vista privilegiada.",
+    "quarto triplo • novidade": "Ambiente contemporâneo e arejado, com cama de casal, cama de solteiro e quintal arborizado.",
     "quarto triplo": "Ambiente acolhedor, com cama de casal e cama de solteiro, ideal para uma estadia com conforto e comodidade.",
-    "quarto duplo": "Ambiente elegante e aconchegante, com cama de casal e detalhes pensados para uma estadia confortável."
+    "quarto família": "Espaço amplo e confortável para toda a família, com cama de casal e três camas de solteiro.",
+    // nomes novos, depois de renomear cada acomodação no admin/quartos.html
+    "mirante": "Amplo espaço no 2º andar, com cozinha equipada, varanda privativa com rede, sofá-cama e vista privilegiada.",
+    "ipê": "Ambiente contemporâneo e arejado, com cama de casal, cama de solteiro e quintal arborizado.",
+    "triplo": "Ambiente acolhedor, com cama de casal e cama de solteiro, ideal para uma estadia com conforto e comodidade.",
+    "família": "Espaço amplo e confortável para toda a família, com cama de casal e três camas de solteiro."
   };
 
   function aplicarDescricoesCurtas() {
     var cartoes = document.querySelectorAll("#rooms .room-card");
     cartoes.forEach(function (cartao) {
       var titulo = cartao.querySelector(".card-body > h3");
-      var paragrafo = cartao.querySelector(".card-body > p:not(.room-card-meta)");
-      if (!titulo || !paragrafo) return;
+      if (!titulo) return;
       var nome = titulo.textContent.trim().toLowerCase();
-      if (Object.prototype.hasOwnProperty.call(descricoesCurtas, nome)) {
-        paragrafo.textContent = descricoesCurtas[nome];
+      if (!Object.prototype.hasOwnProperty.call(descricoesCurtas, nome)) return;
+      // Alguns quartos não têm descrição cadastrada no banco, então o
+      // <p> nem chega a existir no cartão (de propósito, pra não deixar
+      // um espaço vazio à toa) - aqui criamos ele na hora, só pra esses
+      // 5 quartos conhecidos que têm texto fixo definido acima.
+      var paragrafo = cartao.querySelector(".card-body > p:not(.room-card-meta)");
+      if (!paragrafo) {
+        paragrafo = document.createElement("p");
+        titulo.insertAdjacentElement("afterend", paragrafo);
       }
+      paragrafo.textContent = descricoesCurtas[nome];
     });
   }
 
@@ -222,36 +237,6 @@ loadRooms();
   // (filhos diretos de #rooms), nunca o texto dentro deles — senão a
   // própria troca de texto disparava o observador de novo, travando a
   // página num loop.
-  var container = document.getElementById("rooms");
-  if (!container) return;
-  var observador = new MutationObserver(aplicarDescricoesCurtas);
-  observador.observe(container, { childList: true, subtree: false });
-  aplicarDescricoesCurtas();
-})();
-</script>
-<script>
-(function () {
-  var descricoesCurtas = {
-    "flat superior com vista e varanda": "Amplo espaço no 2º andar, com cozinha equipada, varanda privativa com rede e vista privilegiada.",
-    "quarto família": "Espaço amplo e confortável para toda a família, com cama de casal e três camas de solteiro.",
-    "quarto triplo • novidade": "Ambiente contemporâneo, com cama de casal, cama de solteiro e quintal arborizado.",
-    "quarto triplo": "Ambiente acolhedor, com cama de casal e cama de solteiro, ideal para uma estadia com conforto e comodidade.",
-    "quarto duplo": "Ambiente elegante e aconchegante, com cama de casal e detalhes pensados para uma estadia confortável."
-  };
-
-  function aplicarDescricoesCurtas() {
-    var cartoes = document.querySelectorAll("#rooms .room-card");
-    cartoes.forEach(function (cartao) {
-      var titulo = cartao.querySelector(".card-body > h3");
-      var paragrafo = cartao.querySelector(".card-body > p:not(.room-card-meta)");
-      if (!titulo || !paragrafo) return;
-      var nome = titulo.textContent.trim().toLowerCase();
-      if (Object.prototype.hasOwnProperty.call(descricoesCurtas, nome)) {
-        paragrafo.textContent = descricoesCurtas[nome];
-      }
-    });
-  }
-
   var container = document.getElementById("rooms");
   if (!container) return;
   var observador = new MutationObserver(aplicarDescricoesCurtas);
