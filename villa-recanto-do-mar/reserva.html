@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Pagamento do sinal — Villa Recanto do Mar</title>
+<title>Pagamento do sinal: Villa Recanto do Mar</title>
 <meta name="description" content="Pague o sinal da sua reserva na Pousada Villa Recanto do Mar via Pix." />
 
 <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico" />
@@ -113,12 +113,12 @@ function render(res) {
 
     <div class="card" style="margin-top:20px;"><div class="card-body">
       <h3 style="margin-top:0;">Depois de pagar</h3>
-      <p class="help-text">Envie o comprovante do Pix para a pousada pelo WhatsApp e avise por aqui também — assim garantimos que sua reserva foi registrada.</p>
+      <p class="help-text">Envie o comprovante do Pix para a pousada pelo WhatsApp: assim garantimos que sua reserva foi registrada.</p>
       <a class="btn btn-whatsapp btn-block" id="whatsappBtn" target="_blank" rel="noopener">Enviar comprovante pelo WhatsApp</a>
       <button class="btn btn-secondary btn-block" id="markPaidBtn" style="margin-top:10px;" ${alreadyMarked ? "disabled" : ""}>
         ${alreadyMarked ? "✓ A pousada foi avisada" : "Já paguei, avisar a pousada"}
       </button>
-      <p class="help-text" style="margin-top:10px;">A confirmação final da reserva é feita pela pousada após conferir o Pix recebido — pode levar algumas horas.</p>
+      <p class="help-text" style="margin-top:10px;">A confirmação final da reserva é feita pela pousada após conferir o Pix recebido, pode levar algumas horas.</p>
     </div></div>
   `;
 
@@ -132,7 +132,8 @@ function render(res) {
   });
 
   const whatsappMsg = `Olá! Acabei de reservar o ${res.roomName} (${formatDateBR(res.checkIn)} a ${formatDateBR(res.checkOut)}). Segue o comprovante do sinal de ${formatBRL(res.depositAmount)}. Reserva: ${res.id}`;
-  document.getElementById("whatsappBtn").href = `https://wa.me/${VILLA_CONFIG.whatsappNumber}?text=${encodeURIComponent(whatsappMsg)}`;
+  const whatsappBtn = document.getElementById("whatsappBtn");
+  whatsappBtn.href = `https://wa.me/${VILLA_CONFIG.whatsappNumber}?text=${encodeURIComponent(whatsappMsg)}`;
 
   const copyBtn = document.getElementById("copyBtn");
   copyBtn.addEventListener("click", () => {
@@ -149,29 +150,46 @@ function render(res) {
         copyBtn.querySelector(".copy-field-btn-label").textContent = "Copiar";
       }, 2200);
     }).catch(() => {
-      document.getElementById("copyFeedback").textContent = "Não foi possível copiar automaticamente — selecione e copie manualmente.";
+      document.getElementById("copyFeedback").textContent = "Não foi possível copiar automaticamente, selecione e copie manualmente.";
     });
   });
 
   const markBtn = document.getElementById("markPaidBtn");
+
+  async function notifyMarkPaid() {
+    const r = await fetch("/api/mark-paid", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: reservationId, session_id: getVillaSessionId() }),
+    });
+    if (!r.ok) throw new Error("mark-paid falhou");
+  }
+
+  function markAsNotified() {
+    markBtn.disabled = true;
+    markBtn.textContent = "✓ A pousada foi avisada";
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    const box = document.getElementById("countdownBox");
+    if (box) box.remove();
+  }
+
   if (!alreadyMarked) {
     markBtn.addEventListener("click", async () => {
       markBtn.disabled = true;
-      markBtn.innerHTML = '<span class="spinner"></span> Avisando…';
+      markBtn.innerHTML = '<span class="spinner"></span> Avisando...';
       try {
-        await fetch("/api/mark-paid", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: reservationId, session_id: getVillaSessionId() }),
-        });
-        markBtn.textContent = "✓ A pousada foi avisada";
-        if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
-        const box = document.getElementById("countdownBox");
-        if (box) box.remove();
+        await notifyMarkPaid();
+        markAsNotified();
       } catch (e) {
         markBtn.disabled = false;
         markBtn.textContent = "Já paguei, avisar a pousada";
       }
+    });
+
+    whatsappBtn.addEventListener("click", () => {
+      if (whatsappBtn.dataset.notified) return;
+      whatsappBtn.dataset.notified = "1";
+      notifyMarkPaid().then(markAsNotified).catch((e) => console.error(e));
     });
   }
 
@@ -210,9 +228,9 @@ function renderExpired(res) {
     <div class="card"><div class="card-body" style="text-align:center;">
       <div class="badge badge-warn" style="margin-bottom:12px;">Pix expirado</div>
       <h2 style="margin-top:0;">O prazo desse Pix acabou</h2>
-      <p class="help-text">Esse código era válido por 2 horas e o tempo passou. Mas fica tranquilo — seus dados continuam salvos e a data pode já ter ficado disponível de novo.</p>
+      <p class="help-text">Esse código era válido por 2 horas e o tempo passou. Mas fica tranquilo: seus dados continuam salvos e a data pode já ter ficado disponível de novo.</p>
       <a class="btn btn-primary btn-block" href="${newBookingUrl}" style="margin-top:10px;">Fazer uma nova reserva com meus dados</a>
-      <p class="help-text" style="margin-top:14px;">Se você já pagou esse Pix mesmo depois do prazo, sem problema: fale com a pousada pelo WhatsApp e envie o comprovante — sua reserva original (${esc(res.id).slice(0, 8)}…) ainda existe e pode ser confirmada manualmente.</p>
+      <p class="help-text" style="margin-top:14px;">Se você já pagou esse Pix mesmo depois do prazo, sem problema: fale com a pousada pelo WhatsApp e envie o comprovante. Sua reserva original (${esc(res.id).slice(0, 8)}…) ainda existe e pode ser confirmada manualmente.</p>
     </div></div>
   `;
 }

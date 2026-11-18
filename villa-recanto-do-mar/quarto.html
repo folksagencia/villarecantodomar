@@ -15,7 +15,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="light" />
-<title>Reservar — Villa Recanto do Mar</title>
+<title>Reservar: Villa Recanto do Mar</title>
 <meta name="description" content="Reserve diretamente com a Pousada Villa Recanto do Mar. Sinal de 30% via Pix, sem taxas de intermediários." />
 
 <link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico" />
@@ -362,7 +362,7 @@ async function recalculate() {
     const suggestion = findNextAvailableRange(stay.nights, checkout);
     const suggestionHtml = suggestion
       ? `Encontramos uma opção livre pra você: <strong>${formatDateBR(suggestion.checkIn)} a ${formatDateBR(suggestion.checkOut)}</strong> (mesmas ${stay.nights} noite(s)). <button type="button" class="btn btn-sm btn-primary" id="useSuggestedBtn" style="margin-top:8px;">Usar essas datas</button>`
-      : `No momento não achamos automaticamente outra data livre pra essa acomodação nos próximos meses — fale com a pousada pelo WhatsApp que a gente ajuda a encontrar uma opção.`;
+      : `No momento não achamos automaticamente outra data livre pra essa acomodação nos próximos meses. Fale com a pousada pelo WhatsApp que a gente ajuda a encontrar uma opção.`;
     alertBox.innerHTML = `<div class="alert alert-warn">Essa acomodação já está com a lotação cheia em ${fullNights.map(formatDateBR).join(", ")}. ${suggestionHtml}</div>`;
     if (suggestion) {
       document.getElementById("useSuggestedBtn").addEventListener("click", () => {
