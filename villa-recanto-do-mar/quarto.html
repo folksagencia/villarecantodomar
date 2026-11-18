@@ -358,10 +358,12 @@ async function recalculate() {
   }
 
   summary.innerHTML = `
-    <div class="alert alert-info" style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;">
-      <span>${stay.nights} noite(s)</span>
-      <span>Total: <strong>${formatBRL(stay.totalPrice)}</strong></span>
-      <span>Sinal (30%) hoje: <strong>${formatBRL(stay.depositAmount)}</strong></span>
+    <div class="alert alert-info price-summary">
+      <div class="price-summary-top">
+        <span>${stay.nights} noite(s)</span>
+        <span>Total: <strong>${formatBRL(stay.totalPrice)}</strong></span>
+      </div>
+      <div class="price-summary-deposit">Sinal (30%) hoje: <strong>${formatBRL(stay.depositAmount)}</strong></div>
     </div>
   `;
 }

@@ -1,6 +1,4 @@
    @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;0,9..144,800;1,9..144,300&family=Work+Sans:wght@400;500;600;700&display=swap');
 /* assets/style.css — estilo único, compartilhado por todo o site e pelo painel admin. */
 
 :root {
@@ -55,6 +53,17 @@ body {
 img { max-width: 100%; display: block; }
 
 a { color: var(--teal-700); }
+
+/* remove o flash/contorno azul padrão do navegador ao tocar/clicar em
+   links, botões e nos cartões de acomodação (que são um <a> clicável
+   inteiro) — mantém o contorno só pra quem navega pelo teclado, usando a
+   cor dourada da marca em vez do azul padrão do navegador. */
+a, button, .room-card { -webkit-tap-highlight-color: transparent; }
+a:focus, button:focus, .room-card:focus { outline: none; }
+a:focus-visible, button:focus-visible, .room-card:focus-visible {
+  outline: 2px solid var(--sand-500);
+  outline-offset: 3px;
+}
 
 .container {
   width: 100%;
@@ -187,6 +196,14 @@ a { color: var(--teal-700); }
 
 .room-card { display: flex; flex-direction: column; }
 
+/* O card já esticava até a mesma altura dos vizinhos (isso é o grid),
+   mas o conteúdo de dentro (card-body) não acompanhava — ficava do
+   tamanho do próprio texto e sobrava um vão embaixo, então o botão
+   "Reservar..." aparecia em alturas diferentes em cada cartão. Aqui o
+   card-body também passa a esticar (flex:1) e vira coluna, pra poder
+   empurrar o botão pro fundo do cartão com margin-top:auto logo abaixo. */
+.room-card .card-body { display: flex; flex-direction: column; flex: 1; }
+
 .room-card .photo {
   position: relative;
   aspect-ratio: 4 / 3;
@@ -206,7 +223,6 @@ a { color: var(--teal-700); }
   font-size: 0.7rem;
   border-radius: 6px;
   letter-spacing: 0.01em;
-}
 }
 
 /* ---------- carrossel compacto do card de acomodação (home) ---------- */
@@ -264,7 +280,7 @@ a { color: var(--teal-700); }
 }
 .card-carousel-dot.active { background: var(--white); width: 8px; height: 8px; }
 
-.room-card h3 { margin: 0 0 4px; font-size: 1.1rem; }
+.room-card h3 { margin: 0 0 8px; font-size: 1.1rem; }
 .room-card p { margin: 0 0 10px; color: var(--ink-600); font-size: 0.92rem; }
 .room-card-meta {
   display: flex;
@@ -274,7 +290,7 @@ a { color: var(--teal-700); }
   font-size: 0.82rem;
   margin: -2px 0 12px;
 }
-.price-tag { font-weight: 800; color: var(--teal-700); font-size: 1.15rem; }
+.price-tag { font-weight: 800; color: var(--teal-700); font-size: 1.15rem; margin-bottom: 14px; }
 .price-tag small { font-weight: 400; color: var(--ink-600); font-size: 0.8rem; }
 .price-tag .price-label { display: block; font-weight: 500; font-size: 0.78em; color: var(--ink-600); margin-bottom: 1px; }
 
@@ -283,6 +299,7 @@ label { display: block; font-weight: 600; font-size: 0.85rem; margin: 14px 0 6px
 
 input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="number"], input[type="password"], textarea, select {
   width: 100%;
+  max-width: 100%;
   padding: 11px 13px;
   border: 1px solid var(--ink-300);
   border-radius: 8px;
@@ -290,6 +307,7 @@ input[type="text"], input[type="email"], input[type="tel"], input[type="date"], 
   font-family: inherit;
   background: var(--white);
   color: var(--ink-900);
+  box-sizing: border-box;
 }
 
 input:focus, textarea:focus, select:focus {
@@ -298,26 +316,67 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px var(--teal-100);
 }
 
+/* min-width:0 nos itens do grid: sem isso, o navegador calcula a largura
+   mínima de cada coluna pelo CONTEÚDO do campo, não pela coluna — e no
+   iPhone (Safari), o controle nativo de <input type="date"> escreve a
+   data por extenso ("27 de nov. de 2026", bem mais largo que "11/27/2026"
+   do Chrome/Android) e pode se recusar a encolher. Como a página trava o
+   scroll horizontal (overflow-x:hidden, lá embaixo), isso não vira uma
+   barra de rolagem — vira o campo cortado na borda direita da tela, sem
+   nem o cantinho arredondado aparecendo. min-width:0 obriga o campo a
+   respeitar a largura real da coluna em vez da largura do seu conteúdo. */
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-row > div { min-width: 0; }
+
+@media (max-width: 480px) {
+  /* campo de data um pouco mais estreito/compacto só no celular, pra sobrar
+     mais folga pro texto por extenso do Safari (iPhone) não chegar nem
+     perto do limite da coluna */
+  input[type="date"] { padding: 10px 8px; font-size: 0.86rem; }
+}
 .help-text { font-size: 0.8rem; color: var(--ink-600); margin-top: 4px; }
 
-/* ---------- badges / alertas ---------- */
+/* ---------- badges / alertas ----------
+   antes, o texto mais longo ("Aguardando Pix", e principalmente o aviso de
+   Pix expirado) podia quebrar em várias linhas dentro do badge — como o
+   badge é um "pill" bem arredondado, isso criava aquele efeito de bolha
+   gigante parecendo um botão, em vez de parecer um status. Agora o badge
+   nunca quebra linha (nowrap) e ganhou espaço pra um iconezinho na frente
+   (relógio, check, x...), ficando mais com cara de status mesmo. */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   padding: 4px 11px;
   border-radius: 999px;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
+.badge svg { width: 12px; height: 12px; flex-shrink: 0; }
 
 .badge-warn { background: var(--warn-bg); color: var(--warn); }
 .badge-success { background: var(--success-bg); color: var(--success); }
 .badge-danger { background: var(--danger-bg); color: var(--danger); }
 .badge-neutral { background: var(--ink-300); color: var(--ink-900); }
+
+/* ---------- aviso complementar de status (ex: "Pix expirado") ----------
+   esse aviso é mais longo e é um complemento do status principal, não um
+   status por si só — por isso não é mais um badge/pill (que de tão
+   grande e com texto comprido virava um "botão" enorme), e sim uma linha
+   discreta com ícone, que quebra em texto normal igual a uma legenda. */
+.status-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.status-note svg { width: 13px; height: 13px; flex-shrink: 0; margin-top: 2px; }
+.status-note-warn { color: var(--warn); }
 
 /* ---------- comodidades (quarto.html + admin/quartos.html) ---------- */
 
@@ -371,6 +430,31 @@ input:focus, textarea:focus, select:focus {
 .alert-info { background: var(--teal-100); color: var(--teal-900); }
 .alert-warn { background: var(--warn-bg); color: var(--warn); }
 
+/* Resumo de valores (noites / total / sinal) na página de cada quarto.
+   Antes era uma única linha flex com justify-content:space-between e
+   3 itens — em telas estreitas o 3º item ("Sinal (30%) hoje") quebrava
+   pra uma linha sozinho, desalinhado à esquerda, meio perdido. Agora
+   "noites" e "Total" ficam juntos em cima, e o "Sinal" (o valor que a
+   pessoa realmente paga agora, o mais importante) fica centralizado
+   embaixo, separado por uma linha fina e com destaque maior. */
+.price-summary-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.price-summary-deposit {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(24, 56, 76, 0.14);
+  text-align: center;
+}
+.price-summary-deposit strong { font-size: 1.1rem; }
+@media (max-width: 480px) {
+  .price-summary-top { justify-content: center; text-align: center; }
+}
+
 /* ---------- painel admin ---------- */
 .admin-shell { display: flex; min-height: 100vh; }
 
@@ -420,6 +504,100 @@ th { background: var(--teal-100); color: var(--teal-900); font-size: 0.76rem; te
 tr:last-child td { border-bottom: none; }
 
 .table-wrap { overflow-x: auto; }
+
+/* ---------- tabelas do admin viram cartões no celular ----------
+   antes, no celular, essas tabelas (reservas, painel, acomodações) só
+   rolavam pro lado — dava pra ver as 2-3 primeiras colunas e o resto
+   (inclusive os botões de ação) ficava escondido fora da tela. Em vez de
+   só encolher a tabela, abaixo de 760px cada linha vira um cartão
+   empilhado, com o nome da coluna como rótulo acima do valor (via
+   data-label no <td>, lido pelo ::before) — assim dá pra ver e usar tudo
+   sem precisar rolar de lado. Acima de 760px nada muda, continua tabela
+   normal. */
+@media (max-width: 760px) {
+  .table-wrap.cards-on-mobile table,
+  .table-wrap.cards-on-mobile tbody,
+  .table-wrap.cards-on-mobile tr,
+  .table-wrap.cards-on-mobile td { display: block; width: 100%; }
+  .table-wrap.cards-on-mobile thead { display: none; }
+  .table-wrap.cards-on-mobile table { box-shadow: none; background: none; border-radius: 0; }
+  .table-wrap.cards-on-mobile tr {
+    background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow);
+    padding: 14px 16px; margin-bottom: 14px;
+  }
+  .table-wrap.cards-on-mobile td {
+    padding: 8px 0; border-bottom: 1px solid var(--teal-100); font-size: 0.9rem;
+  }
+  .table-wrap.cards-on-mobile tr td:last-child { border-bottom: none; padding-bottom: 2px; }
+  .table-wrap.cards-on-mobile tr td:first-child { padding-top: 2px; }
+  .table-wrap.cards-on-mobile td[data-label]::before {
+    content: attr(data-label); display: block; font-size: 0.66rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-600); margin-bottom: 3px;
+  }
+  .table-wrap.cards-on-mobile td.cell-hidden-mobile { display: none; }
+}
+
+/* arrastar pra reordenar (⠿) é um recurso só de mouse (arrastar com o dedo
+   não funciona em celular) — por isso, abaixo de 760px, troca pelos botões
+   ↑ / ↓ ao lado das outras ações, pro recurso de reordenar continuar
+   funcionando no celular. Acima de 760px os botões ficam escondidos e só o
+   arrastar funciona, como já era. */
+.mobile-reorder-btns { display: none; gap: 6px; margin-bottom: 8px; }
+@media (max-width: 760px) {
+  .mobile-reorder-btns { display: flex; }
+}
+.btn-reorder {
+  background: var(--white); border: 1px solid var(--ink-300); border-radius: 8px;
+  width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 1rem; color: var(--teal-900);
+}
+.btn-reorder:disabled { opacity: 0.35; cursor: not-allowed; }
+.btn-reorder:not(:disabled):hover { border-color: var(--teal-700); }
+
+/* botão de confirmação de pagamento (ex: "Confirmar Pix") — verde sólido,
+   igual ao padrão já usado no botão do WhatsApp, pra sinalizar claramente
+   "isso aqui confirma que o dinheiro entrou" (sem confundir com o dourado
+   do btn-primary, usado pra ações neutras). */
+.btn-success { background: var(--success); color: var(--white); }
+.btn-success:hover { background: #155c3b; }
+
+/* ---------- ações da tabela de reservas (admin/reservas.html) ----------
+   antes, os botões (Confirmar Pix / Cancelar / Excluir) eram 3 pills do
+   mesmo tamanho um embaixo do outro, meio amontoados. Agora a ação
+   principal (confirmar) fica em destaque, cheia e verde, e as ações
+   secundárias/destrutivas (cancelar, excluir) viram links de texto mais
+   discretos logo abaixo — menos "brigando" visualmente, mais claro o que
+   é a ação principal da linha. */
+.row-actions { display: flex; flex-direction: column; align-items: stretch; gap: 8px; min-width: 150px; }
+.row-actions-secondary { display: flex; justify-content: center; gap: 16px; }
+.btn-link-danger {
+  background: none; border: none; padding: 2px 0; cursor: pointer;
+  font-size: 0.78rem; font-weight: 600; color: var(--danger);
+  text-decoration: underline; text-underline-offset: 2px;
+}
+.btn-link-danger:hover { color: #7a241e; }
+
+/* telefone do hóspede clicável, abrindo a conversa no WhatsApp direto
+   (admin/reservas.html) */
+.phone-link { color: #1d8a4e; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.phone-link:hover { text-decoration: underline; }
+.phone-link svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+/* ---------- busca por hóspede (admin/reservas.html) ---------- */
+.search-field { position: relative; max-width: 360px; margin-bottom: 14px; }
+.search-field svg {
+  position: absolute; left: 13px; top: 50%; transform: translateY(-50%);
+  width: 16px; height: 16px; color: var(--ink-600); pointer-events: none;
+}
+.search-field input[type="search"] {
+  width: 100%; padding: 10px 14px 10px 38px; border: 1px solid var(--ink-300);
+  border-radius: 999px; font-size: 0.9rem; font-family: inherit;
+  background: var(--white); color: var(--ink-900);
+}
+.search-field input[type="search"]:focus {
+  outline: none; border-color: var(--teal-500); box-shadow: 0 0 0 3px var(--teal-100);
+}
+.search-field input[type="search"]::-webkit-search-cancel-button { cursor: pointer; }
 
 .photo-thumb-row { display: flex; gap: 10px; flex-wrap: wrap; margin: 10px 0; }
 .photo-thumb { width: 90px; height: 68px; object-fit: cover; border-radius: 8px; border: 1px solid var(--ink-300); position: relative; }
@@ -726,9 +904,7 @@ footer.site-footer {
   padding-top: 28px;
 }
 
-}
-
-/* Estilo do botão "Voltar aos quartos" (o link em si vem na Parte B). */
+/* Estilo do botão "Voltar às acomodações" (o link em si vem na Parte B). */
 .voltar-quartos {
   display: flex;
   align-items: center;
@@ -805,10 +981,11 @@ footer.site-footer {
    verdade (fundo em pill, fica sÃ³lido dourado ao passar o mouse). Sem
    seta â€” o cartÃ£o inteiro jÃ¡ Ã© clicÃ¡vel, isto Ã© sÃ³ o texto/rÃ³tulo. */
 .room-card .card-body::after {
-  content: "Reservar este quarto";
+  content: "Reservar esta acomodação";
   display: inline-flex;
   align-items: center;
-  margin-top: 14px;
+  align-self: flex-start; /* sem isso, o pai (flex-direction:column) estica o botão pra largura toda do cartão, deixando um vazio enorme sobrando à direita — com align-self:flex-start ele volta a ter só o tamanho do próprio texto, alinhado à esquerda junto com o resto do texto do cartão */
+  margin-top: auto; /* empurra o botão pro fundo do cartão, mesmo quando a descrição é curta */
   padding: 9px 18px;
   border-radius: 999px;
   background: rgba(224, 152, 24, 0.14);
@@ -823,35 +1000,40 @@ footer.site-footer {
   color: #fff;
 }
 
-/* BotÃ£o "Voltar aos quartos" (usado pelo trecho que cola no quarto.html,
-   veja trecho-para-colar-no-quarto-html.txt) â€” incluÃ­do aqui pra nÃ£o
-   depender da Parte 2. */
-.voltar-quartos {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin: 18px 0 6px;
-  font-weight: 700;
-  font-size: 0.92rem;
-  color: #18384c;
-  text-decoration: none;
+/* Deixa o texto de cada cartão de acomodação um pouco mais compacto só no
+   celular/tablet (abaixo de 820px, que é onde a grade de colunas do
+   desktop ainda não entrou em ação) — menos respiro no padding e nas
+   margens de título/descrição/preço/botão. A FOTO do quarto (.photo) não
+   é tocada aqui de propósito: continua com a mesma proporção e tamanho de
+   sempre, sem cortar nem espremer nada.
+   Segunda rodada de compactação (pedido da cliente: "ainda dá pra
+   diminuir mais, parece que só tem um quarto se não rolar") — aperta mais
+   um pouco o respiro entre os cartões (gap/margem da grade) e o texto de
+   dentro de cada um, sempre preservando a foto. */
+@media (max-width: 819px) {
+  .room-grid { margin: 16px 0 32px; gap: 16px; }
+  .room-card .card-body { padding: 13px; }
+  .room-card h3 { margin: 0 0 4px; font-size: 1rem; }
+  .room-card p { margin: 0 0 6px; font-size: 0.84rem; line-height: 1.35; }
+  .room-card-meta { margin: -2px 0 7px; font-size: 0.78rem; }
+  .price-tag { font-size: 1.02rem; margin-bottom: 8px; }
+  .price-tag small { font-size: 0.76rem; }
+  .room-card .card-body::after { padding: 6px 13px; font-size: 0.82rem; }
 }
-.voltar-quartos:hover {
-  color: #9e6b11;
-}
-.voltar-quartos svg {
-  width: 16px;
-  height: 16px;
-}
-/* Os quartos lado a lado, 5 por linha, sem rolar e sem cortar as fotos.
-   As fotos nÃ£o mudam (mesma proporÃ§Ã£o de sempre) â€” sÃ³ o texto e os
-   espaÃ§amentos do cartÃ£o ficam mais compactos para caber os 5 juntos. */
+
+/* As acomodações lado a lado, sem rolar e sem cortar as fotos. O número de
+   colunas aqui precisa acompanhar quantas acomodações estão ativas no
+   admin (hoje: 4 - Mirante, Ipê, Triplo e Família). Se o número mudar de
+   novo, ajuste o "repeat(4, 1fr)" abaixo para bater com o total. */
 @media (min-width: 820px) {
   #rooms.room-grid {
     display: grid !important;
-    grid-template-columns: repeat(5, 1fr) !important;
+    grid-template-columns: repeat(4, 1fr) !important;
     gap: 20px !important;
     margin: 28px 0 48px !important;
+  }
+  #rooms.room-grid .room-card .photo {
+    aspect-ratio: 16 / 11 !important;
   }
   #rooms.room-grid .room-card {
     min-width: 0 !important;
@@ -865,7 +1047,7 @@ footer.site-footer {
   #rooms.room-grid .room-card h3 {
     font-size: 1.05rem !important;
     line-height: 1.22 !important;
-    margin: 0 0 2px !important;
+    margin: 0 0 7px !important;
   }
   #rooms.room-grid .room-card p {
     font-size: 0.82rem !important;
@@ -892,16 +1074,19 @@ footer.site-footer {
  #rooms.room-grid .card-body::after {
     font-size: 0.78rem !important;
     padding: 7px 11px !important;
-    margin: 11px 0 0 !important;
+    margin: auto 0 0 !important;
     white-space: nowrap !important;
   }
 }  
 
 /* O bloco de quartos usa um container um pouco mais largo em telas
    grandes, pra ficar na mesma proporção/tamanho do bloco de
-   acomodações que fica mais acima na página (fora do iframe). */
+   acomodações que fica mais acima na página (fora do iframe).
+   Reduzido de 1440px pra 1180px: com 4 colunas, 1440px deixava cada
+   cartão (e a foto dentro dele) grande demais, ocupando a tela quase
+   inteira — mais apertado fica mais discreto e elegante. */
 @media (min-width: 1150px) {
-  .container-wide { max-width: 1440px; }
+  .container-wide { max-width: 1180px; }
 }
 /* ========================================================================
    ESTILO VISUAL ADICIONAL â€” Villa Recanto do Mar
@@ -1025,24 +1210,3 @@ footer.site-footer {
   padding-top: 28px;
 }
 
-/* 5) Estilo do botÃ£o "Voltar aos quartos" que aparece na pÃ¡gina de cada
-   quarto (quarto.html). O link em si Ã© criado por um pequeno trecho que
-   vai colado no arquivo quarto.html â€” veja o arquivo
-   "trecho-para-colar-no-quarto-html.txt" e o LEIA-ME.md. */
-.voltar-quartos {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  margin: 18px 0 6px;
-  font-weight: 700;
-  font-size: 0.92rem;
-  color: #18384c;
-  text-decoration: none;
-}
-.voltar-quartos:hover {
-  color: #9e6b11;
-}
-.voltar-quartos svg {
-  width: 16px;
-  height: 16px;
-}
