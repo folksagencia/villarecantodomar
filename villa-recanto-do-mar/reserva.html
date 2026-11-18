@@ -241,5 +241,49 @@ function esc(str) {
 
 init();
 </script>
+<script>
+(function () {
+  if (window.self === window.top) return;
+  // Mesmo mecanismo do index.html e do quarto.html: avisa o WordPress da
+  // altura real desta página, pra o iframe (que não tem rolagem própria)
+  // se ajustar certinho ao conteúdo, sem sobrar espaço em branco nem
+  // cortar nada. Essa página ainda não tinha esse aviso, então o iframe
+  // ficava com a altura da página anterior (do quarto) ao chegar aqui.
+  var ultimaAltura = 0;
+  function alturaReal() {
+    return document.body ? document.body.scrollHeight : 0;
+  }
+  function enviarAltura() {
+    var altura = alturaReal();
+    if (Math.abs(altura - ultimaAltura) < 2) return;
+    ultimaAltura = altura;
+    window.parent.postMessage({ villaReservaAltura: altura }, '*');
+  }
+  window.addEventListener('load', enviarAltura);
+  var obs = new MutationObserver(enviarAltura);
+  obs.observe(document.body, { childList: true, subtree: true });
+  setTimeout(enviarAltura, 300);
+  setTimeout(enviarAltura, 1000);
+  setTimeout(enviarAltura, 2500);
+})();
+</script>
+<script>
+(function () {
+  if (window.self === window.top) return;
+  // Mesma lógica do quarto.html: como o iframe não tem rolagem própria,
+  // é a página WordPress de fora que precisa rolar até o topo dele ao
+  // chegar aqui vindo da tela do quarto (depois de gerar o Pix), senão a
+  // pessoa continua vendo o mesmo trecho vertical de antes.
+  try {
+    if (!document.referrer) return;
+    if (new URL(document.referrer).origin !== location.origin) return;
+  } catch (e) { return; }
+  function pedirRolagem() {
+    window.parent.postMessage({ villaScrollToTop: true }, '*');
+  }
+  window.addEventListener('load', function () { setTimeout(pedirRolagem, 50); });
+  setTimeout(pedirRolagem, 400);
+})();
+</script>
 </body>
 </html>

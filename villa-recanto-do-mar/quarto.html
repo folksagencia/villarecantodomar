@@ -540,6 +540,30 @@ init();
   setTimeout(enviarAltura, 2500);
 })();
 </script>
+<script>
+(function () {
+  if (window.self === window.top) return;
+  // O iframe do sistema de reservas não tem rolagem própria — a altura
+  // dele é que se ajusta ao conteúdo (bloco acima). Por isso, quando a
+  // pessoa clica num quarto vindo da lista, é a página WordPress de fora
+  // que precisa rolar até o topo do iframe; senão ela continua vendo o
+  // mesmo trecho vertical da tela de antes, agora mostrando um pedaço no
+  // meio do conteúdo novo (geralmente a altura do formulário) em vez das
+  // fotos do quarto. Só pedimos essa rolagem quando a página foi aberta a
+  // partir de outra página do próprio sistema de reservas (confirmado
+  // pelo document.referrer) — assim não mexemos em nada se o quarto foi
+  // aberto direto (ex: link compartilhado).
+  try {
+    if (!document.referrer) return;
+    if (new URL(document.referrer).origin !== location.origin) return;
+  } catch (e) { return; }
+  function pedirRolagem() {
+    window.parent.postMessage({ villaScrollToTop: true }, '*');
+  }
+  window.addEventListener('load', function () { setTimeout(pedirRolagem, 50); });
+  setTimeout(pedirRolagem, 400);
+})();
+</script>
 
 </body>
 </html>
