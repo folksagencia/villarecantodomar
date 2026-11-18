@@ -961,14 +961,20 @@ footer.site-footer {
    desktop ainda não entrou em ação) — menos respiro no padding e nas
    margens de título/descrição/preço/botão. A FOTO do quarto (.photo) não
    é tocada aqui de propósito: continua com a mesma proporção e tamanho de
-   sempre, sem cortar nem espremer nada. */
+   sempre, sem cortar nem espremer nada.
+   Segunda rodada de compactação (pedido da cliente: "ainda dá pra
+   diminuir mais, parece que só tem um quarto se não rolar") — aperta mais
+   um pouco o respiro entre os cartões (gap/margem da grade) e o texto de
+   dentro de cada um, sempre preservando a foto. */
 @media (max-width: 819px) {
-  .room-card .card-body { padding: 16px; }
-  .room-card h3 { margin: 0 0 6px; font-size: 1.05rem; }
-  .room-card p { margin: 0 0 8px; font-size: 0.88rem; }
-  .room-card-meta { margin: -2px 0 9px; }
-  .price-tag { font-size: 1.08rem; margin-bottom: 10px; }
-  .room-card .card-body::after { padding: 7px 14px; font-size: 0.86rem; }
+  .room-grid { margin: 16px 0 32px; gap: 16px; }
+  .room-card .card-body { padding: 13px; }
+  .room-card h3 { margin: 0 0 4px; font-size: 1rem; }
+  .room-card p { margin: 0 0 6px; font-size: 0.84rem; line-height: 1.35; }
+  .room-card-meta { margin: -2px 0 7px; font-size: 0.78rem; }
+  .price-tag { font-size: 1.02rem; margin-bottom: 8px; }
+  .price-tag small { font-size: 0.76rem; }
+  .room-card .card-body::after { padding: 6px 13px; font-size: 0.82rem; }
 }
 
 /* As acomodações lado a lado, sem rolar e sem cortar as fotos. O número de
