@@ -330,21 +330,33 @@ function waLink(phone) {
   return `https://wa.me/${withCountry}`;
 }
 
+// Ícones pequenos (mesmo estilo de traço usado no resto do admin) só pra dar
+// uma pista visual rápida do status, sem precisar ler o texto todo.
+const ICON_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 3"></path></svg>';
+const ICON_CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M8.5 12.5l2.5 2.5 5-5"></path></svg>';
+const ICON_X = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9.5l5 5M14.5 9.5l-5 5"></path></svg>';
+const ICON_FLAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"></path><path d="M5 4h11l-2 4 2 4H5"></path></svg>';
+const ICON_ALERT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3L2 20h20L12 3z"></path><path d="M12 10v4"></path><circle cx="12" cy="17.3" r="0.6" fill="currentColor" stroke="none"></circle></svg>';
+
 function statusBadge(status) {
   const map = {
-    aguardando_pix: '<span class="badge badge-warn">Aguardando Pix</span>',
-    pix_confirmado: '<span class="badge badge-success">Confirmada</span>',
-    cancelada: '<span class="badge badge-danger">Cancelada</span>',
-    concluida: '<span class="badge badge-neutral">Concluída</span>',
+    aguardando_pix: `<span class="badge badge-warn">${ICON_CLOCK} Aguardando Pix</span>`,
+    pix_confirmado: `<span class="badge badge-success">${ICON_CHECK} Confirmada</span>`,
+    cancelada: `<span class="badge badge-danger">${ICON_X} Cancelada</span>`,
+    concluida: `<span class="badge badge-neutral">${ICON_FLAG} Concluída</span>`,
   };
   return map[status] || status;
 }
 
 function rowHtml(r) {
   const expired = isExpiredHold(r);
+  // O aviso de Pix expirado é mais comprido ("Pix expirado — sem retorno em
+  // 2h") — por isso não é mais um badge/pill (ficava parecendo um botão
+  // gigante quando o texto quebrava linha dentro do pill); agora é uma
+  // legenda discreta com ícone de alerta, na mesma cor de "aguardando".
   const notice = r.guest_marked_paid_at
     ? '<br><span class="help-text">✋ hóspede avisou que pagou</span>'
-    : (expired ? '<br><span class="badge badge-neutral" style="margin-top:4px;">Pix expirado (sem retorno em 2h)</span>' : "");
+    : (expired ? `<div class="status-note status-note-warn">${ICON_ALERT} Pix expirado — sem retorno em 2h</div>` : "");
   // Ação principal (confirmar) em destaque, cheia e verde; "Cancelar" e
   // "Excluir" como links de texto discretos logo abaixo — antes os três
   // eram pills do mesmo tamanho empilhados, meio amontoados.
