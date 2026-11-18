@@ -940,7 +940,7 @@ footer.site-footer {
   content: "Reservar esta acomodação";
   display: inline-flex;
   align-items: center;
-  align-self: center; /* sem isso, o pai (flex-direction:column) estica o botão pra largura toda do cartão, deixando o texto grudado na esquerda e um vazio enorme sobrando à direita — com align-self:center ele volta a ter só o tamanho do próprio texto, centralizado */
+  align-self: flex-start; /* sem isso, o pai (flex-direction:column) estica o botão pra largura toda do cartão, deixando um vazio enorme sobrando à direita — com align-self:flex-start ele volta a ter só o tamanho do próprio texto, alinhado à esquerda junto com o resto do texto do cartão */
   margin-top: auto; /* empurra o botão pro fundo do cartão, mesmo quando a descrição é curta */
   padding: 9px 18px;
   border-radius: 999px;
@@ -954,6 +954,21 @@ footer.site-footer {
 .room-card:hover .card-body::after {
   background: #e09818;
   color: #fff;
+}
+
+/* Deixa o texto de cada cartão de acomodação um pouco mais compacto só no
+   celular/tablet (abaixo de 820px, que é onde a grade de colunas do
+   desktop ainda não entrou em ação) — menos respiro no padding e nas
+   margens de título/descrição/preço/botão. A FOTO do quarto (.photo) não
+   é tocada aqui de propósito: continua com a mesma proporção e tamanho de
+   sempre, sem cortar nem espremer nada. */
+@media (max-width: 819px) {
+  .room-card .card-body { padding: 16px; }
+  .room-card h3 { margin: 0 0 6px; font-size: 1.05rem; }
+  .room-card p { margin: 0 0 8px; font-size: 0.88rem; }
+  .room-card-meta { margin: -2px 0 9px; }
+  .price-tag { font-size: 1.08rem; margin-bottom: 10px; }
+  .room-card .card-body::after { padding: 7px 14px; font-size: 0.86rem; }
 }
 
 /* As acomodações lado a lado, sem rolar e sem cortar as fotos. O número de
