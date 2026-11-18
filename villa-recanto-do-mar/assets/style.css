@@ -299,6 +299,7 @@ label { display: block; font-weight: 600; font-size: 0.85rem; margin: 14px 0 6px
 
 input[type="text"], input[type="email"], input[type="tel"], input[type="date"], input[type="number"], input[type="password"], textarea, select {
   width: 100%;
+  max-width: 100%;
   padding: 11px 13px;
   border: 1px solid var(--ink-300);
   border-radius: 8px;
@@ -306,6 +307,7 @@ input[type="text"], input[type="email"], input[type="tel"], input[type="date"], 
   font-family: inherit;
   background: var(--white);
   color: var(--ink-900);
+  box-sizing: border-box;
 }
 
 input:focus, textarea:focus, select:focus {
@@ -315,6 +317,38 @@ input:focus, textarea:focus, select:focus {
 }
 
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.field-row > div { min-width: 0; }
+
+/* Tentativa nº1 (min-width:0 sozinho) não resolveu no iPhone: a cliente
+   confirmou que continua cortando em TODAS as acomodações (não é algo de
+   um quarto específico) e não é zoom do Safari/iOS — ela já checou os
+   dois. Sobra então o próprio comportamento nativo do <input type="date">
+   no Safari: ele escreve a data por extenso ("27 de nov. de 2026") e, bem
+   documentado em outros sites, o controle nativo do iOS às vezes ignora
+   width/max-width em CSS quando o pai é um bloco comum (como aqui) — só
+   respeita direito quando ele mesmo é o único filho de um flex container
+   com min-width:0. Por isso o wrapper de cada campo (o <div> que tem o
+   <label> + o <input> dentro, no .field-row) agora vira flex-column, e o
+   próprio input ganha min-width:0 + flex:1 — isso faz o Safari recalcular
+   a largura disponível de um jeito que, nos relatos de outros devs, ele
+   realmente respeita. Como segunda camada de proteção (se mesmo assim ele
+   tentar desenhar mais largo que a caixa por dentro), overflow:hidden no
+   próprio input garante que o excesso fica cortado DENTRO da borda
+   arredondada do campo — não mais escapando a ponto de sumir até a borda
+   direita, do jeito que está acontecendo agora. */
+.field-row > div { display: flex; flex-direction: column; }
+.field-row input[type="date"] {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+@media (max-width: 480px) {
+  /* campo de data um pouco mais estreito/compacto só no celular, pra sobrar
+     mais folga pro texto por extenso do Safari (iPhone) não chegar nem
+     perto do limite da coluna */
+  input[type="date"] { padding: 10px 8px; font-size: 0.86rem; }
+}
 .help-text { font-size: 0.8rem; color: var(--ink-600); margin-top: 4px; }
 
 /* ---------- badges / alertas ----------
@@ -410,6 +444,31 @@ input:focus, textarea:focus, select:focus {
 .alert-success { background: var(--success-bg); color: var(--success); }
 .alert-info { background: var(--teal-100); color: var(--teal-900); }
 .alert-warn { background: var(--warn-bg); color: var(--warn); }
+
+/* Resumo de valores (noites / total / sinal) na página de cada quarto.
+   Antes era uma única linha flex com justify-content:space-between e
+   3 itens — em telas estreitas o 3º item ("Sinal (30%) hoje") quebrava
+   pra uma linha sozinho, desalinhado à esquerda, meio perdido. Agora
+   "noites" e "Total" ficam juntos em cima, e o "Sinal" (o valor que a
+   pessoa realmente paga agora, o mais importante) fica centralizado
+   embaixo, separado por uma linha fina e com destaque maior. */
+.price-summary-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.price-summary-deposit {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(24, 56, 76, 0.14);
+  text-align: center;
+}
+.price-summary-deposit strong { font-size: 1.1rem; }
+@media (max-width: 480px) {
+  .price-summary-top { justify-content: center; text-align: center; }
+}
 
 /* ---------- painel admin ---------- */
 .admin-shell { display: flex; min-height: 100vh; }
