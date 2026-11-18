@@ -1,6 +1,17 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
+<script>
+  // "Entrando no Mirante abre certinho lá em cima (nas fotos), mas nos
+  // outros quartos abre no meio da página" — isso é o próprio celular
+  // (Safari/Chrome) restaurando sozinho a última posição de rolagem de
+  // uma página já visitada antes nesta sessão, mesmo numa navegação "pra
+  // frente" normal (clicando no cartão do quarto), não só no botão
+  // voltar. O Mirante só abria certinho por acaso, por ainda não ter
+  // sido visitado. 'manual' desliga essa restauração automática do
+  // navegador — o controle da posição de rolagem passa a ser nosso.
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+</script>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="color-scheme" content="light" />
@@ -37,6 +48,13 @@
 <script src="/lib/pricing.js"></script>
 <script src="/assets/session.js"></script>
 <script>
+// Garante que a página sempre abre do topo, pra qualquer quarto — tanto
+// numa visita "fresca" quanto quando o celular restaura essa página de
+// uma memória própria dele (bfcache: o evento "load" não dispara de
+// novo nesse caso, só o "pageshow", por isso os dois aqui).
+window.scrollTo(0, 0);
+window.addEventListener("pageshow", () => window.scrollTo(0, 0));
+
 const params = new URLSearchParams(location.search);
 const slug = params.get("slug");
 let room = null;
