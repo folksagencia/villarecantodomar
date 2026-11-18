@@ -273,13 +273,11 @@ init();
   // Mesma lógica do quarto.html: como o iframe não tem rolagem própria,
   // é a página WordPress de fora que precisa rolar até o topo dele ao
   // chegar aqui vindo da tela do quarto (depois de gerar o Pix), senão a
-  // pessoa continua vendo o mesmo trecho vertical de antes. Quem decide a
-  // hora certa de rolar, com cuidado pra não incomodar, é o WordPress por
-  // fora.
-  try {
-    if (!document.referrer) return;
-    if (new URL(document.referrer).origin !== location.origin) return;
-  } catch (e) { return; }
+  // pessoa continua vendo o mesmo trecho vertical de antes. Avisamos
+  // sempre, a cada carregamento desta página — quem decide se é hora de
+  // rolar é o WordPress por fora (não dependemos mais do
+  // document.referrer aqui, porque o Safari do iPhone costuma apagar
+  // essa informação dentro de iframes de outro domínio).
   window.addEventListener('load', function () {
     window.parent.postMessage({ villaScrollToTop: true }, '*');
   });
