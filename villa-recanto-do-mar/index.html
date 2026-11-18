@@ -166,7 +166,7 @@ function setupCoverCarousels(rooms) {
     const photos = Array.isArray(room.photos) ? room.photos.slice(0, CARD_MAX_PHOTOS) : [];
     renderCardCarousel(`roomCoverGallery-${i}`, photos, {
       alt: room.name,
-      autoplay: 4200 + i * 300, // pequeno intervalo diferente por card, pra não trocarem todos junto
+      autoplay: 3000 + i * 250, // pequeno intervalo diferente por card, pra não trocarem todos junto
     });
   });
 }
@@ -204,13 +204,19 @@ loadRooms();
   // pra área de toque grande, mas tinha um problema: ao começar a rolar a
   // página tocando em cima de um card, se o dedo saía quase na mesma
   // posição (rolagem lenta/curta, bem comum), o toque era interpretado
-  // como um clique normal e abria o quarto sem querer. Agora, qualquer
-  // movimento de verdade do dedo entre o toque e a soltura cancela a
-  // navegação — só abre o quarto se for um toque parado, sem arrastar.
-  var startX = null, startY = null, moved = false;
+  // como um clique normal e abria o quarto sem querer. A versão anterior já
+  // cancelava a navegação quando o dedo se movia mais de 8px — mas num
+  // "flick" de rolagem (toque rápido e solta logo, a página continua
+  // deslizando sozinha um pouco depois por inércia) o movimento bruto do
+  // dedo antes de soltar pode ficar bem pequeno mesmo a página tendo
+  // rolado de verdade, então esse caso ainda escapava. Agora, além do
+  // movimento do dedo, também conferimos se a posição de rolagem da
+  // própria página mudou entre o toque e o clique — se mudou, foi
+  // rolagem, não toque parado, e a navegação é cancelada do mesmo jeito.
+  var startX = null, startY = null, startScrollY = 0, moved = false;
   document.addEventListener("pointerdown", function (e) {
     if (!e.target.closest || !e.target.closest(".room-card")) return;
-    startX = e.clientX; startY = e.clientY; moved = false;
+    startX = e.clientX; startY = e.clientY; startScrollY = window.scrollY; moved = false;
   }, { passive: true });
   document.addEventListener("pointermove", function (e) {
     if (startX == null) return;
@@ -219,7 +225,7 @@ loadRooms();
   document.addEventListener("click", function (e) {
     var card = e.target.closest && e.target.closest(".room-card");
     if (!card) return;
-    if (moved) { e.preventDefault(); e.stopPropagation(); }
+    if (moved || Math.abs(window.scrollY - startScrollY) > 2) { e.preventDefault(); e.stopPropagation(); }
     startX = null; moved = false;
   }, true);
 })();
