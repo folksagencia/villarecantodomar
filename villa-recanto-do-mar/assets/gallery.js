@@ -203,7 +203,13 @@ function renderGallery(containerId, photos, opts) {
 
     container.addEventListener("mouseenter", stop);
     container.addEventListener("mouseleave", start);
+    // Antes era só "touchstart -> stop", sem nada pra retomar depois no
+    // celular (só "focusout", que não acontece aqui) — bastava encostar o
+    // dedo de leve (até só passando o dedo rolando a página por cima) pra
+    // essa troca automática parar pra sempre. Agora um toque só pausa por
+    // um tempinho e volta sozinho.
     container.addEventListener("touchstart", stop, { passive: true });
+    container.addEventListener("touchend", () => setTimeout(start, 2500), { passive: true });
     container.addEventListener("focusin", stop);
     container.addEventListener("focusout", start);
   }
@@ -339,7 +345,12 @@ function renderCardCarousel(containerId, photos, opts) {
 
     container.addEventListener("mouseenter", stop);
     container.addEventListener("mouseleave", start);
+    // Mesmo problema do renderGallery: só "touchstart -> stop" sem retomar
+    // depois travava a troca de foto pra sempre assim que a pessoa tocava
+    // de leve no card (inclusive só de passar o dedo rolando a página por
+    // cima dele) — por isso as fotos de capa paravam de trocar no celular.
     container.addEventListener("touchstart", stop, { passive: true });
+    container.addEventListener("touchend", () => setTimeout(start, 2500), { passive: true });
   }
 }
 
