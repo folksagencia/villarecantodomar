@@ -290,7 +290,7 @@ a:focus-visible, button:focus-visible, .room-card:focus-visible {
   font-size: 0.82rem;
   margin: -2px 0 12px;
 }
-.price-tag { font-weight: 800; color: var(--teal-700); font-size: 1.15rem; }
+.price-tag { font-weight: 800; color: var(--teal-700); font-size: 1.15rem; margin-bottom: 14px; }
 .price-tag small { font-weight: 400; color: var(--ink-600); font-size: 0.8rem; }
 .price-tag .price-label { display: block; font-weight: 500; font-size: 0.78em; color: var(--ink-600); margin-bottom: 1px; }
 
@@ -940,6 +940,7 @@ footer.site-footer {
   content: "Reservar esta acomodação";
   display: inline-flex;
   align-items: center;
+  align-self: center; /* sem isso, o pai (flex-direction:column) estica o botão pra largura toda do cartão, deixando o texto grudado na esquerda e um vazio enorme sobrando à direita — com align-self:center ele volta a ter só o tamanho do próprio texto, centralizado */
   margin-top: auto; /* empurra o botão pro fundo do cartão, mesmo quando a descrição é curta */
   padding: 9px 18px;
   border-radius: 999px;
