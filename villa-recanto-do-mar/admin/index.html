@@ -28,7 +28,7 @@
 
     <h3>Aguardando confirmação do Pix</h3>
     <p class="help-text">Hóspedes que já avisaram que pagaram (ou você conferiu o extrato) — confirme para liberar a reserva.</p>
-    <div class="table-wrap" id="pendingTable"></div>
+    <div class="table-wrap cards-on-mobile" id="pendingTable"></div>
 
     <h3 style="margin-top:36px;">Estatísticas <span id="rangeLabel" style="font-weight:400;color:var(--ink-600);font-size:0.85rem;"></span></h3>
     <div class="card" style="margin-bottom:20px;max-width:720px;"><div class="card-body">
@@ -61,6 +61,18 @@
 <script src="/assets/admin-common.js"></script>
 <script>
 let currentRange = { since: null, until: null, label: "Últimos 30 dias" };
+
+// Telefone é salvo em formato livre (o jeito que a pessoa digitou no
+// formulário de reserva, ex: "(85) 98746-6177", sem código do país) — aqui
+// a gente só pega os dígitos e garante o "55" na frente pro link do
+// WhatsApp funcionar (se a pessoa já tiver digitado com o 55, não duplica).
+function waLink(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  if (digits.length < 10) return "";
+  const withCountry = digits.length <= 11 ? "55" + digits : digits;
+  return `https://wa.me/${withCountry}`;
+}
+const WHATSAPP_ICON = `<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-2-.9-.3-.1-.5-.1-.7.1-.2.3-.8.9-1 1.1-.2.2-.4.2-.7.1-1-.5-2-1.1-2.8-2-.7-.8-1.2-1.6-1.6-2.4-.1-.3 0-.5.1-.7l.5-.6c.1-.2.2-.4.1-.6-.1-.3-.6-1.4-.8-1.9-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.7.7-1 1.6-1 2.6.1 1.2.6 2.4 1.4 3.5 1.4 2 3.2 3.5 5.4 4.3 1.1.4 2 .3 2.7.1.8-.2 1.6-.9 1.8-1.7.1-.3.1-.6 0-.9-.1-.1-.3-.2-.5-.3z"/><path d="M12 3a9 9 0 0 0-7.7 13.6L3 21l4.6-1.2A9 9 0 1 0 12 3z" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>`;
 
 async function init() {
   const session = await requireAdminAuth();
@@ -164,16 +176,22 @@ async function loadDashboard() {
       <table>
         <thead><tr><th>Hóspede</th><th>Acomodação</th><th>Datas</th><th>Sinal</th><th>Avisou em</th><th></th></tr></thead>
         <tbody>
-          ${pending.map((r) => `
+          ${pending.map((r) => {
+            const waHref = waLink(r.guest_phone);
+            const phoneHtml = waHref
+              ? `<a href="${waHref}" target="_blank" rel="noopener" class="phone-link" title="Abrir conversa no WhatsApp">${WHATSAPP_ICON}${esc(r.guest_phone)}</a>`
+              : esc(r.guest_phone);
+            return `
             <tr>
-              <td>${esc(r.guest_name)}<br><span class="help-text">${esc(r.guest_phone)}</span></td>
-              <td>${esc(r.rooms ? r.rooms.name : "")}</td>
-              <td>${formatDateBR(r.check_in)} – ${formatDateBR(r.check_out)}</td>
-              <td>${formatBRL(r.deposit_amount)}</td>
-              <td>${new Date(r.guest_marked_paid_at).toLocaleString("pt-BR")}</td>
-              <td><a class="btn btn-primary btn-sm" href="/admin/reservas.html">Confirmar</a></td>
+              <td data-label="Hóspede">${esc(r.guest_name)}<br><span class="help-text">${phoneHtml}</span></td>
+              <td data-label="Acomodação">${esc(r.rooms ? r.rooms.name : "")}</td>
+              <td data-label="Datas">${formatDateBR(r.check_in)} – ${formatDateBR(r.check_out)}</td>
+              <td data-label="Sinal">${formatBRL(r.deposit_amount)}</td>
+              <td data-label="Avisou em">${new Date(r.guest_marked_paid_at).toLocaleString("pt-BR")}</td>
+              <td><a class="btn btn-success btn-sm btn-block" href="/admin/reservas.html">✓ Confirmar</a></td>
             </tr>
-          `).join("")}
+          `;
+          }).join("")}
         </tbody>
       </table>
     `;

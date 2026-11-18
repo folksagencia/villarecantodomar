@@ -21,7 +21,7 @@
     <h1 class="section-title">Acomodações</h1>
     <p class="section-sub">Cadastre as acomodações, fotos, descrição e o preço padrão por noite.</p>
 
-    <div class="table-wrap" id="table"></div>
+    <div class="table-wrap cards-on-mobile" id="table"></div>
 
     <h3 style="margin-top:32px;" id="formTitle">Nova acomodação</h3>
     <div class="card"><div class="card-body">
@@ -173,18 +173,24 @@ async function load() {
   }
 
   table.innerHTML = `
-    <p class="help-text" style="margin-top:0;">Arraste pelo ⠿ pra mudar a ordem que as acomodações aparecem na página inicial — isso só muda a ordem, nada mais.</p>
+    <p class="help-text" style="margin-top:0;">
+      Arraste pelo ⠿ pra mudar a ordem que as acomodações aparecem na página inicial (no celular, use as setinhas ↑ ↓ dentro de cada cartão) — isso só muda a ordem, nada mais.
+    </p>
     <table>
       <thead><tr><th></th><th>Acomodação</th><th>Unidades</th><th>Preço padrão</th><th>Visível</th><th>Ações</th></tr></thead>
       <tbody>
-        ${rooms.map((r) => `
+        ${rooms.map((r, i) => `
           <tr draggable="true" data-drag-id="${r.id}">
-            <td style="width:30px;"><span class="drag-handle" title="Arraste pra reordenar">${DRAG_HANDLE_ICON}</span></td>
-            <td>${esc(r.name)}<br><span class="help-text">/quarto.html?slug=${esc(r.slug)}</span></td>
-            <td>${r.units || 1}</td>
-            <td>${formatBRL(r.base_price)}</td>
-            <td>${r.active ? '<span class="badge badge-success">Sim</span>' : '<span class="badge badge-neutral">Não</span>'}</td>
+            <td class="cell-hidden-mobile" style="width:30px;"><span class="drag-handle" title="Arraste pra reordenar">${DRAG_HANDLE_ICON}</span></td>
+            <td data-label="Acomodação">${esc(r.name)}<br><span class="help-text">/quarto.html?slug=${esc(r.slug)}</span></td>
+            <td data-label="Unidades">${r.units || 1}</td>
+            <td data-label="Preço padrão">${formatBRL(r.base_price)}</td>
+            <td data-label="Visível">${r.active ? '<span class="badge badge-success">Sim</span>' : '<span class="badge badge-neutral">Não</span>'}</td>
             <td>
+              <div class="mobile-reorder-btns">
+                <button class="btn-reorder" type="button" onclick="moveRoom('${r.id}', -1)" ${i === 0 ? "disabled" : ""} title="Subir">↑</button>
+                <button class="btn-reorder" type="button" onclick="moveRoom('${r.id}', 1)" ${i === rooms.length - 1 ? "disabled" : ""} title="Descer">↓</button>
+              </div>
               <button class="btn btn-secondary btn-sm" onclick="editRoom('${r.id}')">Editar</button>
               <button class="btn btn-danger btn-sm" onclick="deleteRoom('${r.id}')">Excluir</button>
             </td>
@@ -193,6 +199,26 @@ async function load() {
       </tbody>
     </table>
   `;
+}
+
+// Botões ↑ / ↓ (só aparecem no celular — ver .mobile-reorder-btns no CSS):
+// troca o sort_order dessa acomodação com a vizinha na direção escolhida.
+// É a mesma ideia do "arraste pra reordenar", só que funciona no touch.
+async function moveRoom(id, delta) {
+  const i = rooms.findIndex((r) => r.id === id);
+  const j = i + delta;
+  if (i < 0 || j < 0 || j >= rooms.length) return;
+
+  const a = rooms[i], b = rooms[j];
+  const sortA = a.sort_order != null ? a.sort_order : i;
+  const sortB = b.sort_order != null ? b.sort_order : j;
+
+  const [{ error: errA }, { error: errB }] = await Promise.all([
+    villaSupabase.from("rooms").update({ sort_order: sortB }).eq("id", a.id),
+    villaSupabase.from("rooms").update({ sort_order: sortA }).eq("id", b.id),
+  ]);
+  if (errA || errB) { alert("Erro ao reordenar: " + ((errA || errB).message)); return; }
+  await load();
 }
 
 // Reordenar arrastando as linhas da tabela: o handler fica registrado uma vez
