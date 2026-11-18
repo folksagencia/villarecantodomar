@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fotos da pousada: Painel Villa Recanto do Mar</title>
+<link rel="icon" type="image/x-icon" href="/assets/img/favicon.ico" />
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicon-16x16.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192x192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/img/apple-touch-icon.png" />
+<link rel="stylesheet" href="/assets/style.css" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="admin-shell">
+  <nav class="admin-sidebar" id="adminNav"></nav>
+  <main class="admin-main">
+    <h1 class="section-title">Fotos da pousada</h1>
+    <p class="section-sub">Fotos da área comum, piscina, café da manhã, serviços etc.: aparecem num carrossel único na página inicial do site (não são fotos de uma acomodação específica; para isso, use a aba "Acomodações").</p>
+
+    <div class="card" style="max-width:640px;margin-bottom:24px;"><div class="card-body">
+      <label for="photoInput">Adicionar fotos ou vídeos</label>
+      <input type="file" id="photoInput" accept="image/*,video/*" multiple>
+      <p class="help-text">Você pode escolher várias de uma vez. A ordem de chegada aqui embaixo é a ordem que elas aparecem no carrossel da página inicial, <strong>arraste pelo ⠿ pra reorganizar</strong> (ou use "↑ Subir" / "↓ Descer").</p>
+      <p class="help-text"><strong>Formato recomendado:</strong> fotos na horizontal (paisagem), em torno de <strong>1600 × 1067px</strong>. Comprima antes de enviar (ex: tinypng.com) pra o site continuar rápido, evite arquivos muito grandes.</p>
+      <p class="help-text">Também aceita <strong>vídeos verticais</strong> (formato story, .mp4/.mov/.webm): eles tocam sozinhos, mudos e em loop no carrossel, junto com as fotos.</p>
+      <div id="uploadAlert"></div>
+    </div></div>
+
+    <div id="list"></div>
+  </main>
+</div>
+
+<script src="/assets/supabase-client.js"></script>
+<script src="/assets/format.js"></script>
+<script src="/assets/admin-common.js"></script>
+<script>
+let photos = [];
+
+async function init() {
+  const session = await requireAdminAuth();
+  if (!session) return;
+  renderAdminNav("fotos");
+
+  document.getElementById("photoInput").addEventListener("change", uploadPhotos);
+
+  await load();
+}
+
+async function load() {
+  const list = document.getElementById("list");
+  list.innerHTML = '<div class="empty-state"><span class="spinner"></span></div>';
+
+  const { data, error } = await villaSupabase.from("property_photos").select("*").order("sort_order", { ascending: true });
+  if (error) {
+    list.innerHTML = '<div class="empty-state">Erro ao carregar fotos.</div>';
+    console.error(error);
+    return;
+  }
+  photos = data || [];
+  render();
+}
+
+function render() {
+  const list = document.getElementById("list");
+  if (photos.length === 0) {
+    list.innerHTML = '<div class="empty-state">Nenhuma foto cadastrada ainda, use o campo acima para adicionar.</div>';
+    return;
+  }
+
+  list.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;">
+      ${photos.map((p, i) => `
+        <div class="card" data-id="${p.id}" draggable="true" data-drag-id="${p.id}">
+          <div class="photo" style="position:relative;aspect-ratio:16/9;${isVillaVideoUrl(p.url) ? "" : `background-image:url('${esc(p.url)}');background-size:cover;background-position:center;`}">
+            ${isVillaVideoUrl(p.url) ? `<video src="${esc(p.url)}" muted autoplay loop playsinline style="width:100%;height:100%;object-fit:cover;display:block;"></video><span class="badge badge-neutral" style="position:absolute;top:6px;right:6px;">▶ Vídeo</span>` : ""}
+          </div>
+          <div class="card-body">
+            <label style="margin-top:0;">Legenda (opcional)</label>
+            <input type="text" class="captionInput" placeholder="Ex: Piscina, Café da manhã, Área de lazer..." value="${esc(p.caption || "")}">
+            <label style="margin-top:10px;"><input type="checkbox" class="activeCheck" ${p.active ? "checked" : ""} style="width:auto;display:inline-block;"> Visível no site</label>
+            <div style="display:flex;align-items:center;gap:6px;margin-top:14px;flex-wrap:wrap;">
+              <span class="drag-handle" title="Arraste pra reordenar">${DRAG_HANDLE_ICON}</span>
+              <button class="btn btn-secondary btn-sm" onclick="moveUp(${i})" ${i === 0 ? "disabled" : ""}>↑ Subir</button>
+              <button class="btn btn-secondary btn-sm" onclick="moveDown(${i})" ${i === photos.length - 1 ? "disabled" : ""}>↓ Descer</button>
+              <button class="btn btn-primary btn-sm" onclick="savePhoto('${p.id}', this)">Salvar</button>
+              <button class="btn btn-danger btn-sm" onclick="deletePhoto('${p.id}')">Excluir</button>
+            </div>
+            <div class="saveAlert"></div>
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+const DRAG_HANDLE_ICON = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.6"/><circle cx="15" cy="6" r="1.6"/><circle cx="9" cy="12" r="1.6"/><circle cx="15" cy="12" r="1.6"/><circle cx="9" cy="18" r="1.6"/><circle cx="15" cy="18" r="1.6"/></svg>`;
+
+// Reordenar arrastando: registrado uma vez só no container (não em cada
+// card), então continua funcionando mesmo depois que render() troca o
+// innerHTML inteiro a cada carregamento/salvamento.
+//
+// Usa update() linha a linha em vez de upsert(): a coluna "url" de
+// property_photos é obrigatória e sem valor padrão, e o upsert() do Supabase
+// monta um INSERT ... ON CONFLICT por baixo dos panos — mesmo resolvendo como
+// atualização, o Postgres exige essa coluna na hora de montar a linha do
+// INSERT, e sem ela dá erro de "not-null constraint". O update() comum não
+// tem esse problema: ele só toca a coluna informada.
+enableDragReorder(document.getElementById("list"), "[data-drag-id]", async (newOrderIds) => {
+  const updates = newOrderIds.map((id, sort_order) => ({ id, sort_order }));
+  for (const { id, sort_order } of updates) {
+    const { error } = await villaSupabase.from("property_photos").update({ sort_order }).eq("id", id);
+    if (error) { alert("Erro ao reordenar: " + error.message); return; }
+  }
+  await load();
+});
+
+async function savePhoto(id, btnEl) {
+  const card = btnEl.closest(".card");
+  const caption = card.querySelector(".captionInput").value.trim();
+  const active = card.querySelector(".activeCheck").checked;
+  const { error } = await villaSupabase.from("property_photos").update({ caption, active }).eq("id", id);
+  const alertBox = card.querySelector(".saveAlert");
+  alertBox.innerHTML = error
+    ? `<div class="alert alert-danger">Erro: ${esc(error.message)}</div>`
+    : '<div class="alert alert-success">Salvo.</div>';
+  setTimeout(() => { alertBox.innerHTML = ""; }, 3000);
+  const local = photos.find((p) => p.id === id);
+  if (local) { local.caption = caption; local.active = active; }
+}
+
+async function moveUp(i) {
+  if (i === 0) return;
+  await swapOrder(i, i - 1);
+}
+
+async function moveDown(i) {
+  if (i === photos.length - 1) return;
+  await swapOrder(i, i + 1);
+}
+
+async function swapOrder(i, j) {
+  const a = photos[i], b = photos[j];
+  const aOrder = a.sort_order, bOrder = b.sort_order;
+  const { error: error1 } = await villaSupabase.from("property_photos").update({ sort_order: bOrder }).eq("id", a.id);
+  const { error: error2 } = error1 ? {} : await villaSupabase.from("property_photos").update({ sort_order: aOrder }).eq("id", b.id);
+  const error = error1 || error2;
+  if (error) { alert("Erro ao reordenar: " + error.message); return; }
+  await load();
+}
+
+async function deletePhoto(id) {
+  if (!confirm("Excluir esta foto? Isso não pode ser desfeito.")) return;
+  const { error } = await villaSupabase.from("property_photos").delete().eq("id", id);
+  if (error) { alert("Erro ao excluir: " + error.message); return; }
+  await load();
+}
+
+async function uploadPhotos(e) {
+  const files = Array.from(e.target.files || []);
+  if (files.length === 0) return;
+  const alertBox = document.getElementById("uploadAlert");
+  alertBox.innerHTML = '<div class="alert alert-info"><span class="spinner"></span> Enviando fotos…</div>';
+
+  let nextOrder = photos.length > 0 ? Math.max(...photos.map((p) => p.sort_order)) + 1 : 0;
+
+  for (const file of files) {
+    const path = `pousada/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+    const { error: uploadError } = await villaSupabase.storage.from("room-photos").upload(path, file, { upsert: false });
+    if (uploadError) {
+      alertBox.innerHTML = `<div class="alert alert-danger">Erro ao enviar ${esc(file.name)}: ${esc(uploadError.message)}</div>`;
+      continue;
+    }
+    const { data: pub } = villaSupabase.storage.from("room-photos").getPublicUrl(path);
+    const { error: insertError } = await villaSupabase.from("property_photos").insert([
+      { url: pub.publicUrl, caption: "", sort_order: nextOrder, active: true },
+    ]);
+    if (insertError) {
+      alertBox.innerHTML = `<div class="alert alert-danger">Erro ao salvar ${esc(file.name)}: ${esc(insertError.message)}</div>`;
+      continue;
+    }
+    nextOrder++;
+  }
+
+  alertBox.innerHTML = '<div class="alert alert-success">Fotos enviadas.</div>';
+  e.target.value = "";
+  await load();
+}
+
+function esc(str) {
+  return String(str || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+init();
+</script>
+</body>
+</html>
