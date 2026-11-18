@@ -317,23 +317,47 @@ input:focus, textarea:focus, select:focus {
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 .help-text { font-size: 0.8rem; color: var(--ink-600); margin-top: 4px; }
 
-/* ---------- badges / alertas ---------- */
+/* ---------- badges / alertas ----------
+   antes, o texto mais longo ("Aguardando Pix", e principalmente o aviso de
+   Pix expirado) podia quebrar em várias linhas dentro do badge — como o
+   badge é um "pill" bem arredondado, isso criava aquele efeito de bolha
+   gigante parecendo um botão, em vez de parecer um status. Agora o badge
+   nunca quebra linha (nowrap) e ganhou espaço pra um iconezinho na frente
+   (relógio, check, x...), ficando mais com cara de status mesmo. */
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   padding: 4px 11px;
   border-radius: 999px;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
+.badge svg { width: 12px; height: 12px; flex-shrink: 0; }
 
 .badge-warn { background: var(--warn-bg); color: var(--warn); }
 .badge-success { background: var(--success-bg); color: var(--success); }
 .badge-danger { background: var(--danger-bg); color: var(--danger); }
 .badge-neutral { background: var(--ink-300); color: var(--ink-900); }
+
+/* ---------- aviso complementar de status (ex: "Pix expirado") ----------
+   esse aviso é mais longo e é um complemento do status principal, não um
+   status por si só — por isso não é mais um badge/pill (que de tão
+   grande e com texto comprido virava um "botão" enorme), e sim uma linha
+   discreta com ícone, que quebra em texto normal igual a uma legenda. */
+.status-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 5px;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.35;
+}
+.status-note svg { width: 13px; height: 13px; flex-shrink: 0; margin-top: 2px; }
+.status-note-warn { color: var(--warn); }
 
 /* ---------- comodidades (quarto.html + admin/quartos.html) ---------- */
 
