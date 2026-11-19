@@ -259,6 +259,7 @@ loadRooms();
     window.parent.postMessage({ villaReservaAltura: altura }, '*');
   }
   window.addEventListener('load', enviarAltura);
+  window.addEventListener('pageshow', enviarAltura);
   var obs = new MutationObserver(enviarAltura);
   obs.observe(document.body, { childList: true, subtree: true });
   setTimeout(enviarAltura, 300);
@@ -281,9 +282,16 @@ loadRooms();
   // tentava decidir isso aqui, olhando o document.referrer — mas o
   // Safari do iPhone costuma apagar essa informação dentro de iframes de
   // outro domínio, então o aviso nunca saía daqui.)
-  window.addEventListener('load', function () {
+  //
+  // Importante acrescentado agora: além do "load", também escutamos
+  // "pageshow" — ao voltar pra esta lista, alguns navegadores podem
+  // restaurar a página de uma memória própria (bfcache) em vez de
+  // carregá-la de novo de verdade, e nesse caso só o "pageshow" dispara.
+  function avisarRolagem() {
     window.parent.postMessage({ villaScrollToTop: true }, '*');
-  });
+  }
+  window.addEventListener('load', avisarRolagem);
+  window.addEventListener('pageshow', avisarRolagem);
 })();
 </script>
 

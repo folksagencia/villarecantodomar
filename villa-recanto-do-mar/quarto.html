@@ -533,6 +533,7 @@ init();
     window.parent.postMessage({ villaReservaAltura: altura }, '*');
   }
   window.addEventListener('load', enviarAltura);
+  window.addEventListener('pageshow', enviarAltura);
   var obs = new MutationObserver(enviarAltura);
   obs.observe(document.body, { childList: true, subtree: true });
   setTimeout(enviarAltura, 300);
@@ -558,9 +559,20 @@ init();
   // document.referrer — mas o Safari do iPhone costuma apagar essa
   // informação dentro de iframes de outro domínio, então o aviso nunca
   // saía daqui.)
-  window.addEventListener('load', function () {
+  //
+  // Importante acrescentado agora: além do "load" (primeira vez que esta
+  // página carrega de verdade), também escutamos "pageshow" — alguns
+  // navegadores (principalmente no celular) podem restaurar esta página
+  // de uma memória própria deles (bfcache) ao invés de carregá-la de
+  // novo de verdade quando você volta pra ela; nesse caso o "load" NÃO
+  // dispara de novo, só o "pageshow" — e sem isso, o aviso pra rolar pra
+  // cima nunca seria enviado nessas voltas, deixando a página de fora
+  // "esquecida" na posição antiga.
+  function avisarRolagem() {
     window.parent.postMessage({ villaScrollToTop: true }, '*');
-  });
+  }
+  window.addEventListener('load', avisarRolagem);
+  window.addEventListener('pageshow', avisarRolagem);
 })();
 </script>
 
